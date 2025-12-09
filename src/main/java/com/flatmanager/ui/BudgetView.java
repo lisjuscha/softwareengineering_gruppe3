@@ -5,6 +5,7 @@ import com.flatmanager.model.BudgetTransaction;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
@@ -12,14 +13,23 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 import java.sql.*;
+import java.text.NumberFormat;
 import java.time.LocalDate;
+import java.util.*;
 
 public class BudgetView {
     private VBox view;
     private String currentUser;
-    private TableView<BudgetTransaction> tableView;
     private ObservableList<BudgetTransaction> transactions;
-    private Label totalLabel;
+
+    // Kategorien (festgelegt nach deiner Vorgabe)
+    private final List<String> categories = List.of("Einkäufe", "Haushalt", "Abos", "Aktivitäten", "Sonstiges");
+
+    // Container für die kategorisierten Tabellen
+    private VBox categoriesContainer;
+
+    // Currency formatter (DE)
+    private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY);
 
     public BudgetView(String username) {
         this.currentUser = username;
@@ -29,208 +39,269 @@ public class BudgetView {
     }
 
     private void createView() {
-        view = new VBox(15);
-        view.setPadding(new Insets(20));
-        view.setMaxWidth(950);
+        view = new VBox(16);
+        view.setPadding(new Insets(18));
+        view.setMaxWidth(Double.MAX_VALUE);
 
-        Label titleLabel = new Label("Household Budget");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 24));
-        titleLabel.getStyleClass().add("section-title");
+        Label title = new Label("Haushaltsbudget");
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 35));
 
-        // Add transaction form
-        GridPane formGrid = new GridPane();
-        formGrid.setHgap(10);
-        formGrid.setVgap(10);
+        // --- Formular zum Hinzufügen ---
+        GridPane form = new GridPane();
+        form.setHgap(10);
+        form.setVgap(10);
+        form.setPadding(new Insets(6));
 
-        Label descLabel = new Label("Description:");
-        TextField descField = new TextField();
-        descField.setPromptText("e.g., Groceries");
-        descField.setPrefWidth(200);
+        Label beschreibungLabel = new Label("Beschreibung:");
+        TextField beschreibungField = new TextField();
+        beschreibungField.setPromptText("z. B. Einkäufe");
 
-        Label amountLabel = new Label("Amount:");
-        TextField amountField = new TextField();
-        amountField.setPromptText("e.g., 25.50");
-        amountField.setPrefWidth(100);
+        Label betragLabel = new Label("Betrag:");
+        TextField betragField = new TextField();
+        betragField.setPromptText("z. B. 12.50");
 
-        Label categoryLabel = new Label("Category:");
-        ComboBox<String> categoryBox = new ComboBox<>();
-        categoryBox.getItems().addAll("Groceries", "Utilities", "Cleaning", "Other");
-        categoryBox.setValue("Other");
-        categoryBox.setPrefWidth(120);
+        Label kategorieLabel = new Label("Kategorie:");
+        ComboBox<String> kategorieBox = new ComboBox<>();
+        kategorieBox.getItems().addAll(categories);
+        kategorieBox.setValue(categories.get(0));
 
-        Label dateLabel = new Label("Date:");
-        DatePicker datePicker = new DatePicker();
-        datePicker.setValue(LocalDate.now());
-        datePicker.setPrefWidth(150);
+        Label datumLabel = new Label("Datum:");
+        DatePicker datePicker = new DatePicker(LocalDate.now());
 
-        Button addButton = new Button("Add Transaction");
-        addButton.getStyleClass().add("primary-button");
-        addButton.setOnAction(e -> {
-            String description = descField.getText().trim();
-            String amountStr = amountField.getText().trim();
-            String category = categoryBox.getValue();
-            LocalDate date = datePicker.getValue();
+        Label personLabel = new Label("Person:");
+        TextField personField = new TextField();
+        personField.setPromptText("z. B. Lisa");
 
-            if (!description.isEmpty() && !amountStr.isEmpty() && date != null) {
-                try {
-                    double amount = Double.parseDouble(amountStr);
-                    addTransaction(description, amount, category, date.toString());
-                    descField.clear();
-                    amountField.clear();
-                    categoryBox.setValue("Other");
-                    datePicker.setValue(LocalDate.now());
-                    loadTransactions();
-                } catch (NumberFormatException ex) {
-                    showAlert("Please enter a valid amount");
-                }
-            } else {
-                showAlert("Please fill in all fields");
+        Button hinzufuegenBtn = new Button("Eintrag hinzufügen");
+        hinzufuegenBtn.setDefaultButton(true);
+
+        hinzufuegenBtn.setOnAction(e -> {
+            String beschreibung = beschreibungField.getText().trim();
+            String betragText = betragField.getText().trim();
+            String kategorie = kategorieBox.getValue();
+            LocalDate datum = datePicker.getValue();
+            String person = personField.getText().trim();
+
+            if (beschreibung.isEmpty() || betragText.isEmpty() || datum == null || person.isEmpty()) {
+                showAlert("Bitte alle Felder ausfüllen.");
+                return;
             }
+
+            double betrag;
+            try {
+                betrag = Double.parseDouble(betragText.replace(",", "."));
+            } catch (NumberFormatException ex) {
+                showAlert("Bitte einen gültigen Betrag eingeben (z. B. 12.50).");
+                return;
+            }
+
+            addTransaction(beschreibung, betrag, kategorie, datum.toString(), person);
+            beschreibungField.clear();
+            betragField.clear();
+            kategorieBox.setValue(categories.get(0));
+            datePicker.setValue(LocalDate.now());
+            personField.clear();
+            loadTransactions();
         });
 
-        formGrid.add(descLabel, 0, 0);
-        formGrid.add(descField, 1, 0);
-        formGrid.add(amountLabel, 2, 0);
-        formGrid.add(amountField, 3, 0);
-        formGrid.add(categoryLabel, 0, 1);
-        formGrid.add(categoryBox, 1, 1);
-        formGrid.add(dateLabel, 2, 1);
-        formGrid.add(datePicker, 3, 1);
-        formGrid.add(addButton, 4, 1);
+        // Layout des Formulars
+        form.add(beschreibungLabel, 0, 0);
+        form.add(beschreibungField, 1, 0, 3, 1);
 
-        // Total display
-        totalLabel = new Label("Total: €0.00");
-        totalLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
-        totalLabel.getStyleClass().add("total-label");
+        form.add(betragLabel, 0, 1);
+        form.add(betragField, 1, 1);
 
-        // Table view
-        tableView = new TableView<>();
-        tableView.setItems(transactions);
+        form.add(kategorieLabel, 2, 1);
+        form.add(kategorieBox, 3, 1);
 
-        TableColumn<BudgetTransaction, String> descCol = new TableColumn<>("Description");
-        descCol.setCellValueFactory(new PropertyValueFactory<>("description"));
-        descCol.setPrefWidth(200);
+        form.add(datumLabel, 0, 2);
+        form.add(datePicker, 1, 2);
 
-        TableColumn<BudgetTransaction, Double> amountCol = new TableColumn<>("Amount");
-        amountCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
-        amountCol.setPrefWidth(100);
-        amountCol.setCellFactory(col -> new TableCell<BudgetTransaction, Double>() {
-            @Override
-            protected void updateItem(Double amount, boolean empty) {
-                super.updateItem(amount, empty);
-                if (empty || amount == null) {
-                    setText(null);
-                } else {
-                    setText(String.format("€%.2f", amount));
-                }
-            }
-        });
+        form.add(personLabel, 2, 2);
+        form.add(personField, 3, 2);
 
-        TableColumn<BudgetTransaction, String> categoryCol = new TableColumn<>("Category");
-        categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
-        categoryCol.setPrefWidth(120);
+        form.add(hinzufuegenBtn, 0, 3, 4, 1);
+        GridPane.setMargin(hinzufuegenBtn, new Insets(8, 0, 0, 0));
+        hinzufuegenBtn.setMaxWidth(Double.MAX_VALUE);
 
-        TableColumn<BudgetTransaction, String> paidByCol = new TableColumn<>("Paid By");
-        paidByCol.setCellValueFactory(new PropertyValueFactory<>("paidBy"));
-        paidByCol.setPrefWidth(120);
+        // --- Container für Kategorien/Tables ---
+        categoriesContainer = new VBox(18);
+        categoriesContainer.setPadding(new Insets(8));
 
-        TableColumn<BudgetTransaction, String> dateCol = new TableColumn<>("Date");
-        dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
-        dateCol.setPrefWidth(120);
+        ScrollPane scroll = new ScrollPane(categoriesContainer);
+        scroll.setFitToWidth(true);
+        scroll.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
 
-        TableColumn<BudgetTransaction, Void> actionCol = new TableColumn<>("Actions");
-        actionCol.setPrefWidth(100);
-        actionCol.setCellFactory(param -> new TableCell<>() {
-            private final Button deleteBtn = new Button("Delete");
-
-            {
-                deleteBtn.getStyleClass().add("delete-button");
-
-                deleteBtn.setOnAction(e -> {
-                    BudgetTransaction transaction = getTableView().getItems().get(getIndex());
-                    deleteTransaction(transaction.getId());
-                    loadTransactions();
-                });
-            }
-
-            @Override
-            protected void updateItem(Void item, boolean empty) {
-                super.updateItem(item, empty);
-                if (empty) {
-                    setGraphic(null);
-                } else {
-                    setGraphic(deleteBtn);
-                }
-            }
-        });
-
-        tableView.getColumns().addAll(descCol, amountCol, categoryCol, paidByCol, dateCol, actionCol);
-
-        view.getChildren().addAll(titleLabel, formGrid, totalLabel, tableView);
+        view.getChildren().addAll(title, form, scroll);
     }
 
     private void loadTransactions() {
         transactions.clear();
-        double total = 0.0;
-        
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM budget_transactions ORDER BY date DESC")) {
 
             while (rs.next()) {
-                double amount = rs.getDouble("amount");
-                transactions.add(new BudgetTransaction(
-                    rs.getInt("id"),
-                    rs.getString("description"),
-                    amount,
-                    rs.getString("paid_by"),
-                    rs.getString("date"),
-                    rs.getString("category")
-                ));
-                total += amount;
+                BudgetTransaction bt = new BudgetTransaction(
+                        rs.getInt("id"),
+                        rs.getString("description"),
+                        rs.getDouble("amount"),
+                        rs.getString("paid_by"),
+                        rs.getString("date"),
+                        rs.getString("category")
+                );
+                transactions.add(bt);
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
-            showAlert("Error loading transactions");
+            showAlert("Fehler beim Laden der Transaktionen.");
         }
 
-        totalLabel.setText(String.format("Total: €%.2f", total));
+        rebuildCategoryTables();
     }
 
-    private void addTransaction(String description, double amount, String category, String date) {
-        try {
-            Connection conn = DatabaseManager.getConnection();
-            String sql = "INSERT INTO budget_transactions (description, amount, paid_by, date, category) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+    private void rebuildCategoryTables() {
+        categoriesContainer.getChildren().clear();
+
+        // Gruppieren nach Kategorie in der Reihenfolge der 'categories'-Liste
+        Map<String, List<BudgetTransaction>> grouped = new LinkedHashMap<>();
+        for (String c : categories) grouped.put(c, new ArrayList<>());
+
+        for (BudgetTransaction t : transactions) {
+            String cat = t.getCategory();
+            if (grouped.containsKey(cat)) {
+                grouped.get(cat).add(t);
+            } else {
+                // Falls eine Transaktion eine unbekannte Kategorie hat, in "Sonstiges"
+                grouped.computeIfAbsent("Sonstiges", k -> new ArrayList<>()).add(t);
+            }
+        }
+
+        // Für jede Kategorie eine Überschrift + Tabelle + Summe
+        for (String category : grouped.keySet()) {
+            List<BudgetTransaction> list = grouped.get(category);
+            if (list.isEmpty()) {
+                // Optional: leere Kategorien anzeigen oder nicht; wir zeigen die Überschrift trotzdem mit "keine Einträge"
+                Label catLabel = new Label(category);
+                catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+                Label empty = new Label("Keine Einträge");
+                empty.setPadding(new Insets(4, 0, 8, 6));
+                VBox box = new VBox(6, catLabel, empty);
+                categoriesContainer.getChildren().add(box);
+                continue;
+            }
+
+            Label catLabel = new Label(category);
+            catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+
+            // TableView für diese Kategorie
+            TableView<BudgetTransaction> tv = new TableView<>();
+            tv.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+            tv.setPrefHeight(Math.min(200, 40 + list.size() * 28)); // height estimate
+
+            TableColumn<BudgetTransaction, String> beschrCol = new TableColumn<>("Beschreibung");
+            beschrCol.setCellValueFactory(new PropertyValueFactory<>("description"));
+            beschrCol.setPrefWidth(300);
+
+            TableColumn<BudgetTransaction, Double> betragCol = new TableColumn<>("Betrag");
+            betragCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
+            betragCol.setPrefWidth(100);
+            betragCol.setCellFactory(col -> new TableCell<BudgetTransaction, Double>() {
+                @Override
+                protected void updateItem(Double amt, boolean empty) {
+                    super.updateItem(amt, empty);
+                    if (empty || amt == null) {
+                        setText(null);
+                    } else {
+                        setText(currencyFormat.format(amt));
+                    }
+                    setAlignment(Pos.CENTER_RIGHT);
+                }
+            });
+
+            TableColumn<BudgetTransaction, String> dateCol = new TableColumn<>("Datum");
+            dateCol.setCellValueFactory(new PropertyValueFactory<>("date"));
+            dateCol.setPrefWidth(120);
+
+            TableColumn<BudgetTransaction, String> personCol = new TableColumn<>("Person");
+            personCol.setCellValueFactory(new PropertyValueFactory<>("paidBy"));
+            personCol.setPrefWidth(120);
+
+            TableColumn<BudgetTransaction, Void> deleteCol = new TableColumn<>("Löschen");
+            deleteCol.setPrefWidth(90);
+            deleteCol.setCellFactory(param -> new TableCell<>() {
+                private final Button delBtn = new Button("Löschen");
+
+                {
+                    delBtn.setOnAction(e -> {
+                        BudgetTransaction bt = getTableView().getItems().get(getIndex());
+                        deleteTransaction(bt.getId());
+                        loadTransactions();
+                    });
+                }
+
+                @Override
+                protected void updateItem(Void item, boolean empty) {
+                    super.updateItem(item, empty);
+                    setGraphic(empty ? null : delBtn);
+                }
+            });
+
+            tv.getColumns().addAll(beschrCol, betragCol, dateCol, personCol, deleteCol);
+            tv.getItems().addAll(list);
+
+            // Summe berechnen
+            double sum = 0.0;
+            for (BudgetTransaction t : list) sum += t.getAmount();
+            Label sumLabel = new Label("Summe " + category + ": " + currencyFormat.format(sum));
+            sumLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+            sumLabel.setPadding(new Insets(6, 0, 0, 0));
+
+            VBox box = new VBox(8, catLabel, tv, sumLabel);
+            box.setPadding(new Insets(6, 0, 12, 0));
+            box.setStyle("-fx-background-color: #ffffff; -fx-border-color: transparent;");
+            categoriesContainer.getChildren().add(box);
+        }
+    }
+
+    private void addTransaction(String description, double amount, String category, String date, String paidBy) {
+        String sql = "INSERT INTO budget_transactions (description, amount, paid_by, date, category) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setString(1, description);
             pstmt.setDouble(2, amount);
-            pstmt.setString(3, currentUser);
+            pstmt.setString(3, paidBy);
             pstmt.setString(4, date);
             pstmt.setString(5, category);
             pstmt.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
-            showAlert("Error adding transaction");
+            showAlert("Fehler beim Hinzufügen der Transaktion.");
         }
     }
 
-    private void deleteTransaction(int transactionId) {
-        try {
-            Connection conn = DatabaseManager.getConnection();
-            String sql = "DELETE FROM budget_transactions WHERE id = ?";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
-            pstmt.setInt(1, transactionId);
+    private void deleteTransaction(int id) {
+        String sql = "DELETE FROM budget_transactions WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
+            pstmt.setInt(1, id);
             pstmt.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
-            showAlert("Error deleting transaction");
+            showAlert("Fehler beim Löschen der Transaktion.");
         }
     }
 
     private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setContentText(message);
-        alert.showAndWait();
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
+        a.setContentText(message);
+        a.showAndWait();
     }
 
     public VBox getView() {
