@@ -1,82 +1,100 @@
-package com.flatmanager.database;
 
-import java.sql.*;
+            package com.flatmanager.database;
 
-public class DatabaseManager {
-    private static final String DB_URL = "jdbc:sqlite:flatmanager.db";
-    private static Connection connection = null;
+            import java.sql.*;
 
-    public static Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            connection = DriverManager.getConnection(DB_URL);
-            initializeDatabase();
-        }
-        return connection;
-    }
+            public class DatabaseManager {
+                private static final String DB_URL = "jdbc:sqlite:flatmanager.db";
+                private static Connection connection = null;
 
-    private static void initializeDatabase() throws SQLException {
-        try (Statement stmt = connection.createStatement()) {
-            // Users table
-            stmt.execute(
-                "CREATE TABLE IF NOT EXISTS users (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "username TEXT UNIQUE NOT NULL," +
-                "password TEXT NOT NULL," +
-                "name TEXT NOT NULL)"
-            );
+                public static Connection getConnection() throws SQLException {
+                    if (connection == null || connection.isClosed()) {
+                        connection = DriverManager.getConnection(DB_URL);
+                        initializeDatabase();
+                    }
+                    return connection;
+                }
 
-            // Cleaning schedules table
-            stmt.execute(
-                "CREATE TABLE IF NOT EXISTS cleaning_schedules (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "task TEXT NOT NULL," +
-                "assigned_to TEXT NOT NULL," +
-                "due_date TEXT NOT NULL," +
-                "completed INTEGER DEFAULT 0)"
-            );
+                private static void initializeDatabase() throws SQLException {
+                    try (Statement stmt = connection.createStatement()) {
+                        // Users table
+                        stmt.execute(
+                            "CREATE TABLE IF NOT EXISTS users (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "username TEXT UNIQUE NOT NULL," +
+                            "password TEXT NOT NULL," +
+                            "name TEXT NOT NULL)"
+                        );
 
-            // Shopping list items table
-            stmt.execute(
-                "CREATE TABLE IF NOT EXISTS shopping_items (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "item_name TEXT NOT NULL," +
-                "quantity TEXT," +
-                "added_by TEXT NOT NULL," +
-                "purchased INTEGER DEFAULT 0)"
-            );
+                        // Cleaning schedules table
+                        stmt.execute(
+                            "CREATE TABLE IF NOT EXISTS cleaning_schedules (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "task TEXT NOT NULL," +
+                            "assigned_to TEXT NOT NULL," +
+                            "due_date TEXT NOT NULL," +
+                            "completed INTEGER DEFAULT 0)"
+                        );
 
-            // Budget transactions table
-            stmt.execute(
-                "CREATE TABLE IF NOT EXISTS budget_transactions (" +
-                "id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                "description TEXT NOT NULL," +
-                "amount REAL NOT NULL," +
-                "paid_by TEXT NOT NULL," +
-                "date TEXT NOT NULL," +
-                "category TEXT NOT NULL)"
-            );
+                        // Shopping list items table (mit category)
+                        stmt.execute(
+                            "CREATE TABLE IF NOT EXISTS shopping_items (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "item_name TEXT NOT NULL," +
+                            "quantity TEXT," +
+                            "added_by TEXT NOT NULL," +
+                            "purchased INTEGER DEFAULT 0," +
+                            "category TEXT)"
+                        );
 
-            // Insert default user if not exists
-            // WARNING: Default credentials with plain text password for educational purposes only.
-            // In production, use secure password hashing and require password change on first login.
-            String checkUser = "SELECT COUNT(*) FROM users WHERE username = 'admin'";
-            ResultSet rs = stmt.executeQuery(checkUser);
-            if (rs.next() && rs.getInt(1) == 0) {
-                stmt.execute(
-                    "INSERT INTO users (username, password, name) " +
-                    "VALUES ('admin', 'admin', 'Administrator')"
-                );
+                        // If the table existed before without 'category', add the column
+                        try (ResultSet rs = stmt.executeQuery("PRAGMA table_info(shopping_items)")) {
+                            boolean hasCategory = false;
+                            while (rs.next()) {
+                                String name = rs.getString("name");
+                                if ("category".equalsIgnoreCase(name)) {
+                                    hasCategory = true;
+                                    break;
+                                }
+                            }
+                            if (!hasCategory) {
+                                stmt.execute("ALTER TABLE shopping_items ADD COLUMN category TEXT");
+                            }
+                        }
+
+                        // Budget transactions table
+                        stmt.execute(
+                            "CREATE TABLE IF NOT EXISTS budget_transactions (" +
+                            "id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "description TEXT NOT NULL," +
+                            "amount REAL NOT NULL," +
+                            "paid_by TEXT NOT NULL," +
+                            "date TEXT NOT NULL," +
+                            "category TEXT NOT NULL)"
+                        );
+
+                        // Insert default user if not exists
+                        // WARNING: Default credentials with plain text password for educational purposes only.
+                        // In production, use secure password hashing and require password change on first login.
+                        String checkUser = "SELECT COUNT(*) FROM users WHERE username = 'admin'";
+                        try (ResultSet rs = stmt.executeQuery(checkUser)) {
+                            if (rs.next() && rs.getInt(1) == 0) {
+                                stmt.execute(
+                                    "INSERT INTO users (username, password, name) " +
+                                    "VALUES ('admin', 'admin', 'Administrator')"
+                                );
+                            }
+                        }
+                    }
+                }
+
+                public static void closeConnection() {
+                    try {
+                        if (connection != null && !connection.isClosed()) {
+                            connection.close();
+                        }
+                    } catch (SQLException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
-        }
-    }
-
-    public static void closeConnection() {
-        try {
-            if (connection != null && !connection.isClosed()) {
-                connection.close();
-            }
-        } catch (SQLException e) {
-            e.printStackTrace();
-        }
-    }
-}

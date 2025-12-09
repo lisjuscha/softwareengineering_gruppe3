@@ -1,3 +1,4 @@
+// java
 package com.flatmanager;
 
 import com.flatmanager.database.DatabaseManager;
@@ -12,20 +13,20 @@ public class App extends Application {
     @Override
     public void start(Stage stage) {
         primaryStage = stage;
-        primaryStage.setTitle("Flat Manager");
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(600);
-        
+        primaryStage.setTitle("WG-App");
+        primaryStage.setWidth(1300);
+        primaryStage.setHeight(800);
+
         // Initialize database
         try {
             DatabaseManager.getConnection();
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
+
         // Show login screen
         showLoginScreen();
-        
+
         primaryStage.show();
     }
 
