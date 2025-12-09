@@ -1,0 +1,183 @@
+/* Global styles */
+.root {
+    -fx-font-family: "Arial";
+    -fx-background-color: #f5f5f5;
+}
+
+/* Login Screen */
+.login-container {
+    -fx-background-color: linear-gradient(to bottom, #667eea 0%, #764ba2 100%);
+}
+
+.title {
+    -fx-text-fill: white;
+}
+
+.subtitle {
+    -fx-text-fill: #e0e0e0;
+}
+
+/* Buttons */
+.primary-button {
+    -fx-background-color: #4CAF50;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+    -fx-background-radius: 5;
+    -fx-padding: 10px 20px;
+}
+
+.primary-button:hover {
+    -fx-background-color: #45a049;
+}
+
+.complete-button {
+    -fx-background-color: #2196F3;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+    -fx-background-radius: 3;
+    -fx-padding: 5px 10px;
+}
+
+.complete-button:hover {
+    -fx-background-color: #0b7dda;
+}
+
+.delete-button {
+    -fx-background-color: #f44336;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+    -fx-background-radius: 3;
+    -fx-padding: 5px 10px;
+}
+
+.delete-button:hover {
+    -fx-background-color: #da190b;
+}
+
+.logout-button {
+    -fx-background-color: #ff6b6b;
+    -fx-text-fill: white;
+    -fx-font-size: 12px;
+    -fx-cursor: hand;
+    -fx-background-radius: 3;
+    -fx-padding: 8px 15px;
+}
+
+.logout-button:hover {
+    -fx-background-color: #ee5a52;
+}
+
+/* Dashboard */
+.dashboard {
+    -fx-background-color: #f5f5f5;
+}
+
+.top-bar {
+    -fx-background-color: #2c3e50;
+    -fx-border-color: #34495e;
+    -fx-border-width: 0 0 2 0;
+}
+
+.dashboard-title {
+    -fx-text-fill: white;
+}
+
+.sidebar {
+    -fx-background-color: #34495e;
+    -fx-border-color: #2c3e50;
+    -fx-border-width: 0 2 0 0;
+}
+
+.nav-title {
+    -fx-text-fill: white;
+}
+
+.nav-button {
+    -fx-background-color: #2c3e50;
+    -fx-text-fill: white;
+    -fx-font-size: 14px;
+    -fx-cursor: hand;
+    -fx-background-radius: 5;
+    -fx-padding: 12px;
+    -fx-alignment: center-left;
+}
+
+.nav-button:hover {
+    -fx-background-color: #1a252f;
+}
+
+.content-area {
+    -fx-background-color: white;
+}
+
+/* Section styles */
+.section-title {
+    -fx-text-fill: #2c3e50;
+}
+
+.welcome-title {
+    -fx-text-fill: #2c3e50;
+}
+
+.welcome-text {
+    -fx-text-fill: #555;
+}
+
+.total-label {
+    -fx-text-fill: #2c3e50;
+}
+
+/* Input fields */
+TextField, PasswordField, DatePicker, ComboBox {
+    -fx-background-color: white;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 3;
+    -fx-background-radius: 3;
+    -fx-padding: 8px;
+}
+
+TextField:focused, PasswordField:focused, DatePicker:focused, ComboBox:focused {
+    -fx-border-color: #667eea;
+    -fx-border-width: 2;
+}
+
+/* Table styles */
+.table-view {
+    -fx-background-color: white;
+    -fx-border-color: #ddd;
+    -fx-border-radius: 5;
+}
+
+.table-view .column-header {
+    -fx-background-color: #34495e;
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+}
+
+.table-view .table-cell {
+    -fx-border-color: #f0f0f0;
+}
+
+.table-row-cell:selected {
+    -fx-background-color: #667eea;
+    -fx-text-fill: white;
+}
+
+.table-row-cell:hover {
+    -fx-background-color: #e8eaf6;
+}
+
+/* Separator */
+.separator {
+    -fx-background-color: #4a5f7f;
+}
+
+/* Labels */
+.message {
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
