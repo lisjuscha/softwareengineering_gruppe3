@@ -2,24 +2,26 @@ package com.flatmanager.ui;
 
 import com.flatmanager.database.DatabaseManager;
 import com.flatmanager.model.ShoppingItem;
+import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
-import javafx.scene.control.cell.CheckBoxTableCell;
-import javafx.scene.control.cell.PropertyValueFactory;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 import java.sql.*;
+import java.util.*;
 
 public class ShoppingListView {
+
     private BorderPane root;
     private String currentUser;
-    private TableView<ShoppingItem> tableView;
     private ObservableList<ShoppingItem> items;
+
+    private VBox listContainer;
 
     public ShoppingListView(String username) {
         this.currentUser = username;
@@ -32,89 +34,44 @@ public class ShoppingListView {
         root = new BorderPane();
         root.setPadding(new Insets(0));
 
-        // Top header
         Label header = new Label("Einkaufsliste");
         header.setFont(Font.font("Arial", FontWeight.BOLD, 26));
         header.setPadding(new Insets(12));
         BorderPane.setAlignment(header, Pos.CENTER);
         root.setTop(header);
 
-        // Mitte: Liste mit Titel
+        // Mitte – keine Tabelle mehr, sondern VBox
         VBox centerBox = new VBox(10);
         centerBox.setPadding(new Insets(18));
+
         Label sectionTitle = new Label("Unsere Einkäufe");
         sectionTitle.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        sectionTitle.setAlignment(Pos.CENTER);
 
-        // Table
-        tableView = new TableView<>();
-        tableView.setItems(items);
-        tableView.setPrefWidth(450); // schmaler
-        tableView.setPrefHeight(580);
-        tableView.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        listContainer = new VBox(18);
+        listContainer.setPadding(new Insets(10));
 
-        // Komplett weißer Hintergrund, keine inneren Rahmen
-        tableView.setStyle(
-                "-fx-background-color: white;" +
-                        "-fx-table-cell-border-color: transparent;" +
-                        "-fx-table-header-border-color: transparent;" +
-                        "-fx-selection-bar: #d0d0d0;" +
-                        "-fx-selection-bar-non-focused: #d0d0d0;"
-        );
+        ScrollPane scrollPane = new ScrollPane(listContainer);
+        scrollPane.setFitToWidth(true);
+        scrollPane.setStyle("-fx-background-color: white; -fx-border-color: transparent;");
 
-        // Checkbox-Spalte
-        TableColumn<ShoppingItem, Boolean> selectCol = new TableColumn<>("");
-        selectCol.setCellValueFactory(param -> param.getValue().selectedProperty());
-        selectCol.setCellFactory(CheckBoxTableCell.forTableColumn(selectCol));
-        selectCol.setPrefWidth(40);
-        selectCol.setStyle("-fx-alignment: CENTER;");
-
-        // Menge-Spalte
-        TableColumn<ShoppingItem, String> quantityCol = new TableColumn<>("Menge");
-        quantityCol.setCellValueFactory(new PropertyValueFactory<>("quantity"));
-        quantityCol.setPrefWidth(80);
-        quantityCol.setStyle("-fx-alignment: CENTER;");
-
-        // Artikel-Spalte
-        TableColumn<ShoppingItem, String> itemCol = new TableColumn<>("Artikel");
-        itemCol.setCellValueFactory(new PropertyValueFactory<>("itemName"));
-        itemCol.setPrefWidth(200);
-        itemCol.setStyle("-fx-alignment: CENTER;");
-
-        // Kategorie-Spalte
-        TableColumn<ShoppingItem, String> categoryCol = new TableColumn<>("Kategorie");
-        categoryCol.setCellValueFactory(new PropertyValueFactory<>("category"));
-        categoryCol.setPrefWidth(140);
-        categoryCol.setStyle("-fx-alignment: CENTER;");
-
-        // Hinzugefügt von
-        TableColumn<ShoppingItem, String> addedByCol = new TableColumn<>("Hinzugefügt von");
-        addedByCol.setCellValueFactory(new PropertyValueFactory<>("addedBy"));
-        addedByCol.setPrefWidth(120);
-        addedByCol.setStyle("-fx-alignment: CENTER;");
-
-        tableView.getColumns().setAll(selectCol, quantityCol, itemCol, categoryCol, addedByCol);
-
-        ScrollPane tablePane = new ScrollPane(tableView);
-        tablePane.setFitToWidth(true);
-        tablePane.setFitToHeight(true);
-        tablePane.setStyle("-fx-background: transparent; -fx-border-color: transparent;");
-        VBox.setVgrow(tablePane, Priority.ALWAYS);
-
-        centerBox.getChildren().addAll(sectionTitle, tablePane);
+        centerBox.getChildren().addAll(sectionTitle, scrollPane);
         root.setCenter(centerBox);
 
-        // Rechts: Formular
+        // Rechts – Formular bleibt
         VBox rightBox = new VBox(12);
         rightBox.setPadding(new Insets(18));
-        rightBox.setPrefWidth(500); // breiter
+        rightBox.setPrefWidth(380);
 
         Label formTitle = new Label("Neues Produkt hinzufügen");
         formTitle.setFont(Font.font("Arial", FontWeight.BOLD, 16));
 
         VBox form = new VBox(8);
         form.setPadding(new Insets(12));
-        form.setStyle("-fx-border-color: #bdbdbd; -fx-border-radius: 6; -fx-background-color: white;");
+        form.setStyle(
+                "-fx-border-color: #bdbdbd;" +
+                        "-fx-border-radius: 6;" +
+                        "-fx-background-color: #ffffff;"
+        );
 
         TextField itemField = new TextField();
         itemField.setPromptText("Name");
@@ -124,14 +81,16 @@ public class ShoppingListView {
 
         ComboBox<String> categoryCombo = new ComboBox<>();
         categoryCombo.getItems().addAll(
-                "Milch, Eier & Käse",
+                "Milch & Käse",
                 "Obst & Gemüse",
                 "Brot & Gebäck",
+                "Eier",
                 "Beilagen",
                 "Getränke",
-                "Haushalt"
+                "Haushalt",
+                "Sonstiges"
         );
-        categoryCombo.setValue("Milch, Eier & Käse");
+        categoryCombo.setValue("Sonstiges");
 
         Button saveBtn = new Button("Speichern");
         saveBtn.setMaxWidth(Double.MAX_VALUE);
@@ -139,11 +98,12 @@ public class ShoppingListView {
             String name = itemField.getText().trim();
             String qty = quantityField.getText().trim();
             String cat = categoryCombo.getValue();
+
             if (!name.isEmpty()) {
                 addItem(name, qty.isEmpty() ? "1" : qty, cat);
                 itemField.clear();
                 quantityField.clear();
-                categoryCombo.setValue("Milch, Eier & Käse");
+                categoryCombo.setValue("Sonstiges");
                 loadItems();
             } else {
                 showAlert("Bitte einen Namen eingeben");
@@ -161,73 +121,135 @@ public class ShoppingListView {
         rightBox.getChildren().addAll(formTitle, form, clearBtn);
         root.setRight(rightBox);
 
-        // Gesamtstil
-        root.setStyle("-fx-font-family: 'Arial'; -fx-background-color: #ffffff;");
+        root.setStyle("-fx-font-family: Arial; -fx-background-color: white;");
     }
 
+    // ---------------------------------------------------------
+    //   LISTE AUS DER DATENBANK LADEN UND ALS KATEGORIEN BAUEN
+    // ---------------------------------------------------------
     private void loadItems() {
         items.clear();
+
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM shopping_items ORDER BY id")) {
+             ResultSet rs = stmt.executeQuery("SELECT * FROM shopping_items ORDER BY category, item_name")) {
 
             while (rs.next()) {
-                ShoppingItem item = new ShoppingItem(
+                items.add(new ShoppingItem(
                         rs.getInt("id"),
                         rs.getString("item_name"),
                         rs.getString("quantity"),
                         rs.getString("added_by"),
-                        rs.getString("category")
-                );
-                items.add(item);
+                        rs.getString("category"),
+                        rs.getInt("purchased") == 1
+                ));
             }
+
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert("Fehler beim Laden der Artikel");
+        }
+
+        rebuildCategoryLayout();
+    }
+
+    // -----------------------------------------
+    //   VISUELLE DARSTELLUNG DER KATEGORIEN
+    // -----------------------------------------
+    private void rebuildCategoryLayout() {
+        listContainer.getChildren().clear();
+
+        Map<String, List<ShoppingItem>> grouped = new LinkedHashMap<>();
+
+        for (ShoppingItem item : items) {
+            grouped.computeIfAbsent(item.getCategory(), c -> new ArrayList<>()).add(item);
+        }
+
+        for (String category : grouped.keySet()) {
+
+            Label catLabel = new Label(category);
+            catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+            catLabel.setPadding(new Insets(4, 0, 4, 0));
+
+            VBox itemBox = new VBox(6);
+
+            for (ShoppingItem item : grouped.get(category)) {
+                HBox row = new HBox(12);
+                row.setAlignment(Pos.CENTER_LEFT);
+
+                CheckBox check = new CheckBox();
+                check.setSelected(item.isPurchased());
+
+                check.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                    item.setPurchased(newVal);
+                    updatePurchased(item.getId(), newVal);
+                });
+
+                Label qty = new Label(item.getQuantity());
+                qty.setFont(Font.font(14));
+
+                Label name = new Label(item.getItemName());
+                name.setFont(Font.font(14));
+
+                row.getChildren().addAll(check, qty, name);
+                itemBox.getChildren().add(row);
+            }
+
+            VBox wrapper = new VBox(8, catLabel, itemBox);
+            listContainer.getChildren().add(wrapper);
         }
     }
 
     private void addItem(String itemName, String quantity, String category) {
         String sql = "INSERT INTO shopping_items (item_name, quantity, added_by, category) VALUES (?, ?, ?, ?)";
+
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
+
             pstmt.setString(1, itemName);
             pstmt.setString(2, quantity);
             pstmt.setString(3, currentUser);
             pstmt.setString(4, category);
             pstmt.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert("Fehler beim Hinzufügen");
         }
     }
 
-    private void deleteItem(int itemId) {
+    private void updatePurchased(int id, boolean purchased) {
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("DELETE FROM shopping_items WHERE id = ?")) {
-            pstmt.setInt(1, itemId);
+             PreparedStatement pstmt = conn.prepareStatement(
+                     "UPDATE shopping_items SET purchased = ? WHERE id = ?"
+             )) {
+
+            pstmt.setInt(1, purchased ? 1 : 0);
+            pstmt.setInt(2, id);
             pstmt.executeUpdate();
+
         } catch (SQLException e) {
             e.printStackTrace();
-            showAlert("Fehler beim Löschen");
         }
     }
 
     private void clearList() {
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement()) {
+
             stmt.executeUpdate("DELETE FROM shopping_items");
+
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert("Fehler beim Leeren der Liste");
         }
     }
 
-    private void showAlert(String message) {
-        Alert alert = new Alert(Alert.AlertType.INFORMATION);
-        alert.setHeaderText(null);
-        alert.setContentText(message);
-        alert.showAndWait();
+    private void showAlert(String msg) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
+        a.setContentText(msg);
+        a.showAndWait();
     }
 
     public Region getView() {
