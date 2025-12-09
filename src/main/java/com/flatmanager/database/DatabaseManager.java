@@ -57,6 +57,8 @@ public class DatabaseManager {
             );
 
             // Insert default user if not exists
+            // WARNING: Default credentials with plain text password for educational purposes only.
+            // In production, use secure password hashing and require password change on first login.
             String checkUser = "SELECT COUNT(*) FROM users WHERE username = 'admin'";
             ResultSet rs = stmt.executeQuery(checkUser);
             if (rs.next() && rs.getInt(1) == 0) {

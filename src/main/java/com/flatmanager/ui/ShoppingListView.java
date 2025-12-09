@@ -127,11 +127,9 @@ public class ShoppingListView {
 
     private void loadItems() {
         items.clear();
-        try {
-            Connection conn = DatabaseManager.getConnection();
-            String sql = "SELECT * FROM shopping_items ORDER BY purchased, id";
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM shopping_items ORDER BY purchased, id")) {
 
             while (rs.next()) {
                 items.add(new ShoppingItem(

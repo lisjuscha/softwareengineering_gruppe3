@@ -93,15 +93,16 @@ public class LoginScreen {
         view.getChildren().addAll(titleLabel, subtitleLabel, formBox);
     }
 
+    // WARNING: This uses plain text password comparison for educational purposes only.
+    // In production, passwords should be hashed using bcrypt, PBKDF2, or similar algorithms.
     private boolean authenticate(String username, String password) {
-        try {
-            Connection conn = DatabaseManager.getConnection();
-            String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?")) {
             pstmt.setString(1, username);
             pstmt.setString(2, password);
-            ResultSet rs = pstmt.executeQuery();
-            return rs.next();
+            try (ResultSet rs = pstmt.executeQuery()) {
+                return rs.next();
+            }
         } catch (Exception e) {
             e.printStackTrace();
             return false;

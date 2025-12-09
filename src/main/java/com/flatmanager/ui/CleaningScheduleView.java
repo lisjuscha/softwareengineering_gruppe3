@@ -134,11 +134,9 @@ public class CleaningScheduleView {
 
     private void loadTasks() {
         tasks.clear();
-        try {
-            Connection conn = DatabaseManager.getConnection();
-            String sql = "SELECT * FROM cleaning_schedules ORDER BY due_date";
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM cleaning_schedules ORDER BY due_date")) {
 
             while (rs.next()) {
                 tasks.add(new CleaningTask(

@@ -173,11 +173,9 @@ public class BudgetView {
         transactions.clear();
         double total = 0.0;
         
-        try {
-            Connection conn = DatabaseManager.getConnection();
-            String sql = "SELECT * FROM budget_transactions ORDER BY date DESC";
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT * FROM budget_transactions ORDER BY date DESC")) {
 
             while (rs.next()) {
                 double amount = rs.getDouble("amount");
