@@ -11,6 +11,8 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.sql.*;
 import java.time.LocalDate;
 
@@ -172,21 +174,24 @@ public class BudgetView {
     private void loadTransactions() {
         transactions.clear();
         double total = 0.0;
-        
+
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
              ResultSet rs = stmt.executeQuery("SELECT * FROM budget_transactions ORDER BY date DESC")) {
 
             while (rs.next()) {
                 double amount = rs.getDouble("amount");
-                transactions.add(new BudgetTransaction(
-                    rs.getInt("id"),
-                    rs.getString("description"),
-                    amount,
-                    rs.getString("paid_by"),
-                    rs.getString("date"),
-                    rs.getString("category")
-                ));
+
+                // Verwende No-Arg-Konstruktor und Setter um Konstruktor-Fehler zu vermeiden
+                BudgetTransaction t = new BudgetTransaction();
+                t.setId(rs.getInt("id"));
+                t.setAmount(amount);
+                t.setDescription(rs.getString("description")); // falls null ok
+                setPaidByIfPresent(t, rs.getString("paid_by"));
+                t.setDate(rs.getString("date"));
+                t.setCategory(rs.getString("category"));
+
+                transactions.add(t);
                 total += amount;
             }
         } catch (SQLException e) {
@@ -198,10 +203,9 @@ public class BudgetView {
     }
 
     private void addTransaction(String description, double amount, String category, String date) {
-        try {
-            Connection conn = DatabaseManager.getConnection();
-            String sql = "INSERT INTO budget_transactions (description, amount, paid_by, date, category) VALUES (?, ?, ?, ?, ?)";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+        String sql = "INSERT INTO budget_transactions (description, amount, paid_by, date, category) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, description);
             pstmt.setDouble(2, amount);
             pstmt.setString(3, currentUser);
@@ -215,10 +219,9 @@ public class BudgetView {
     }
 
     private void deleteTransaction(int transactionId) {
-        try {
-            Connection conn = DatabaseManager.getConnection();
-            String sql = "DELETE FROM budget_transactions WHERE id = ?";
-            PreparedStatement pstmt = conn.prepareStatement(sql);
+        String sql = "DELETE FROM budget_transactions WHERE id = ?";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setInt(1, transactionId);
             pstmt.executeUpdate();
         } catch (SQLException e) {
@@ -231,6 +234,25 @@ public class BudgetView {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setContentText(message);
         alert.showAndWait();
+    }
+
+    // --- Reflection helper für optionales paidBy-Feld/setPaidBy-Setter ---
+    private void setPaidByIfPresent(BudgetTransaction t, String paidBy) {
+        if (paidBy == null) return;
+        try {
+            Method m = t.getClass().getMethod("setPaidBy", String.class);
+            m.invoke(t, paidBy);
+            return;
+        } catch (NoSuchMethodException ignored) {
+        } catch (Exception ignored) {
+        }
+
+        try {
+            Field f = t.getClass().getDeclaredField("paidBy");
+            f.setAccessible(true);
+            f.set(t, paidBy);
+        } catch (Exception ignored) {
+        }
     }
 
     public VBox getView() {

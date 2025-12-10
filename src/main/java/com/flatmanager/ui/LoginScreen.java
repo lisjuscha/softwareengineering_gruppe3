@@ -80,14 +80,14 @@ public class LoginScreen {
         // Allow Enter key to login
         passwordField.setOnAction(e -> loginButton.fire());
 
-        Label infoLabel = new Label("Default credentials: admin / admin");
+        Label infoLabel = new Label("Default credentials: admin / Admin");
         infoLabel.setFont(Font.font("Arial", 12));
         infoLabel.setStyle("-fx-text-fill: #666;");
 
         formBox.getChildren().addAll(
-            usernameLabel, usernameField,
-            passwordLabel, passwordField,
-            loginButton, messageLabel, infoLabel
+                usernameLabel, usernameField,
+                passwordLabel, passwordField,
+                loginButton, messageLabel, infoLabel
         );
 
         view.getChildren().addAll(titleLabel, subtitleLabel, formBox);
@@ -96,8 +96,10 @@ public class LoginScreen {
     // WARNING: This uses plain text password comparison for educational purposes only.
     // In production, passwords should be hashed using bcrypt, PBKDF2, or similar algorithms.
     private boolean authenticate(String username, String password) {
+        // Use COLLATE NOCASE to make username comparison case-insensitive (SQLite).
+        String sql = "SELECT 1 FROM users WHERE username = ? COLLATE NOCASE AND password = ? LIMIT 1";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement("SELECT * FROM users WHERE username = ? AND password = ?")) {
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             pstmt.setString(2, password);
             try (ResultSet rs = pstmt.executeQuery()) {

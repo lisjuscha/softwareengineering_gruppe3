@@ -1,8 +1,8 @@
 package com.flatmanager;
 
-import com.flatmanager.database.DatabaseManager;
 import com.flatmanager.ui.LoginScreen;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Scene;
 import javafx.stage.Stage;
 
@@ -15,17 +15,12 @@ public class App extends Application {
         primaryStage.setTitle("Flat Manager");
         primaryStage.setWidth(800);
         primaryStage.setHeight(600);
-        
-        // Initialize database
-        try {
-            DatabaseManager.getConnection();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        
+
+        // Datenbank-Initialisierung nicht hier (rückgängig gemacht)
+
         // Show login screen
         showLoginScreen();
-        
+
         primaryStage.show();
     }
 
@@ -42,7 +37,7 @@ public class App extends Application {
 
     @Override
     public void stop() {
-        DatabaseManager.closeConnection();
+        // Falls DatabaseManager entfernt wurde, hier nichts aufrufen
     }
 
     public static void main(String[] args) {
