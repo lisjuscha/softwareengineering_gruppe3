@@ -7,99 +7,160 @@ import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
+import javafx.scene.text.TextAlignment;
 
 import java.sql.Connection;
-import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
+import java.util.Optional;
 
 public class LoginScreen {
     private VBox view;
+    private FlowPane usersPane;
 
     public LoginScreen() {
         createView();
+        loadUsers();
     }
 
     private void createView() {
         view = new VBox(20);
-        view.setAlignment(Pos.CENTER);
+        view.setAlignment(Pos.TOP_CENTER);
         view.setPadding(new Insets(40));
         view.getStyleClass().add("login-container");
 
         Label titleLabel = new Label("Flat Manager");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 32));
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 36));
         titleLabel.getStyleClass().add("title");
 
-        Label subtitleLabel = new Label("Shared Living Space Management");
-        subtitleLabel.setFont(Font.font("Arial", 16));
-        subtitleLabel.getStyleClass().add("subtitle");
+        Label subtitleLabel = new Label("Wähle dein Profil");
+        subtitleLabel.setFont(Font.font("Arial", 14));
+        subtitleLabel.setStyle("-fx-text-fill: #666;");
 
-        VBox formBox = new VBox(15);
-        formBox.setAlignment(Pos.CENTER);
-        formBox.setMaxWidth(350);
+        usersPane = new FlowPane();
+        usersPane.setHgap(24);
+        usersPane.setVgap(24);
+        usersPane.setPadding(new Insets(24));
+        usersPane.setAlignment(Pos.CENTER);
+        usersPane.setPrefWrapLength(800); // Zeilenumbruch bei Bedarf
 
-        Label usernameLabel = new Label("Username:");
-        TextField usernameField = new TextField();
-        usernameField.setPromptText("Enter username");
-        usernameField.setMaxWidth(300);
+        view.getChildren().addAll(titleLabel, subtitleLabel, usersPane);
+        view.setStyle("-fx-font-family: Arial; -fx-background-color: white;");
+    }
 
-        Label passwordLabel = new Label("Password:");
-        PasswordField passwordField = new PasswordField();
-        passwordField.setPromptText("Enter password");
-        passwordField.setMaxWidth(300);
+    private void loadUsers() {
+        usersPane.getChildren().clear();
 
-        Button loginButton = new Button("Login");
-        loginButton.getStyleClass().add("primary-button");
-        loginButton.setMaxWidth(300);
-        loginButton.setMinHeight(40);
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery("SELECT username FROM users ORDER BY username")) {
 
-        Label messageLabel = new Label();
-        messageLabel.getStyleClass().add("message");
-
-        loginButton.setOnAction(e -> {
-            String username = usernameField.getText().trim();
-            String password = passwordField.getText().trim();
-
-            if (username.isEmpty() || password.isEmpty()) {
-                messageLabel.setText("Please enter both username and password");
-                messageLabel.setStyle("-fx-text-fill: red;");
-                return;
+            while (rs.next()) {
+                String username = rs.getString("username");
+                usersPane.getChildren().add(createUserTile(username));
             }
 
-            if (authenticate(username, password)) {
-                messageLabel.setText("Login successful!");
-                messageLabel.setStyle("-fx-text-fill: green;");
-                // Show dashboard
-                DashboardScreen dashboard = new DashboardScreen(username);
-                com.flatmanager.App.getPrimaryStage().getScene().setRoot(dashboard.getView());
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Fehler beim Laden der Benutzer: " + e.getMessage());
+        }
+    }
+
+    private VBox createUserTile(String username) {
+        String displayName = username; // Falls es später ein display_name gibt, hier anpassen
+        String initial = displayName.isEmpty() ? "?" : displayName.substring(0, 1).toUpperCase();
+
+        StackPane square = new StackPane();
+        square.setPrefSize(120, 120);
+        square.setMaxSize(120, 120);
+        square.setStyle(
+                "-fx-background-color: #e0e0e0;" +
+                        "-fx-border-radius: 8; -fx-background-radius: 8;" +
+                        "-fx-cursor: hand;"
+        );
+
+        Label initialLabel = new Label(initial);
+        initialLabel.setFont(Font.font("Arial", FontWeight.BOLD, 48));
+        initialLabel.setStyle("-fx-text-fill: #333;");
+        square.getChildren().add(initialLabel);
+
+        Label nameLabel = new Label(displayName);
+        nameLabel.setFont(Font.font("Arial", 14));
+        nameLabel.setWrapText(true);
+        nameLabel.setTextAlignment(TextAlignment.CENTER);
+        nameLabel.setMaxWidth(120);
+
+        VBox wrapper = new VBox(8, square, nameLabel);
+        wrapper.setAlignment(Pos.CENTER);
+        wrapper.setOnMouseClicked(e -> {
+            if ("admin".equalsIgnoreCase(username)) {
+                showAdminPasswordDialog(username);
             } else {
-                messageLabel.setText("Invalid username or password");
-                messageLabel.setStyle("-fx-text-fill: red;");
+                loginAndShowDashboard(username);
             }
         });
 
-        // Allow Enter key to login
-        passwordField.setOnAction(e -> loginButton.fire());
+        // Hover-Effekt
+        wrapper.setOnMouseEntered(e -> square.setStyle(
+                "-fx-background-color: #d0d0d0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand;"
+        ));
+        wrapper.setOnMouseExited(e -> square.setStyle(
+                "-fx-background-color: #e0e0e0; -fx-border-radius: 8; -fx-background-radius: 8;"
+        ));
 
-        Label infoLabel = new Label("Default credentials: admin / Admin");
-        infoLabel.setFont(Font.font("Arial", 12));
-        infoLabel.setStyle("-fx-text-fill: #666;");
-
-        formBox.getChildren().addAll(
-                usernameLabel, usernameField,
-                passwordLabel, passwordField,
-                loginButton, messageLabel, infoLabel
-        );
-
-        view.getChildren().addAll(titleLabel, subtitleLabel, formBox);
+        return wrapper;
     }
 
-    // WARNING: This uses plain text password comparison for educational purposes only.
-    // In production, passwords should be hashed using bcrypt, PBKDF2, or similar algorithms.
+    private void showAdminPasswordDialog(String username) {
+        Dialog<String> dlg = new Dialog<>();
+        dlg.setTitle("Admin Login");
+        dlg.setHeaderText("Passwort für Admin eingeben");
+
+        ButtonType loginBtnType = new ButtonType("Login", ButtonBar.ButtonData.OK_DONE);
+        dlg.getDialogPane().getButtonTypes().addAll(loginBtnType, ButtonType.CANCEL);
+
+        PasswordField pwdField = new PasswordField();
+        pwdField.setPromptText("Passwort");
+
+        VBox content = new VBox(8, new Label("Admin Passwort:"), pwdField);
+        content.setPadding(new Insets(10));
+        dlg.getDialogPane().setContent(content);
+
+        // Enable/disable Login button based on input
+        Button loginBtn = (Button) dlg.getDialogPane().lookupButton(loginBtnType);
+        loginBtn.setDisable(true);
+        pwdField.textProperty().addListener((obs, oldV, newV) -> loginBtn.setDisable(newV.trim().isEmpty()));
+
+        dlg.setResultConverter(btn -> {
+            if (btn == loginBtnType) return pwdField.getText();
+            return null;
+        });
+
+        Optional<String> result = dlg.showAndWait();
+        result.ifPresent(pw -> {
+            if (authenticate(username, pw)) {
+                loginAndShowDashboard(username);
+            } else {
+                showAlert("Falsches Admin-Passwort");
+            }
+        });
+    }
+
+    private void loginAndShowDashboard(String username) {
+        try {
+            DashboardScreen dashboard = new DashboardScreen(username);
+            com.flatmanager.App.getPrimaryStage().getScene().setRoot(dashboard.getView());
+        } catch (Exception e) {
+            e.printStackTrace();
+            showAlert("Fehler beim Wechsel zum Dashboard: " + e.getMessage());
+        }
+    }
+
+    // WARNING: uses plain text password comparison (wie vorher)
     private boolean authenticate(String username, String password) {
-        // Use COLLATE NOCASE to make username comparison case-insensitive (SQLite).
         String sql = "SELECT 1 FROM users WHERE username = ? COLLATE NOCASE AND password = ? LIMIT 1";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+        try (var conn = DatabaseManager.getConnection();
+             var pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, username);
             pstmt.setString(2, password);
             try (ResultSet rs = pstmt.executeQuery()) {
@@ -109,6 +170,13 @@ public class LoginScreen {
             e.printStackTrace();
             return false;
         }
+    }
+
+    private void showAlert(String message) {
+        Alert a = new Alert(Alert.AlertType.INFORMATION);
+        a.setHeaderText(null);
+        a.setContentText(message);
+        a.showAndWait();
     }
 
     public VBox getView() {

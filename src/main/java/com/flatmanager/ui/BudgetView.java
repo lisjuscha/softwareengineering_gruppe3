@@ -40,8 +40,21 @@ public class BudgetView {
         view.setPadding(new Insets(18));
         view.setMaxWidth(Double.MAX_VALUE);
 
+        // Topbar: Titel links, Spacer (Admin-Button zentral in DashboardScreen)
         Label title = new Label("Haushaltsbudget");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 35));
+        title.setPadding(new Insets(0, 8, 0, 0));
+
+        HBox topBar = new HBox();
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.setPadding(new Insets(0, 0, 6, 0));
+        topBar.setSpacing(8);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Admin-Node entfernt, da zentral in DashboardScreen eingefügt
+        topBar.getChildren().addAll(title, spacer);
 
         // --- Formular zum Hinzufügen ---
         GridPane form = new GridPane();
@@ -130,7 +143,8 @@ public class BudgetView {
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
 
-        view.getChildren().addAll(title, form, scroll);
+        // Zusammensetzen der View: Topbar, Formular, Listenbereich
+        view.getChildren().addAll(topBar, form, scroll);
     }
 
     private void loadTransactions() {

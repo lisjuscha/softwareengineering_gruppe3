@@ -33,11 +33,22 @@ public class ShoppingListView {
         root = new BorderPane();
         root.setPadding(new Insets(0));
 
+        // Top bar: Header links, Spacer (Admin-Button zentral in DashboardScreen)
         Label header = new Label("Einkaufsliste");
         header.setFont(Font.font("Arial", FontWeight.BOLD, 26));
         header.setPadding(new Insets(12));
-        BorderPane.setAlignment(header, Pos.CENTER);
-        root.setTop(header);
+
+        HBox topBar = new HBox();
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.setPadding(new Insets(0));
+        topBar.setSpacing(8);
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Lokale Admin-Node entfernt
+        topBar.getChildren().addAll(header, spacer);
+        root.setTop(topBar);
 
         VBox centerBox = new VBox(10);
         centerBox.setPadding(new Insets(18));
@@ -151,14 +162,6 @@ public class ShoppingListView {
         rebuildCategoryLayout();
     }
 
-    /**
-     * Prüft via PRAGMA table_info ob eine Spalte existiert; falls nicht, wird sie hinzugefügt.
-     * @param conn bestehende Connection
-     * @param tableName Tabellenname
-     * @param columnName Spaltenname
-     * @param columnType Spaltentyp (z. B. "TEXT")
-     * @param defaultValueSql Default-Wert als SQL-Fragment (z. B. "'Sonstiges'")
-     */
     private void ensureColumnExists(Connection conn, String tableName, String columnName, String columnType, String defaultValueSql) {
         String pragma = "PRAGMA table_info(" + tableName + ")";
         try (Statement s = conn.createStatement();

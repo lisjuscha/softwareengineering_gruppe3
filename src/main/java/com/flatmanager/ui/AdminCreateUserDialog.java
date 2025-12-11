@@ -1,58 +1,98 @@
 package com.flatmanager.ui;
 
-import com.flatmanager.database.DatabaseManager;
+import com.flatmanager.storage.Database;
 import javafx.geometry.Insets;
-import javafx.scene.Scene;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.GridPane;
 import javafx.stage.Modality;
-import javafx.stage.Stage;
+import javafx.stage.Window;
 
-public final class AdminCreateUserDialog {
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.SQLException;
+import java.util.Optional;
 
-    private AdminCreateUserDialog() {
-    }
+public class AdminCreateUserDialog {
 
-    public static void show(Stage owner) {
-        Stage dialog = new Stage();
-        dialog.initOwner(owner);
+    /**
+     * Öffnet einen Dialog zum Anlegen eines neuen Benutzers.
+     * Rückgabe:
+     * - Optional.of(true)  -> Benutzer wurde erfolgreich angelegt
+     * - Optional.of(false) -> Dialog abgebrochen oder Fehler (Fehlermeldung wird angezeigt)
+     * - Optional.empty()   -> selten, falls showAndWait selbst leer zurückgibt
+     */
+    public static Optional<Boolean> showAndWait(Window owner) {
+        Dialog<Boolean> dialog = new Dialog<>();
+        dialog.setTitle("Neuen Benutzer anlegen");
+        if (owner != null) dialog.initOwner(owner);
         dialog.initModality(Modality.APPLICATION_MODAL);
-        dialog.setTitle("Admin: Neuen Benutzer anlegen");
 
-        GridPane gp = new GridPane();
-        gp.setPadding(new Insets(10));
-        gp.setHgap(10);
-        gp.setVgap(10);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
-        TextField username = new TextField();
-        PasswordField password = new PasswordField();
-        TextField name = new TextField();
+        GridPane grid = new GridPane();
+        grid.setHgap(10);
+        grid.setVgap(10);
+        grid.setPadding(new Insets(20, 150, 10, 10));
 
-        gp.add(new Label("Benutzername:"), 0, 0);
-        gp.add(username, 1, 0);
-        gp.add(new Label("Passwort:"), 0, 1);
-        gp.add(password, 1, 1);
-        gp.add(new Label("Anzeigename:"), 0, 2);
-        gp.add(name, 1, 2);
+        TextField usernameField = new TextField();
+        usernameField.setPromptText("Benutzername");
 
-        Button createBtn = new Button("Anlegen / Aktualisieren");
-        createBtn.setDefaultButton(true);
-        createBtn.setOnAction(evt -> {
-            String u = username.getText();
-            String p = password.getText();
-            String n = name.getText();
-            boolean ok = DatabaseManager.createOrUpdateUser(u, p, n);
-            Alert a = new Alert(ok ? Alert.AlertType.INFORMATION : Alert.AlertType.ERROR);
-            a.initOwner(dialog);
-            a.setHeaderText(null);
-            a.setContentText(ok ? "Benutzer erfolgreich angelegt/aktualisiert." : "Fehler beim Anlegen/Aktualisieren.");
-            a.showAndWait();
-            if (ok) dialog.close();
+        PasswordField passwordField = new PasswordField();
+        passwordField.setPromptText("Passwort");
+
+        CheckBox adminCheck = new CheckBox("Admin");
+
+        grid.add(new Label("Benutzername:"), 0, 0);
+        grid.add(usernameField, 1, 0);
+        grid.add(new Label("Passwort:"), 0, 1);
+        grid.add(passwordField, 1, 1);
+        grid.add(adminCheck, 1, 2);
+
+        dialog.getDialogPane().setContent(grid);
+
+        Node okButton = dialog.getDialogPane().lookupButton(ButtonType.OK);
+        okButton.setDisable(true);
+
+        // Aktivieren des OK-Buttons nur wenn Felder gefüllt sind
+        usernameField.textProperty().addListener((obs, oldV, newV) ->
+                okButton.setDisable(newV.trim().isEmpty() || passwordField.getText().trim().isEmpty()));
+        passwordField.textProperty().addListener((obs, oldV, newV) ->
+                okButton.setDisable(newV.trim().isEmpty() || usernameField.getText().trim().isEmpty()));
+
+        dialog.setResultConverter(dialogButton -> {
+            if (dialogButton == ButtonType.OK) {
+                String username = usernameField.getText().trim();
+                String password = passwordField.getText(); // evtl. später hashen
+                boolean isAdmin = adminCheck.isSelected();
+
+                // Versuche, den Benutzer in die DB einzufügen
+                String sql = "INSERT INTO users (username, password, is_admin) VALUES (?, ?, ?)";
+                try (Connection conn = Database.getConnection();
+                     PreparedStatement ps = conn.prepareStatement(sql)) {
+
+                    ps.setString(1, username);
+                    ps.setString(2, password);
+                    ps.setInt(3, isAdmin ? 1 : 0);
+                    ps.executeUpdate();
+                    return true;
+                } catch (SQLException ex) {
+                    Alert a = new Alert(Alert.AlertType.ERROR);
+                    a.setHeaderText("Fehler beim Anlegen des Benutzers");
+                    a.setContentText(ex.getMessage());
+                    a.showAndWait();
+                    return false;
+                } catch (Exception ex) {
+                    Alert a = new Alert(Alert.AlertType.ERROR);
+                    a.setHeaderText("Unerwarteter Fehler");
+                    a.setContentText(ex.getMessage());
+                    a.showAndWait();
+                    return false;
+                }
+            }
+            return false; // bei CANCEL
         });
 
-        gp.add(createBtn, 0, 3, 2, 1);
-
-        dialog.setScene(new Scene(gp));
-        dialog.showAndWait();
+        return dialog.showAndWait();
     }
 }

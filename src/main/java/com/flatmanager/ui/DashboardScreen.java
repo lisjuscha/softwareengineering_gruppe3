@@ -2,6 +2,7 @@ package com.flatmanager.ui;
 
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
@@ -38,7 +39,10 @@ public class DashboardScreen {
         logoutButton.getStyleClass().add("logout-button");
         logoutButton.setOnAction(e -> logout());
 
-        topBar.getChildren().addAll(titleLabel, spacer, logoutButton);
+        // Admin-Node erzeugen und VOR dem Logout-Button einfügen (dann steht er links vom Logout)
+        Node adminNode = AdminToolbar.settingsNode(currentUser);
+
+        topBar.getChildren().addAll(titleLabel, spacer, adminNode, logoutButton);
 
         // Left sidebar with navigation
         VBox sidebar = new VBox(10);
@@ -65,8 +69,8 @@ public class DashboardScreen {
         budgetButton.getStyleClass().add("nav-button");
         budgetButton.setOnAction(e -> showHouseholdBudget());
 
-        sidebar.getChildren().addAll(navLabel, new Separator(), 
-            cleaningButton, shoppingButton, budgetButton);
+        sidebar.getChildren().addAll(navLabel, new Separator(),
+                cleaningButton, shoppingButton, budgetButton);
 
         // Content area
         contentArea = new VBox(20);
@@ -83,16 +87,16 @@ public class DashboardScreen {
 
     private void showWelcome() {
         contentArea.getChildren().clear();
-        
+
         Label welcomeLabel = new Label("Welcome to Flat Manager!");
         welcomeLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
         welcomeLabel.getStyleClass().add("welcome-title");
 
         Label instructionLabel = new Label(
-            "Use the navigation menu on the left to:\n\n" +
-            "• Manage Cleaning Schedules\n" +
-            "• Create Shopping Lists\n" +
-            "• Track Household Budget"
+                "Use the navigation menu on the left to:\n\n" +
+                        "• Manage Cleaning Schedules\n" +
+                        "• Create Shopping Lists\n" +
+                        "• Track Household Budget"
         );
         instructionLabel.setFont(Font.font("Arial", 16));
         instructionLabel.getStyleClass().add("welcome-text");

@@ -82,13 +82,21 @@ public class CleaningScheduleView {
         view = new BorderPane();
         view.getStyleClass().add("cleaning-view");
 
-        // Title
+        // Top-Bar: Header links und Spacer (Admin-Button zentral in DashboardScreen)
         Label title = new Label("Putzplan");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 22));
         title.getStyleClass().add("cleaning-title");
-        HBox titleBar = new HBox(title);
-        titleBar.setPadding(new Insets(10, 0, 10, 0));
-        titleBar.setAlignment(Pos.CENTER);
+        title.setPadding(new Insets(10, 0, 10, 0));
+
+        HBox topBar = new HBox();
+        topBar.setAlignment(Pos.CENTER_LEFT);
+        topBar.setPadding(new Insets(10, 12, 10, 12));
+
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+
+        // Admin-Node entfernt, da zentral in DashboardScreen eingefügt
+        topBar.getChildren().addAll(title, spacer);
 
         // Fehlerlabel (versteckt, wird bei Problemen sichtbar)
         errorLabel = new Label();
@@ -99,7 +107,7 @@ public class CleaningScheduleView {
         errorBox.setAlignment(Pos.CENTER);
         errorBox.setPadding(new Insets(6, 0, 6, 0));
 
-        VBox top = new VBox(titleBar, errorBox);
+        VBox top = new VBox(topBar, errorBox);
         view.setTop(top);
 
         // Two columns: assigned + open
