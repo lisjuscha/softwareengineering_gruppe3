@@ -2,7 +2,6 @@ package com.flatmanager.ui;
 
 import com.flatmanager.database.DatabaseManager;
 import com.flatmanager.model.ShoppingItem;
-import javafx.beans.property.BooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -40,7 +39,6 @@ public class ShoppingListView {
         BorderPane.setAlignment(header, Pos.CENTER);
         root.setTop(header);
 
-        // Mitte – keine Tabelle mehr, sondern VBox
         VBox centerBox = new VBox(10);
         centerBox.setPadding(new Insets(18));
 
@@ -57,7 +55,6 @@ public class ShoppingListView {
         centerBox.getChildren().addAll(sectionTitle, scrollPane);
         root.setCenter(centerBox);
 
-        // Rechts – Formular bleibt
         VBox rightBox = new VBox(12);
         rightBox.setPadding(new Insets(18));
         rightBox.setPrefWidth(380);
@@ -124,38 +121,71 @@ public class ShoppingListView {
         root.setStyle("-fx-font-family: Arial; -fx-background-color: white;");
     }
 
-    // ---------------------------------------------------------
-    //   LISTE AUS DER DATENBANK LADEN UND ALS KATEGORIEN BAUEN
-    // ---------------------------------------------------------
     private void loadItems() {
         items.clear();
 
-        try (Connection conn = DatabaseManager.getConnection();
-             Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM shopping_items ORDER BY category, item_name")) {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // Sicherstellen, dass die erwartete Spalte vorhanden ist (verhindert "no such column")
+            ensureColumnExists(conn, "shopping_items", "category", "TEXT", "'Sonstiges'");
 
-            while (rs.next()) {
-                items.add(new ShoppingItem(
-                        rs.getInt("id"),
-                        rs.getString("item_name"),
-                        rs.getString("quantity"),
-                        rs.getString("added_by"),
-                        rs.getString("category"),
-                        rs.getInt("purchased") == 1
-                ));
+            try (Statement stmt = conn.createStatement();
+                 ResultSet rs = stmt.executeQuery("SELECT * FROM shopping_items ORDER BY category, item_name")) {
+
+                while (rs.next()) {
+                    items.add(new ShoppingItem(
+                            rs.getInt("id"),
+                            rs.getString("item_name"),
+                            rs.getString("quantity"),
+                            rs.getString("added_by"),
+                            rs.getString("category"),
+                            rs.getInt("purchased") == 1
+                    ));
+                }
             }
 
         } catch (SQLException e) {
             e.printStackTrace();
-            showAlert("Fehler beim Laden der Artikel");
+            showAlert("Fehler beim Laden der Artikel: " + e.getMessage());
         }
 
         rebuildCategoryLayout();
     }
 
-    // -----------------------------------------
-    //   VISUELLE DARSTELLUNG DER KATEGORIEN
-    // -----------------------------------------
+    /**
+     * Prüft via PRAGMA table_info ob eine Spalte existiert; falls nicht, wird sie hinzugefügt.
+     * @param conn bestehende Connection
+     * @param tableName Tabellenname
+     * @param columnName Spaltenname
+     * @param columnType Spaltentyp (z. B. "TEXT")
+     * @param defaultValueSql Default-Wert als SQL-Fragment (z. B. "'Sonstiges'")
+     */
+    private void ensureColumnExists(Connection conn, String tableName, String columnName, String columnType, String defaultValueSql) {
+        String pragma = "PRAGMA table_info(" + tableName + ")";
+        try (Statement s = conn.createStatement();
+             ResultSet rs = s.executeQuery(pragma)) {
+
+            boolean found = false;
+            while (rs.next()) {
+                String name = rs.getString("name");
+                if (columnName.equalsIgnoreCase(name)) {
+                    found = true;
+                    break;
+                }
+            }
+            if (!found) {
+                String alter = "ALTER TABLE " + tableName + " ADD COLUMN " + columnName + " " + columnType + " DEFAULT " + defaultValueSql;
+                try (Statement s2 = conn.createStatement()) {
+                    s2.executeUpdate(alter);
+                    System.out.println("[DB] Added missing column " + columnName + " to " + tableName);
+                } catch (SQLException ex) {
+                    System.out.println("[DB] Failed to add column " + columnName + ": " + ex.getMessage());
+                }
+            }
+        } catch (SQLException e) {
+            System.out.println("[DB] Could not inspect table " + tableName + ": " + e.getMessage());
+        }
+    }
+
     private void rebuildCategoryLayout() {
         listContainer.getChildren().clear();
 

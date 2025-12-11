@@ -1,183 +1,195 @@
-/* Global styles */
-.root {
-    -fx-font-family: "Arial";
-    -fx-background-color: #f5f5f5;
-}
+/* css - neues Styling für Putzplan-Ansicht (nur Aussehen, keine Logik) */
 
-/* Login Screen */
-.login-container {
-    -fx-background-color: linear-gradient(to bottom, #667eea 0%, #764ba2 100%);
-}
+        /* Grundlayout */
+        .root {
+            -fx-background-color: #f5f5f5;
+            -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+        }
 
-.title {
-    -fx-text-fill: white;
-}
+        /* Obere Leiste mit Titel / eingeloggtem User */
+        .top-bar {
+            -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #efefef 0%, #e2e2e2 100%);
+            -fx-padding: 8 16;
+            -fx-border-color: #cfcfcf;
+            -fx-border-width: 0 0 1 0;
+            -fx-alignment: center;
+        }
 
-.subtitle {
-    -fx-text-fill: #e0e0e0;
-}
+        .top-bar .title {
+            -fx-font-size: 18px;
+            -fx-font-weight: bold;
+            -fx-text-fill: #333333;
+            -fx-alignment: center;
+        }
 
-/* Buttons */
-.primary-button {
-    -fx-background-color: #4CAF50;
-    -fx-text-fill: white;
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-    -fx-cursor: hand;
-    -fx-background-radius: 5;
-    -fx-padding: 10px 20px;
-}
+        /* Layout Hauptbereich: Sidebar links, Content rechts */
+        .app-shell {
+            -fx-padding: 0;
+            -fx-spacing: 0;
+            -fx-background-color: transparent;
+        }
 
-.primary-button:hover {
-    -fx-background-color: #45a049;
-}
+        /* Sidebar */
+        .sidebar {
+            -fx-pref-width: 150;
+            -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #fbfbfb 0%, #f4f4f4 100%);
+            -fx-border-color: transparent #d0d0d0 transparent transparent;
+            -fx-border-width: 0 1 0 0;
+            -fx-padding: 18 10;
+        }
 
-.complete-button {
-    -fx-background-color: #2196F3;
-    -fx-text-fill: white;
-    -fx-font-size: 12px;
-    -fx-cursor: hand;
-    -fx-background-radius: 3;
-    -fx-padding: 5px 10px;
-}
+        .sidebar .nav-item {
+            -fx-padding: 8 6;
+            -fx-alignment: center-left;
+            -fx-text-fill: #444444;
+            -fx-font-size: 13px;
+            -fx-graphic-text-gap: 10;
+            -fx-cursor: hand;
+            -fx-background-radius: 6;
+        }
 
-.complete-button:hover {
-    -fx-background-color: #0b7dda;
-}
+        .sidebar .nav-item:hover {
+            -fx-background-color: #f0f0f0;
+        }
 
-.delete-button {
-    -fx-background-color: #f44336;
-    -fx-text-fill: white;
-    -fx-font-size: 12px;
-    -fx-cursor: hand;
-    -fx-background-radius: 3;
-    -fx-padding: 5px 10px;
-}
+        /* Haupt-Content mit zwei Spalten */
+        .content {
+            -fx-padding: 20;
+            -fx-hgap: 18;
+            -fx-vgap: 12;
+            -fx-background-color: transparent;
+        }
 
-.delete-button:hover {
-    -fx-background-color: #da190b;
-}
+        .columns {
+            -fx-spacing: 18;
+            -fx-fill-height: true;
+        }
 
-.logout-button {
-    -fx-background-color: #ff6b6b;
-    -fx-text-fill: white;
-    -fx-font-size: 12px;
-    -fx-cursor: hand;
-    -fx-background-radius: 3;
-    -fx-padding: 8px 15px;
-}
+        /* Jede Spalte */
+        .column {
+            -fx-background-color: transparent;
+            -fx-pref-width: 50%;
+            -fx-padding: 6 8;
+            -fx-border-color: transparent #cfcfcf transparent transparent;
+            -fx-border-width: 0 1 0 0;
+        }
 
-.logout-button:hover {
-    -fx-background-color: #ee5a52;
-}
+        /* Header der Spalten (z.B. Zugewiesene Aufgaben / Offene Aufgaben) */
+        .column .column-header {
+            -fx-font-size: 16px;
+            -fx-font-weight: 600;
+            -fx-text-fill: #222;
+            -fx-alignment: center-left;
+            -fx-padding: 6 10 12 10;
+            -fx-border-color: transparent transparent #e2e2e2 transparent;
+            -fx-border-width: 0 0 1 0;
+        }
 
-/* Dashboard */
-.dashboard {
-    -fx-background-color: #f5f5f5;
-}
+        /* Scroll-Pane / List-View Fläche */
+        .column .list-view,
+        .column .scroll-pane {
+            -fx-background-color: transparent;
+            -fx-background-radius: 6;
+            -fx-border-radius: 6;
+            -fx-padding: 8;
+        }
 
-.top-bar {
-    -fx-background-color: #2c3e50;
-    -fx-border-color: #34495e;
-    -fx-border-width: 0 0 2 0;
-}
+        /* Karten / Aufgaben-Items */
+        .task-card,
+        .card,
+        .list-cell .card {
+            -fx-background-color: linear-gradient(#ffffff, #fbfbfb);
+            -fx-border-color: #d0d0d0;
+            -fx-border-width: 1;
+            -fx-background-radius: 6;
+            -fx-border-radius: 6;
+            -fx-padding: 10;
+            -fx-effect: null; /* saubere Ränder */
+            -fx-pref-height: 64;
+            -fx-alignment: center-left;
+        }
 
-.dashboard-title {
-    -fx-text-fill: white;
-}
+        /* Innerer Inhalt einer Aufgabe */
+        .task-card .title {
+            -fx-font-size: 14px;
+            -fx-font-weight: 600;
+            -fx-text-fill: #222;
+        }
 
-.sidebar {
-    -fx-background-color: #34495e;
-    -fx-border-color: #2c3e50;
-    -fx-border-width: 0 2 0 0;
-}
+        .task-card .meta {
+            -fx-font-size: 12px;
+            -fx-text-fill: #666666;
+            -fx-padding: 6 0 0 0;
+        }
 
-.nav-title {
-    -fx-text-fill: white;
-}
+        /* Rotes Datum / überfällige Info */
+        .task-card .overdue {
+            -fx-text-fill: #e04c4c;
+            -fx-font-weight: 600;
+        }
 
-.nav-button {
-    -fx-background-color: #2c3e50;
-    -fx-text-fill: white;
-    -fx-font-size: 14px;
-    -fx-cursor: hand;
-    -fx-background-radius: 5;
-    -fx-padding: 12px;
-    -fx-alignment: center-left;
-}
+        /* Leere rechte Spalte (Platzhalter) */
+        .column.empty {
+            -fx-background-color: transparent;
+        }
 
-.nav-button:hover {
-    -fx-background-color: #1a252f;
-}
+        /* Buttons: neutral & danger */
+        .button {
+            -fx-background-color: linear-gradient(#ffffff, #efefef);
+            -fx-border-color: #cfcfcf;
+            -fx-border-width: 1;
+            -fx-background-radius: 6;
+            -fx-border-radius: 6;
+            -fx-text-fill: #222;
+            -fx-padding: 6 12;
+            -fx-font-size: 13px;
+        }
 
-.content-area {
-    -fx-background-color: white;
-}
+        .button:hover {
+            -fx-background-color: linear-gradient(#ffffff, #f6f6f6);
+        }
 
-/* Section styles */
-.section-title {
-    -fx-text-fill: #2c3e50;
-}
+        .button-primary {
+            -fx-background-color: linear-gradient(#f7f7f7, #eaeaea);
+            -fx-border-color: #bfbfbf;
+        }
 
-.welcome-title {
-    -fx-text-fill: #2c3e50;
-}
+        .button-danger {
+            -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
+            -fx-text-fill: white;
+            -fx-border-color: transparent;
+            -fx-background-radius: 8;
+            -fx-border-radius: 8;
+        }
 
-.welcome-text {
-    -fx-text-fill: #555;
-}
+        /* Footer-Bereich in rechter Spalte für Aktionen */
+        .column .actions {
+            -fx-padding: 10 8 0 8;
+            -fx-alignment: center;
+        }
 
-.total-label {
-    -fx-text-fill: #2c3e50;
-}
+        /* Feinheiten: kleineres padding in Listen, saubere Scrollbars */
+        .list-view .list-cell {
+            -fx-padding: 6 4;
+            -fx-background-color: transparent;
+        }
 
-/* Input fields */
-TextField, PasswordField, DatePicker, ComboBox {
-    -fx-background-color: white;
-    -fx-border-color: #ddd;
-    -fx-border-radius: 3;
-    -fx-background-radius: 3;
-    -fx-padding: 8px;
-}
+        .scroll-pane .viewport {
+            -fx-background-color: transparent;
+        }
 
-TextField:focused, PasswordField:focused, DatePicker:focused, ComboBox:focused {
-    -fx-border-color: #667eea;
-    -fx-border-width: 2;
-}
+        /* Utility: Icon spacing (falls Icons als Label-Graphic verwendet werden) */
+        .icon {
+            -fx-padding: 0 10 0 0;
+        }
 
-/* Table styles */
-.table-view {
-    -fx-background-color: white;
-    -fx-border-color: #ddd;
-    -fx-border-radius: 5;
-}
-
-.table-view .column-header {
-    -fx-background-color: #34495e;
-    -fx-text-fill: white;
-    -fx-font-weight: bold;
-}
-
-.table-view .table-cell {
-    -fx-border-color: #f0f0f0;
-}
-
-.table-row-cell:selected {
-    -fx-background-color: #667eea;
-    -fx-text-fill: white;
-}
-
-.table-row-cell:hover {
-    -fx-background-color: #e8eaf6;
-}
-
-/* Separator */
-.separator {
-    -fx-background-color: #4a5f7f;
-}
-
-/* Labels */
-.message {
-    -fx-font-size: 14px;
-    -fx-font-weight: bold;
-}
+        /* Responsives Verhalten: bei kleiner Breite Spalten untereinander */
+        @media screen and (max-width: 900px) {
+            .column {
+                -fx-pref-width: 100%;
+                -fx-border-width: 0 0 1 0;
+            }
+            .sidebar {
+                -fx-pref-width: 110;
+            }
+        }

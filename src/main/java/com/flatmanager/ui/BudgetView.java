@@ -24,13 +24,8 @@ public class BudgetView {
     private String currentUser;
     private ObservableList<BudgetTransaction> transactions;
 
-    // Kategorien (festgelegt nach deiner Vorgabe)
     private final List<String> categories = List.of("Einkäufe", "Haushalt", "Abos", "Aktivitäten", "Sonstiges");
-
-    // Container für die kategorisierten Tabellen
     private VBox categoriesContainer;
-
-    // Currency formatter (DE)
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY);
 
     public BudgetView(String username) {
@@ -74,15 +69,9 @@ public class BudgetView {
         TextField personField = new TextField();
         personField.setPromptText("z. B. Lisa");
 
-        Button addButton = new Button("Add Transaction");
+        Button addButton = new Button("Transaktion hinzufügen");
         addButton.getStyleClass().add("primary-button");
         addButton.setOnAction(e -> {
-            String description = descField.getText().trim();
-            String amountStr = amountField.getText().trim();
-            String category = categoryBox.getValue();
-            LocalDate date = datePicker.getValue();
-
-        hinzufuegenBtn.setOnAction(e -> {
             String beschreibung = beschreibungField.getText().trim();
             String betragText = betragField.getText().trim();
             String kategorie = kategorieBox.getValue();
@@ -103,11 +92,13 @@ public class BudgetView {
             }
 
             addTransaction(beschreibung, betrag, kategorie, datum.toString(), person);
+
             beschreibungField.clear();
             betragField.clear();
             kategorieBox.setValue(categories.get(0));
             datePicker.setValue(LocalDate.now());
             personField.clear();
+
             loadTransactions();
         });
 
@@ -127,9 +118,9 @@ public class BudgetView {
         form.add(personLabel, 2, 2);
         form.add(personField, 3, 2);
 
-        form.add(hinzufuegenBtn, 0, 3, 4, 1);
-        GridPane.setMargin(hinzufuegenBtn, new Insets(8, 0, 0, 0));
-        hinzufuegenBtn.setMaxWidth(Double.MAX_VALUE);
+        form.add(addButton, 0, 3, 4, 1);
+        GridPane.setMargin(addButton, new Insets(8, 0, 0, 0));
+        addButton.setMaxWidth(Double.MAX_VALUE);
 
         // --- Container für Kategorien/Tables ---
         categoriesContainer = new VBox(18);
@@ -144,7 +135,6 @@ public class BudgetView {
 
     private void loadTransactions() {
         transactions.clear();
-        double total = 0.0;
 
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
@@ -153,17 +143,15 @@ public class BudgetView {
             while (rs.next()) {
                 double amount = rs.getDouble("amount");
 
-                // Verwende No-Arg-Konstruktor und Setter um Konstruktor-Fehler zu vermeiden
                 BudgetTransaction t = new BudgetTransaction();
                 t.setId(rs.getInt("id"));
                 t.setAmount(amount);
-                t.setDescription(rs.getString("description")); // falls null ok
+                t.setDescription(rs.getString("description"));
                 setPaidByIfPresent(t, rs.getString("paid_by"));
                 t.setDate(rs.getString("date"));
                 t.setCategory(rs.getString("category"));
 
                 transactions.add(t);
-                total += amount;
             }
 
         } catch (SQLException e) {
@@ -177,7 +165,6 @@ public class BudgetView {
     private void rebuildCategoryTables() {
         categoriesContainer.getChildren().clear();
 
-        // Gruppieren nach Kategorie in der Reihenfolge der 'categories'-Liste
         Map<String, List<BudgetTransaction>> grouped = new LinkedHashMap<>();
         for (String c : categories) grouped.put(c, new ArrayList<>());
 
@@ -186,16 +173,13 @@ public class BudgetView {
             if (grouped.containsKey(cat)) {
                 grouped.get(cat).add(t);
             } else {
-                // Falls eine Transaktion eine unbekannte Kategorie hat, in "Sonstiges"
                 grouped.computeIfAbsent("Sonstiges", k -> new ArrayList<>()).add(t);
             }
         }
 
-        // Für jede Kategorie eine Überschrift + Tabelle + Summe
         for (String category : grouped.keySet()) {
             List<BudgetTransaction> list = grouped.get(category);
             if (list.isEmpty()) {
-                // Optional: leere Kategorien anzeigen oder nicht; wir zeigen die Überschrift trotzdem mit "keine Einträge"
                 Label catLabel = new Label(category);
                 catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
                 Label empty = new Label("Keine Einträge");
@@ -208,10 +192,9 @@ public class BudgetView {
             Label catLabel = new Label(category);
             catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
 
-            // TableView für diese Kategorie
             TableView<BudgetTransaction> tv = new TableView<>();
             tv.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
-            tv.setPrefHeight(Math.min(200, 40 + list.size() * 28)); // height estimate
+            tv.setPrefHeight(Math.min(200, 40 + list.size() * 28));
 
             TableColumn<BudgetTransaction, String> beschrCol = new TableColumn<>("Beschreibung");
             beschrCol.setCellValueFactory(new PropertyValueFactory<>("description"));
@@ -264,7 +247,6 @@ public class BudgetView {
             tv.getColumns().addAll(beschrCol, betragCol, dateCol, personCol, deleteCol);
             tv.getItems().addAll(list);
 
-            // Summe berechnen
             double sum = 0.0;
             for (BudgetTransaction t : list) sum += t.getAmount();
             Label sumLabel = new Label("Summe " + category + ": " + currencyFormat.format(sum));
@@ -283,10 +265,6 @@ public class BudgetView {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
 
-    private void addTransaction(String description, double amount, String category, String date) {
-        String sql = "INSERT INTO budget_transactions (description, amount, paid_by, date, category) VALUES (?, ?, ?, ?, ?)";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
             pstmt.setString(1, description);
             pstmt.setDouble(2, amount);
             pstmt.setString(3, paidBy);
@@ -300,11 +278,6 @@ public class BudgetView {
         }
     }
 
-    private void deleteTransaction(int transactionId) {
-        String sql = "DELETE FROM budget_transactions WHERE id = ?";
-        try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
-            pstmt.setInt(1, transactionId);
     private void deleteTransaction(int id) {
         String sql = "DELETE FROM budget_transactions WHERE id = ?";
         try (Connection conn = DatabaseManager.getConnection();
@@ -326,7 +299,6 @@ public class BudgetView {
         a.showAndWait();
     }
 
-    // --- Reflection helper für optionales paidBy-Feld/setPaidBy-Setter ---
     private void setPaidByIfPresent(BudgetTransaction t, String paidBy) {
         if (paidBy == null) return;
         try {
