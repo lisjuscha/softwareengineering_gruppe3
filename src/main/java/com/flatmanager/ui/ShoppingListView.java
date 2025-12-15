@@ -31,14 +31,18 @@ public class ShoppingListView {
 
     private void createView() {
         root = new BorderPane();
+        // root style-class damit globales Styling greift
+        root.getStyleClass().add("app-shell");
         root.setPadding(new Insets(0));
 
         // Top bar: Header links, Spacer (Admin-Button zentral in DashboardScreen)
         Label header = new Label("Einkaufsliste");
         header.setFont(Font.font("Arial", FontWeight.BOLD, 26));
         header.setPadding(new Insets(12));
+        header.getStyleClass().add("title");
 
         HBox topBar = new HBox();
+        topBar.getStyleClass().add("top-bar");
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setPadding(new Insets(0));
         topBar.setSpacing(8);
@@ -46,32 +50,35 @@ public class ShoppingListView {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Lokale Admin-Node entfernt
         topBar.getChildren().addAll(header, spacer);
         root.setTop(topBar);
 
         VBox centerBox = new VBox(10);
         centerBox.setPadding(new Insets(18));
+        centerBox.getStyleClass().add("content");
 
         Label sectionTitle = new Label("Unsere Einkäufe");
         sectionTitle.setFont(Font.font("Arial", FontWeight.BOLD, 20));
+        sectionTitle.getStyleClass().add("title");
 
         listContainer = new VBox(18);
         listContainer.setPadding(new Insets(10));
+        listContainer.getStyleClass().add("columns");
 
         ScrollPane scrollPane = new ScrollPane(listContainer);
         scrollPane.setFitToWidth(true);
         scrollPane.setStyle("-fx-background-color: white; -fx-border-color: transparent;");
+        scrollPane.getStyleClass().add("scroll-pane");
 
         centerBox.getChildren().addAll(sectionTitle, scrollPane);
-        root.setCenter(centerBox);
 
         VBox rightBox = new VBox(12);
         rightBox.setPadding(new Insets(18));
-        rightBox.setPrefWidth(380);
+        rightBox.getStyleClass().add("column");
 
         Label formTitle = new Label("Neues Produkt hinzufügen");
         formTitle.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        formTitle.getStyleClass().add("title");
 
         VBox form = new VBox(8);
         form.setPadding(new Insets(12));
@@ -83,9 +90,11 @@ public class ShoppingListView {
 
         TextField itemField = new TextField();
         itemField.setPromptText("Name");
+        itemField.getStyleClass().add("text-field");
 
         TextField quantityField = new TextField();
         quantityField.setPromptText("Menge (z. B. 2x, 500g)");
+        quantityField.getStyleClass().add("text-field");
 
         ComboBox<String> categoryCombo = new ComboBox<>();
         categoryCombo.getItems().addAll(
@@ -99,8 +108,10 @@ public class ShoppingListView {
                 "Sonstiges"
         );
         categoryCombo.setValue("Sonstiges");
+        categoryCombo.getStyleClass().add("combo-box");
 
         Button saveBtn = new Button("Speichern");
+        saveBtn.getStyleClass().addAll("button", "button-primary");
         saveBtn.setMaxWidth(Double.MAX_VALUE);
         saveBtn.setOnAction(e -> {
             String name = itemField.getText().trim();
@@ -119,6 +130,7 @@ public class ShoppingListView {
         });
 
         Button clearBtn = new Button("Liste leeren");
+        clearBtn.getStyleClass().addAll("button", "button-danger");
         clearBtn.setMaxWidth(Double.MAX_VALUE);
         clearBtn.setOnAction(e -> {
             clearList();
@@ -127,7 +139,21 @@ public class ShoppingListView {
 
         form.getChildren().addAll(itemField, quantityField, categoryCombo, saveBtn);
         rightBox.getChildren().addAll(formTitle, form, clearBtn);
-        root.setRight(rightBox);
+
+        // --- Wichtige Änderung: beide Bereiche in einer HBox platzieren und jeweils 50% Breite binden ---
+        HBox mainColumns = new HBox(12);
+        mainColumns.getChildren().addAll(centerBox, rightBox);
+
+        HBox.setHgrow(centerBox, Priority.ALWAYS);
+        HBox.setHgrow(rightBox, Priority.ALWAYS);
+        centerBox.setMaxWidth(Double.MAX_VALUE);
+        rightBox.setMaxWidth(Double.MAX_VALUE);
+
+        // Bindet die Präferenzbreite jeder Spalte auf die Hälfte der Root-Breite (abzüglich etwas Abstand)
+        centerBox.prefWidthProperty().bind(root.widthProperty().subtract(36).divide(2));
+        rightBox.prefWidthProperty().bind(root.widthProperty().subtract(36).divide(2));
+
+        root.setCenter(mainColumns);
 
         root.setStyle("-fx-font-family: Arial; -fx-background-color: white;");
     }
@@ -203,6 +229,7 @@ public class ShoppingListView {
             Label catLabel = new Label(category);
             catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
             catLabel.setPadding(new Insets(4, 0, 4, 0));
+            catLabel.getStyleClass().add("title");
 
             VBox itemBox = new VBox(6);
 

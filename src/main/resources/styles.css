@@ -1,195 +1,153 @@
-/* css - neues Styling für Putzplan-Ansicht (nur Aussehen, keine Logik) */
+/* css - JavaFX compatible */
+                    /* Datei: src/main/resources/styles.css */
 
-        /* Grundlayout */
-        .root {
-            -fx-background-color: #f5f5f5;
-            -fx-font-family: "Segoe UI", "Helvetica Neue", Arial, sans-serif;
-        }
+                    /* ------------------  THEME (statische Werte für JavaFX) ------------------ */
+                    /* Farben / Werte: primär: #3B82F6, hover: #2563EB, bg: #F9FAFB, surface: #FFFFFF, text: #111827 */
 
-        /* Obere Leiste mit Titel / eingeloggtem User */
-        .top-bar {
-            -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #efefef 0%, #e2e2e2 100%);
-            -fx-padding: 8 16;
-            -fx-border-color: #cfcfcf;
-            -fx-border-width: 0 0 1 0;
-            -fx-alignment: center;
-        }
+                    /* ------------------  GLOBAL / ROOT ------------------ */
+                    .root {
+                        -fx-background-color: #F9FAFB;
+                        -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+                        -fx-text-fill: #111827;
+                    }
 
-        .top-bar .title {
-            -fx-font-size: 18px;
-            -fx-font-weight: bold;
-            -fx-text-fill: #333333;
-            -fx-alignment: center;
-        }
+                    /* ------------------  TOPBAR ------------------ */
+                    .top-bar {
+                        -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #efefef 0%, #e2e2e2 100%);
+                        -fx-padding: 8 16;
+                        -fx-border-color: #cfcfcf;
+                        -fx-border-width: 0 0 1 0;
+                        -fx-alignment: center-left;
+                    }
+                    .top-bar .label.title {
+                        -fx-font-size: 18px;
+                        -fx-font-weight: 600;
+                        -fx-text-fill: #333333;
+                    }
+                    .top-bar .label.user {
+                        -fx-font-size: 13px;
+                        -fx-text-fill: #6B7280;
+                    }
 
-        /* Layout Hauptbereich: Sidebar links, Content rechts */
-        .app-shell {
-            -fx-padding: 0;
-            -fx-spacing: 0;
-            -fx-background-color: transparent;
-        }
+                    /* ------------------  LAYOUT: SIDEBAR + CONTENT ------------------ */
+                    .app-shell { -fx-padding: 0; -fx-background-color: transparent; }
+                    .sidebar {
+                        -fx-pref-width: 150px;
+                        -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #fbfbfb 0%, #f4f4f4 100%);
+                        -fx-border-color: transparent #d0d0d0 transparent transparent;
+                        -fx-border-width: 0 1 0 0;
+                        -fx-padding: 18 10;
+                    }
+                    .sidebar .label.nav-item {
+                        -fx-padding: 8 6;
+                        -fx-alignment: center-left;
+                        -fx-text-fill: #444444;
+                        -fx-font-size: 13px;
+                        -fx-graphic-text-gap: 10;
+                        -fx-background-radius: 6;
+                    }
+                    .sidebar .label.nav-item:hover { -fx-background-color: #f0f0f0; }
 
-        /* Sidebar */
-        .sidebar {
-            -fx-pref-width: 150;
-            -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #fbfbfb 0%, #f4f4f4 100%);
-            -fx-border-color: transparent #d0d0d0 transparent transparent;
-            -fx-border-width: 0 1 0 0;
-            -fx-padding: 18 10;
-        }
+                    .content { -fx-padding: 20; -fx-background-color: transparent; }
+                    .columns { -fx-spacing: 18; -fx-fill-height: true; }
+                    .column {
+                        -fx-background-color: transparent;
+                        -fx-pref-width: 50%;
+                        -fx-padding: 6 8;
+                        -fx-border-color: transparent #cfcfcf transparent transparent;
+                        -fx-border-width: 0 1 0 0;
+                    }
+                    .column.empty { -fx-background-color: transparent; }
 
-        .sidebar .nav-item {
-            -fx-padding: 8 6;
-            -fx-alignment: center-left;
-            -fx-text-fill: #444444;
-            -fx-font-size: 13px;
-            -fx-graphic-text-gap: 10;
-            -fx-cursor: hand;
-            -fx-background-radius: 6;
-        }
+                    /* ------------------  COLUMN HEADERS / LISTS ------------------ */
+                    .column .label.column-header {
+                        -fx-font-size: 16px;
+                        -fx-font-weight: 600;
+                        -fx-text-fill: #222222;
+                        -fx-alignment: center-left;
+                        -fx-padding: 6 10 12 10;
+                        -fx-border-color: transparent transparent #e2e2e2 transparent;
+                        -fx-border-width: 0 0 1 0;
+                    }
+                    .scroll-pane {
+                        -fx-background-color: transparent;
+                        -fx-background-radius: 6;
+                        -fx-border-radius: 6;
+                        -fx-padding: 8;
+                    }
+                    .scroll-pane .viewport { -fx-background-color: transparent; }
 
-        .sidebar .nav-item:hover {
-            -fx-background-color: #f0f0f0;
-        }
+                    /* ------------------  CARD / TASK ITEM ------------------ */
+                    .task-card, .card, .list-cell .card {
+                        -fx-background-color: linear-gradient(#ffffff, #fbfbfb);
+                        -fx-border-color: #d0d0d0;
+                        -fx-border-width: 1;
+                        -fx-background-radius: 8;
+                        -fx-border-radius: 8;
+                        -fx-padding: 10;
+                        -fx-pref-height: 64;
+                        -fx-alignment: center-left;
+                    }
+                    .task-card .label.title { -fx-font-size: 14px; -fx-font-weight: 600; -fx-text-fill: #222222; }
+                    .task-card .label.meta { -fx-font-size: 12px; -fx-text-fill: #6B7280; -fx-padding: 6 0 0 0; }
+                    .task-card .label.overdue { -fx-text-fill: #EF4444; -fx-font-weight: 600; }
 
-        /* Haupt-Content mit zwei Spalten */
-        .content {
-            -fx-padding: 20;
-            -fx-hgap: 18;
-            -fx-vgap: 12;
-            -fx-background-color: transparent;
-        }
+                    /* ------------------  BUTTONS ------------------ */
+                    /* JavaFX-Buttons haben standardmäßig die style-class "button" */
+                    .button {
+                        -fx-background-color: linear-gradient(#FFFFFF, #efefef);
+                        -fx-border-color: #E5E7EB;
+                        -fx-border-width: 1;
+                        -fx-background-radius: 8;
+                        -fx-border-radius: 8;
+                        -fx-text-fill: #111827;
+                        -fx-padding: 6 12;
+                        -fx-font-size: 13px;
+                    }
+                    .button:hover {
+                        -fx-background-color: linear-gradient(#FFFFFF, #F3F4F6);
+                    }
+                    .button-primary {
+                        -fx-background-color: linear-gradient(#3B82F6, #2563EB);
+                        -fx-text-fill: white;
+                        -fx-border-color: transparent;
+                    }
+                    .button-danger {
+                        -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
+                        -fx-text-fill: white;
+                        -fx-border-color: transparent;
+                    }
+                    .button-outline {
+                        -fx-background-color: transparent;
+                        -fx-border-color: #E5E7EB;
+                        -fx-text-fill: #111827;
+                    }
+                    .button:disabled { -fx-opacity: 0.6; -fx-cursor: default; }
 
-        .columns {
-            -fx-spacing: 18;
-            -fx-fill-height: true;
-        }
+                    /* ------------------  FORM ELEMENTS / CONTROLS ------------------ */
+                    /* Standard JavaFX-Klassen verwenden (TextField, TextArea, ComboBox, DatePicker...) */
+                    .text-field, .text-area, .combo-box, .date-picker, .choice-box, .spinner {
+                        -fx-font-size: 16px;
+                        -fx-padding: 8 10;
+                        -fx-border-color: #E5E7EB;
+                        -fx-border-width: 1;
+                        -fx-background-color: #FFFFFF;
+                        -fx-background-radius: 6;
+                        -fx-border-radius: 6;
+                    }
+                    .text-field:focused, .combo-box:focused, .date-picker:focused {
+                        -fx-border-color: #3B82F6;
+                    }
 
-        /* Jede Spalte */
-        .column {
-            -fx-background-color: transparent;
-            -fx-pref-width: 50%;
-            -fx-padding: 6 8;
-            -fx-border-color: transparent #cfcfcf transparent transparent;
-            -fx-border-width: 0 1 0 0;
-        }
+                    /* ------------------  TABLE / LIST ------------------ */
+                    .table-view .column-header-background { -fx-background-color: transparent; }
+                    .table-view .column-header, .table-view .table-row-cell { -fx-border-color: transparent; }
 
-        /* Header der Spalten (z.B. Zugewiesene Aufgaben / Offene Aufgaben) */
-        .column .column-header {
-            -fx-font-size: 16px;
-            -fx-font-weight: 600;
-            -fx-text-fill: #222;
-            -fx-alignment: center-left;
-            -fx-padding: 6 10 12 10;
-            -fx-border-color: transparent transparent #e2e2e2 transparent;
-            -fx-border-width: 0 0 1 0;
-        }
+                    /* ------------------  UTILITIES ------------------ */
+                    .title { -fx-font-size: 16px; -fx-font-weight: 600; -fx-text-fill: #222222; }
+                    .small-text { -fx-font-size: 14px; -fx-text-fill: #6B7280; }
+                    .mt-20 { -fx-padding: 20 0 0 0; } /* JavaFX verwendet padding/spacing statt margin in vielen Fällen */
 
-        /* Scroll-Pane / List-View Fläche */
-        .column .list-view,
-        .column .scroll-pane {
-            -fx-background-color: transparent;
-            -fx-background-radius: 6;
-            -fx-border-radius: 6;
-            -fx-padding: 8;
-        }
-
-        /* Karten / Aufgaben-Items */
-        .task-card,
-        .card,
-        .list-cell .card {
-            -fx-background-color: linear-gradient(#ffffff, #fbfbfb);
-            -fx-border-color: #d0d0d0;
-            -fx-border-width: 1;
-            -fx-background-radius: 6;
-            -fx-border-radius: 6;
-            -fx-padding: 10;
-            -fx-effect: null; /* saubere Ränder */
-            -fx-pref-height: 64;
-            -fx-alignment: center-left;
-        }
-
-        /* Innerer Inhalt einer Aufgabe */
-        .task-card .title {
-            -fx-font-size: 14px;
-            -fx-font-weight: 600;
-            -fx-text-fill: #222;
-        }
-
-        .task-card .meta {
-            -fx-font-size: 12px;
-            -fx-text-fill: #666666;
-            -fx-padding: 6 0 0 0;
-        }
-
-        /* Rotes Datum / überfällige Info */
-        .task-card .overdue {
-            -fx-text-fill: #e04c4c;
-            -fx-font-weight: 600;
-        }
-
-        /* Leere rechte Spalte (Platzhalter) */
-        .column.empty {
-            -fx-background-color: transparent;
-        }
-
-        /* Buttons: neutral & danger */
-        .button {
-            -fx-background-color: linear-gradient(#ffffff, #efefef);
-            -fx-border-color: #cfcfcf;
-            -fx-border-width: 1;
-            -fx-background-radius: 6;
-            -fx-border-radius: 6;
-            -fx-text-fill: #222;
-            -fx-padding: 6 12;
-            -fx-font-size: 13px;
-        }
-
-        .button:hover {
-            -fx-background-color: linear-gradient(#ffffff, #f6f6f6);
-        }
-
-        .button-primary {
-            -fx-background-color: linear-gradient(#f7f7f7, #eaeaea);
-            -fx-border-color: #bfbfbf;
-        }
-
-        .button-danger {
-            -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
-            -fx-text-fill: white;
-            -fx-border-color: transparent;
-            -fx-background-radius: 8;
-            -fx-border-radius: 8;
-        }
-
-        /* Footer-Bereich in rechter Spalte für Aktionen */
-        .column .actions {
-            -fx-padding: 10 8 0 8;
-            -fx-alignment: center;
-        }
-
-        /* Feinheiten: kleineres padding in Listen, saubere Scrollbars */
-        .list-view .list-cell {
-            -fx-padding: 6 4;
-            -fx-background-color: transparent;
-        }
-
-        .scroll-pane .viewport {
-            -fx-background-color: transparent;
-        }
-
-        /* Utility: Icon spacing (falls Icons als Label-Graphic verwendet werden) */
-        .icon {
-            -fx-padding: 0 10 0 0;
-        }
-
-        /* Responsives Verhalten: bei kleiner Breite Spalten untereinander */
-        @media screen and (max-width: 900px) {
-            .column {
-                -fx-pref-width: 100%;
-                -fx-border-width: 0 0 1 0;
-            }
-            .sidebar {
-                -fx-pref-width: 110;
-            }
-        }
+                    /* ------------------  RESPONSIVE / ALIASES ------------------ */
+                    /* JavaFX unterstützt kein @media\, bei Bedarf per Code anpassen */
+                    .topbar { -fx-padding: 8 12; } /* alternative Class-Name, falls verwendet */

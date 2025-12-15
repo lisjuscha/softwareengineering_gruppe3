@@ -16,8 +16,6 @@ public class App extends Application {
         primaryStage.setWidth(800);
         primaryStage.setHeight(600);
 
-        // Datenbank-Initialisierung nicht hier (rückgängig gemacht)
-
         // Show login screen
         showLoginScreen();
 
@@ -27,7 +25,10 @@ public class App extends Application {
     public static void showLoginScreen() {
         LoginScreen loginScreen = new LoginScreen();
         Scene scene = new Scene(loginScreen.getView(), 800, 600);
+
+        // styles.css aus src/main/resources laden
         scene.getStylesheets().add(App.class.getResource("/styles.css").toExternalForm());
+
         primaryStage.setScene(scene);
     }
 
