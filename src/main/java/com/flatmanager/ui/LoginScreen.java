@@ -42,7 +42,7 @@ public class LoginScreen {
         view.setPadding(new Insets(40));
         view.getStyleClass().add("login-container");
 
-        Label titleLabel = new Label("Flat Manager");
+        Label titleLabel = new Label("WG Verwaltung");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 36));
         titleLabel.getStyleClass().add("title");
 

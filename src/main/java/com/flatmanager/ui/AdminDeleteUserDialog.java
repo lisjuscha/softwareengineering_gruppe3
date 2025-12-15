@@ -1,6 +1,7 @@
 package com.flatmanager.ui;
 
 import com.flatmanager.storage.Database;
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -29,20 +30,16 @@ import java.util.concurrent.atomic.AtomicReference;
 public class AdminDeleteUserDialog {
 
     /**
-     * Zeigt ein modal Fenster zum Löschen eines Benutzers.
-     * Der Benutzername des aktuellen Admins wird aus der Auswahl ausgeschlossen.
-     *
-     * Rückgabe:
-     * - Optional.of(Boolean.TRUE) wenn der Benutzer bestätigt gelöscht wurde
-     * - Optional.empty() bei Abbruch/Schließen
+     * showAndWait jetzt mit einer Callback, die den Login-Screen öffnet.
+     * openLoginAction darf null sein; dann wird eine Info angezeigt.
      */
-    public static Optional<Boolean> showAndWait(Window owner, String currentAdminUsername) {
+    public static Optional<Boolean> showAndWait(Window owner, String currentAdminUsername, Runnable openLoginAction) {
         AtomicReference<Boolean> result = new AtomicReference<>(null);
 
         Stage stage = new Stage();
         stage.initModality(Modality.APPLICATION_MODAL);
         if (owner != null) stage.initOwner(owner);
-        stage.setTitle("Benutzer löschen");
+        stage.setTitle("Benutzer / WG löschen");
 
         Label label = new Label("Benutzer zum Löschen auswählen:");
         List<String> usernames = loadUsernames(owner, currentAdminUsername);
@@ -67,7 +64,6 @@ public class AdminDeleteUserDialog {
             confirm.initOwner(stage);
             Optional<ButtonType> choice = confirm.showAndWait();
             if (choice.isPresent() && choice.get() == ButtonType.OK) {
-                // Tatsächliche Löschlogik: DELETE FROM users WHERE username = ?
                 String sqlDelete = "DELETE FROM users WHERE username = ?";
                 try (Connection conn = Database.getConnection();
                      PreparedStatement psDel = conn.prepareStatement(sqlDelete)) {
@@ -111,6 +107,102 @@ public class AdminDeleteUserDialog {
         stage.showAndWait();
 
         return Optional.ofNullable(result.get());
+    }
+
+    /**
+     * Extrahierte Methode: löscht alle Tabellen (WG & Einträge) nach Bestätigung.
+     * Schließt optionales Owner-Stage und führt openLoginAction aus.
+     */
+    public static Optional<Boolean> deleteEntireWg(Window owner, Runnable openLoginAction) {
+        AtomicReference<Boolean> result = new AtomicReference<>(null);
+
+        Alert confirm = new Alert(AlertType.CONFIRMATION);
+        confirm.setHeaderText(null);
+        confirm.setContentText("ALLE Benutzer (inkl. Admin) und alle Einträge wirklich löschen?\nDieser Vorgang ist unwiederbringlich und startet die Registrierung neu.");
+        if (owner != null) confirm.initOwner(owner);
+        Optional<ButtonType> choice = confirm.showAndWait();
+        if (choice.isPresent() && choice.get() == ButtonType.OK) {
+            String[] tables = {"cleaning_tasks", "budget_transactions", "shopping_items", "users"};
+            List<String> missing = new ArrayList<>();
+            try (Connection conn = Database.getConnection()) {
+                boolean previousAuto = conn.getAutoCommit();
+                try {
+                    conn.setAutoCommit(false);
+                    for (String tbl : tables) {
+                        if (!tableExists(conn, tbl)) {
+                            missing.add(tbl);
+                            continue;
+                        }
+                        String sql = "DELETE FROM " + tbl;
+                        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                            ps.executeUpdate();
+                        }
+                    }
+                    conn.commit();
+
+                    String msg = "WG und alle Einträge wurden gelöscht.";
+                    if (!missing.isEmpty()) {
+                        msg += " Einige Tabellen fehlten und wurden übersprungen: " + String.join(", ", missing) + ".";
+                    }
+                    showInfo(msg, owner);
+                    result.set(Boolean.TRUE);
+
+                    // Owner-Fenster schließen und Login öffnen auf dem JavaFX-Thread
+                    Platform.runLater(() -> {
+                        if (owner instanceof Stage) {
+                            try {
+                                ((Stage) owner).close();
+                            } catch (Exception ignored) {
+                            }
+                        }
+                        if (openLoginAction != null) {
+                            try {
+                                openLoginAction.run();
+                            } catch (Throwable t) {
+                                showInfo("Fehler beim Öffnen des Login-Screens: " + t.getMessage(), null);
+                            }
+                        } else {
+                            showInfo("LoginView/Screen konnte nicht geöffnet werden. Bitte Anwendung neu starten.", null);
+                        }
+                    });
+
+                } catch (SQLException ex) {
+                    try {
+                        conn.rollback();
+                    } catch (SQLException rollbackEx) {
+                        // Ignorieren
+                    }
+                    Alert a = new Alert(AlertType.ERROR);
+                    a.setHeaderText(null);
+                    a.setContentText("Fehler beim Löschen der WG-Daten: " + ex.getMessage());
+                    if (owner != null) a.initOwner(owner);
+                    a.showAndWait();
+                } finally {
+                    try {
+                        conn.setAutoCommit(previousAuto);
+                    } catch (SQLException ignored) {
+                    }
+                }
+            } catch (SQLException ex) {
+                Alert a = new Alert(AlertType.ERROR);
+                a.setHeaderText(null);
+                a.setContentText("Datenbankfehler: " + ex.getMessage());
+                if (owner != null) a.initOwner(owner);
+                a.showAndWait();
+            }
+        }
+
+        return Optional.ofNullable(result.get());
+    }
+
+    private static boolean tableExists(Connection conn, String tableName) throws SQLException {
+        String sql = "SELECT name FROM sqlite_master WHERE type='table' AND name = ?";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, tableName);
+            try (ResultSet rs = ps.executeQuery()) {
+                return rs.next();
+            }
+        }
     }
 
     private static List<String> loadUsernames(Window owner, String currentAdminUsername) {

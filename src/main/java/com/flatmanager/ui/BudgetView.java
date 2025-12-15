@@ -79,8 +79,16 @@ public class BudgetView {
         DatePicker datePicker = new DatePicker(LocalDate.now());
 
         Label personLabel = new Label("Person:");
-        TextField personField = new TextField();
-        personField.setPromptText("z. B. Lisa");
+        ComboBox<String> personBox = new ComboBox<>();
+        personBox.setPromptText("Wähle eine Person");
+
+        // Lade Benutzer aus DB und setze Auswahl (final, nicht neu zuweisen)
+        final List<String> users = loadUsernames();
+        if (!users.isEmpty()) {
+            personBox.getItems().addAll(users);
+            if (users.contains(currentUser)) personBox.setValue(currentUser);
+            else personBox.setValue(users.get(0));
+        }
 
         Button addButton = new Button("Transaktion hinzufügen");
         addButton.getStyleClass().add("primary-button");
@@ -89,7 +97,7 @@ public class BudgetView {
             String betragText = betragField.getText().trim();
             String kategorie = kategorieBox.getValue();
             LocalDate datum = datePicker.getValue();
-            String person = personField.getText().trim();
+            String person = personBox.getValue() != null ? personBox.getValue().trim() : "";
 
             if (beschreibung.isEmpty() || betragText.isEmpty() || datum == null || person.isEmpty()) {
                 showAlert("Bitte alle Felder ausfüllen.");
@@ -110,7 +118,12 @@ public class BudgetView {
             betragField.clear();
             kategorieBox.setValue(categories.get(0));
             datePicker.setValue(LocalDate.now());
-            personField.clear();
+
+            // Lade Benutzer neu und aktualisiere die ComboBox ohne die ursprüngliche lokale Variable neu zuzuweisen
+            List<String> refreshed = loadUsernames();
+            personBox.getItems().setAll(refreshed);
+            if (refreshed.contains(currentUser)) personBox.setValue(currentUser);
+            else if (!refreshed.isEmpty()) personBox.setValue(refreshed.get(0));
 
             loadTransactions();
         });
@@ -129,7 +142,7 @@ public class BudgetView {
         form.add(datePicker, 1, 2);
 
         form.add(personLabel, 2, 2);
-        form.add(personField, 3, 2);
+        form.add(personBox, 3, 2);
 
         form.add(addButton, 0, 3, 4, 1);
         GridPane.setMargin(addButton, new Insets(8, 0, 0, 0));
@@ -329,6 +342,24 @@ public class BudgetView {
             f.set(t, paidBy);
         } catch (Exception ignored) {
         }
+    }
+
+    private List<String> loadUsernames() {
+        List<String> result = new ArrayList<>();
+        String sql = "SELECT username FROM users ORDER BY username";
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                String u = rs.getString("username");
+                if (u != null && !u.isEmpty()) result.add(u);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            // Fallback: aktuellen Benutzer anzeigen, damit UI nicht leer bleibt
+            if (currentUser != null && !currentUser.isEmpty()) result.add(currentUser);
+        }
+        return result;
     }
 
     public VBox getView() {

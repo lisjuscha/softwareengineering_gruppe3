@@ -28,14 +28,14 @@ public class DashboardScreen {
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.getStyleClass().add("top-bar");
 
-        Label titleLabel = new Label("Flat Manager - Welcome, " + currentUser);
+        Label titleLabel = new Label("WG Verwaltung - Willkommen, " + currentUser);
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
         titleLabel.getStyleClass().add("dashboard-title");
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        Button logoutButton = new Button("Logout");
+        Button logoutButton = new Button("Abmelden");
         logoutButton.getStyleClass().add("logout-button");
         logoutButton.setOnAction(e -> logout());
 
@@ -54,17 +54,17 @@ public class DashboardScreen {
         navLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         navLabel.getStyleClass().add("nav-title");
 
-        Button cleaningButton = new Button("Cleaning Schedules");
+        Button cleaningButton = new Button("Putzplan");
         cleaningButton.setMaxWidth(Double.MAX_VALUE);
         cleaningButton.getStyleClass().add("nav-button");
         cleaningButton.setOnAction(e -> showCleaningSchedules());
 
-        Button shoppingButton = new Button("Shopping Lists");
+        Button shoppingButton = new Button("Einkaufsliste");
         shoppingButton.setMaxWidth(Double.MAX_VALUE);
         shoppingButton.getStyleClass().add("nav-button");
         shoppingButton.setOnAction(e -> showShoppingLists());
 
-        Button budgetButton = new Button("Household Budget");
+        Button budgetButton = new Button("Haushaltsbuch");
         budgetButton.setMaxWidth(Double.MAX_VALUE);
         budgetButton.getStyleClass().add("nav-button");
         budgetButton.setOnAction(e -> showHouseholdBudget());
@@ -88,15 +88,15 @@ public class DashboardScreen {
     private void showWelcome() {
         contentArea.getChildren().clear();
 
-        Label welcomeLabel = new Label("Welcome to Flat Manager!");
+        Label welcomeLabel = new Label("Willkommen bei der WG Verwaltung!");
         welcomeLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
         welcomeLabel.getStyleClass().add("welcome-title");
 
         Label instructionLabel = new Label(
-                "Use the navigation menu on the left to:\n\n" +
-                        "• Manage Cleaning Schedules\n" +
-                        "• Create Shopping Lists\n" +
-                        "• Track Household Budget"
+                "Verwende das Navigationsmenü links, um:\n\n" +
+                        "• Putzpläne zu verwalten\n" +
+                        "• Einkaufsliste(n) zu erstellen\n" +
+                        "• das Haushaltsbudget zu verwalten"
         );
         instructionLabel.setFont(Font.font("Arial", 16));
         instructionLabel.getStyleClass().add("welcome-text");
