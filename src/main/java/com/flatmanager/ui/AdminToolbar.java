@@ -11,16 +11,9 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.Optional;
 
 public class AdminToolbar {
 
-    /**
-     * Liefert ein Node für die Topbar. Nur sichtbar/aktiv für Admins.
-     * Der Admin-Button öffnet direkt den AdminCreateUserDialog.
-     * Wichtig: Füge das zurückgegebene Node in der Topbar vor dem Logout-Button ein,
-     * damit es links neben Logout erscheint.
-     */
     public static Node settingsNode(String currentUser) {
         if (currentUser == null) return placeholder();
 
@@ -32,13 +25,11 @@ public class AdminToolbar {
             try {
                 Window owner = adminBtn.getScene() != null ? adminBtn.getScene().getWindow() : null;
 
-                // Direkt den Dialog öffnen (keine neue Stage)
-                Optional<Boolean> result = AdminCreateUserDialog.showAndWait(owner);
-                if (result.isPresent() && Boolean.TRUE.equals(result.get())) {
-                    showInfo("Benutzer wurde angelegt.");
-                }
+                // aktuellen Admin-Benutzernamen weitergeben
+                AdminUserManagementView.showAndWait(owner, currentUser);
+
             } catch (NoClassDefFoundError ex) {
-                showInfo("AdminCreateUserDialog ist nicht vorhanden.");
+                showInfo("AdminUserManagementView ist nicht vorhanden.");
             } catch (Exception ex) {
                 Alert a = new Alert(Alert.AlertType.ERROR);
                 a.setHeaderText(null);
@@ -67,10 +58,6 @@ public class AdminToolbar {
         a.showAndWait();
     }
 
-    /**
-     * Versucht aus der DB zu lesen, ob der Nutzer Admin ist.
-     * Fallback: true, wenn username == "admin" (case-insensitive).
-     */
     private static boolean isAdmin(String username) {
         if (username == null) return false;
         if ("admin".equalsIgnoreCase(username.trim())) return true;

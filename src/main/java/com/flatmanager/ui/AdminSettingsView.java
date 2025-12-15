@@ -14,15 +14,12 @@ import javafx.stage.Window;
 
 import java.util.Optional;
 
-/**
- * Einfache Admin\-Einstellungsansicht, die in einem separaten Fenster geöffnet wird.
- * Erweiterbar: Buttons verlinken später auf echte Funktionen (Benutzerverwaltung, DB-Export, ...).
- */
 public class AdminSettingsView {
 
     public static Node createView() {
         BorderPane root = new BorderPane();
         root.setPadding(new Insets(12));
+
         Label title = new Label("Admin Einstellungen");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 18));
         BorderPane.setAlignment(title, Pos.CENTER_LEFT);
@@ -40,7 +37,6 @@ public class AdminSettingsView {
         Button appSettings = new Button("Einstellungen");
 
         manageUsers.setOnAction(e -> {
-            // Besitzer-Fenster ermitteln (falls vorhanden)
             Window owner = null;
             if (e.getSource() instanceof javafx.scene.Node) {
                 javafx.scene.Node src = (javafx.scene.Node) e.getSource();
@@ -48,19 +44,11 @@ public class AdminSettingsView {
             }
 
             try {
-                // Erwartete Dialog-API:
-                // public static java.util.Optional<Boolean> showAndWait(javafx.stage.Window owner)
-                Optional<Boolean> result = AdminCreateUserDialog.showAndWait(owner);
-
-                if (result.isPresent() && Boolean.TRUE.equals(result.get())) {
-                    showInfo("Benutzer wurde angelegt.");
-                    // Optional: Events oder Callback feuern, damit andere Views (z. B. CleaningScheduleView)
-                    // ihre Benutzerlisten neu laden können.
-                }
-            } catch (NoClassDefFoundError ex) {
-                showInfo("AdminCreateUserDialog ist nicht vorhanden.");
+                // showAndWait benötigt jetzt (Window owner, String currentAdminUsername)
+                // Falls der aktuelle Admin-Name hier nicht verfügbar ist, null übergeben.
+                AdminUserManagementView.showAndWait(owner, null);
             } catch (Exception ex) {
-                showInfo("Fehler beim Öffnen des Erstellungsdialogs: " + ex.getMessage());
+                showInfo("Fehler: " + ex.getMessage());
             }
         });
 
@@ -69,8 +57,8 @@ public class AdminSettingsView {
 
         buttons.getChildren().addAll(manageUsers, dbExport, appSettings);
         content.getChildren().addAll(info, buttons);
-
         root.setCenter(content);
+
         return root;
     }
 
