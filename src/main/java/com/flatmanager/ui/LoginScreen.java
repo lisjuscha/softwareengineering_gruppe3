@@ -11,6 +11,7 @@ import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
+import javafx.stage.Stage;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -62,6 +63,7 @@ public class LoginScreen {
 
     private void loadUsers() {
         usersPane.getChildren().clear();
+        int loaded = 0;
 
         try (Connection conn = DatabaseManager.getConnection()) {
             boolean hasIsAdmin = hasColumn(conn, "is_admin");
@@ -71,46 +73,53 @@ public class LoginScreen {
 
             String sql;
             if (hasIsAdmin) {
-                sql = "SELECT " + nameCol + ", COALESCE(is_admin, 0) AS is_admin FROM users ORDER BY " + nameCol;
+                sql = "SELECT " + nameCol + " AS display, COALESCE(is_admin, 0) AS is_admin FROM users ORDER BY " + nameCol;
             } else {
-                LOG.log(Level.INFO, "Spalte `is_admin` fehlt in Tabelle `users`, verwende Fallback (admin per Namen).");
-                sql = "SELECT " + nameCol + " FROM users ORDER BY " + nameCol;
+                sql = "SELECT " + nameCol + " AS display FROM users ORDER BY " + nameCol;
             }
 
             try (Statement stmt = conn.createStatement();
                  ResultSet rs = stmt.executeQuery(sql)) {
 
                 while (rs.next()) {
-                    String username = rs.getString(nameCol);
-                    if (username == null || username.trim().isEmpty()) {
-                        LOG.warning("Gefundener Benutzer hat null/empty " + nameCol + " - überspringe Eintrag.");
-                        continue;
-                    }
-                    boolean isAdmin;
+                    String display = rs.getString("display");
+                    boolean isAdmin = false;
                     if (hasIsAdmin) {
-                        Object val = rs.getObject("is_admin");
-                        if (val == null) {
-                            isAdmin = false;
-                        } else if (val instanceof Number) {
-                            isAdmin = ((Number) val).intValue() == 1;
-                        } else {
-                            String s = val.toString().trim();
-                            isAdmin = "1".equals(s) || "true".equalsIgnoreCase(s);
+                        try {
+                            isAdmin = rs.getInt("is_admin") == 1;
+                        } catch (SQLException ignored) {
                         }
-                    } else {
-                        isAdmin = "admin".equalsIgnoreCase(username);
                     }
-                    LOG.info("Found user: " + username + ", isAdmin=" + isAdmin);
-                    usersPane.getChildren().add(createUserTile(username, isAdmin));
+                    Node tile = createUserTile(display, isAdmin);
+                    usersPane.getChildren().add(tile);
+                    loaded++;
                 }
             }
 
         } catch (SQLException e) {
             LOG.log(Level.WARNING, "Fehler beim Laden der Benutzer: {0}", e.getMessage());
             showAlert("Fehler beim Laden der Benutzer: " + e.getMessage());
+            return;
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Unerwarteter Fehler beim Laden der Benutzer", e);
             showAlert("Unerwarteter Fehler: " + e.getMessage());
+            return;
+        }
+
+        if (loaded == 0) {
+            Button registerBtn = new Button("Neue WG erstellen");
+            registerBtn.setOnAction(ev -> {
+                Stage owner = com.flatmanager.App.getPrimaryStage();
+                RegistrationView.showRegistration(owner, success -> {
+                    if (success) {
+                        loadUsers();
+                    }
+                });
+            });
+            VBox wrapper = new VBox(10, new Label("Keine Benutzer gefunden."), registerBtn);
+            wrapper.setAlignment(Pos.CENTER);
+            wrapper.setPadding(new Insets(20));
+            usersPane.getChildren().add(wrapper);
         }
     }
 
@@ -130,8 +139,11 @@ public class LoginScreen {
     }
 
     private String resolveNameColumn(Connection conn) {
-        if (hasColumn(conn, "username")) return "username";
-        if (hasColumn(conn, "name")) return "name";
+        try {
+            if (hasColumn(conn, "username")) return "username";
+            if (hasColumn(conn, "name")) return "name";
+        } catch (Exception ignored) {
+        }
         return "username";
     }
 
@@ -162,7 +174,6 @@ public class LoginScreen {
         VBox wrapper = new VBox(8, square, nameLabel);
         wrapper.setAlignment(Pos.CENTER);
 
-        // Bei Admin: Passwortdialog öffnen, sonst direkt login
         wrapper.setOnMouseClicked(e -> {
             LOG.fine("Clicked user: " + username + ", isAdmin=" + isAdmin);
             if (isAdmin) {
@@ -174,7 +185,6 @@ public class LoginScreen {
             }
         });
 
-        // Hover-Effekt
         wrapper.setOnMouseEntered(e -> square.setStyle(
                 "-fx-background-color: #d0d0d0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand;"
         ));
@@ -189,7 +199,6 @@ public class LoginScreen {
         LOG.info("Showing admin password dialog for: " + username);
         Dialog<String> dialog = new Dialog<>();
         dialog.setTitle("Admin Anmeldung");
-        // sicherstellen, dass PrimaryStage nicht null ist
         if (com.flatmanager.App.getPrimaryStage() != null) {
             dialog.initOwner(com.flatmanager.App.getPrimaryStage());
         } else {
@@ -227,19 +236,10 @@ public class LoginScreen {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) {
-                    String storedHash = rs.getString("password");
-                    if (storedHash == null || storedHash.trim().isEmpty()) {
-                        // kein gesetztes Passwort -> Anmeldung nicht erlaubt
-                        LOG.info("Kein Passwort gesetzt für Admin: " + username);
-                        return false;
-                    }
-                    String enteredHash = hashPassword(password == null ? "" : password);
-                    boolean ok = storedHash.equalsIgnoreCase(enteredHash);
-                    LOG.info("Admin auth for " + username + " success=" + ok);
-                    return ok;
-                } else {
-                    LOG.info("Benutzer nicht gefunden beim Admin-Check: " + username);
-                    return false;
+                    String stored = rs.getString("password");
+                    if (stored == null) return false;
+                    String hash = hashPassword(password);
+                    return stored.equalsIgnoreCase(hash);
                 }
             }
         } catch (Exception e) {
@@ -247,6 +247,7 @@ public class LoginScreen {
             showAlert("Fehler bei der Authentifizierung: " + e.getMessage());
             return false;
         }
+        return false;
     }
 
     private void loginAndShowDashboard(String username) {
@@ -270,7 +271,7 @@ public class LoginScreen {
         return view;
     }
 
-    // Gleiche Hash-Funktion wie beim Anlegen des Admins (SHA-256)
+    // Gleiche Hash-Funktion wie beim Anlegen (SHA-256)
     private static String hashPassword(String plain) {
         try {
             MessageDigest md = MessageDigest.getInstance("SHA-256");
@@ -281,7 +282,6 @@ public class LoginScreen {
             }
             return sb.toString();
         } catch (NoSuchAlgorithmException e) {
-            // fallback (sollte nie passieren)
             return plain;
         }
     }
