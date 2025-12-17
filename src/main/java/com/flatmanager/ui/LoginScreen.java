@@ -1,9 +1,11 @@
 package com.flatmanager.ui;
 
 import com.flatmanager.database.DatabaseManager;
+import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.StackPane;
@@ -12,6 +14,7 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 import javafx.scene.text.TextAlignment;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
@@ -284,5 +287,80 @@ public class LoginScreen {
         } catch (NoSuchAlgorithmException e) {
             return plain;
         }
+    }
+
+    // ------------------------
+    // Statische Helfer für Reflection-Aufrufe
+    // ------------------------
+    public static void show() {
+        Platform.runLater(() -> {
+            try {
+                Stage primary = com.flatmanager.App.getPrimaryStage();
+                LoginScreen ls = new LoginScreen();
+                if (primary != null) {
+                    if (primary.getScene() != null) {
+                        primary.getScene().setRoot(ls.getView());
+                    } else {
+                        primary.setScene(new Scene(ls.getView()));
+                        primary.show();
+                    }
+                } else {
+                    Stage s = new Stage();
+                    s.setScene(new Scene(ls.getView()));
+                    s.show();
+                }
+            } catch (Throwable t) {
+                LOG.log(Level.SEVERE, "Fehler beim Anzeigen des LoginScreens", t);
+                showErrorAlert(t);
+            }
+        });
+    }
+
+    public static void show(Window owner) {
+        Platform.runLater(() -> {
+            try {
+                Stage primary = com.flatmanager.App.getPrimaryStage();
+                LoginScreen ls = new LoginScreen();
+                if (primary != null) {
+                    if (primary.getScene() != null) {
+                        primary.getScene().setRoot(ls.getView());
+                    } else {
+                        primary.setScene(new Scene(ls.getView()));
+                        primary.show();
+                    }
+                } else if (owner instanceof Stage) {
+                    Stage ownerStage = (Stage) owner;
+                    if (ownerStage.getScene() != null) {
+                        ownerStage.getScene().setRoot(ls.getView());
+                    } else {
+                        ownerStage.setScene(new Scene(ls.getView()));
+                        ownerStage.show();
+                    }
+                } else {
+                    Stage s = new Stage();
+                    if (owner != null) s.initOwner(owner);
+                    s.setScene(new Scene(ls.getView()));
+                    s.show();
+                }
+            } catch (Throwable t) {
+                LOG.log(Level.SEVERE, "Fehler beim Anzeigen des LoginScreens mit Owner", t);
+                showErrorAlert(t);
+            }
+        });
+    }
+
+    // Aliase, falls Reflection nach showLogin sucht
+    public static void showLogin() { show(); }
+    public static void showLogin(Window owner) { show(owner); }
+
+    private static void showErrorAlert(Throwable t) {
+        t.printStackTrace(System.err);
+        Platform.runLater(() -> {
+            Alert a = new Alert(Alert.AlertType.ERROR);
+            a.setHeaderText("Fehler beim Öffnen des Logins");
+            String msg = t == null ? "Unbekannter Fehler" : t.toString();
+            a.setContentText(msg);
+            a.showAndWait();
+        });
     }
 }

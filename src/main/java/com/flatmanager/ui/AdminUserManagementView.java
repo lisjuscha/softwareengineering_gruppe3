@@ -71,9 +71,7 @@ public class AdminUserManagementView {
         deleteWgBtn.setOnAction(e -> {
             try {
                 Optional<Boolean> res = AdminDeleteUserDialog.deleteEntireWg(stage, () -> openLoginWithReflection(owner));
-                if (res.isPresent() && Boolean.TRUE.equals(res.get())) {
-                    showInfo("WG wurde gelöscht.");
-                }
+                // Meldung "WG wurde gelöscht." entfernt, da bereits nach dem Loginscreen-Aufruf angezeigt wird
                 result.set("delete-wg");
             } catch (NoClassDefFoundError ex) {
                 showInfo("AdminDeleteUserDialog nicht vorhanden.");
@@ -102,10 +100,7 @@ public class AdminUserManagementView {
         return Optional.ofNullable(result.get());
     }
 
-    /**
-     * Verbesserte Reflection: probiert verschiedene Signaturen, ContextClassLoader und
-     * sowohl statische als auch Instanzmethoden. Loggt Fehler auf stderr für Debugging.
-     */
+    // ersetzt die bestehende openLoginWithReflection-Methode in `AdminUserManagementView.java`
     private static void openLoginWithReflection(Window owner) {
         String[] candidates = {
                 "com.flatmanager.ui.LoginView",
@@ -113,6 +108,8 @@ public class AdminUserManagementView {
                 "LoginView",
                 "LoginScreen"
         };
+
+        final AtomicReference<Throwable> lastThrowableRef = new AtomicReference<>(null);
 
         for (String clsName : candidates) {
             try {
@@ -132,7 +129,6 @@ public class AdminUserManagementView {
                 }
                 if (cls == null) continue;
 
-                // mögliche Methodensignaturen in Reihenfolge der Wahrscheinlichkeit
                 String[][] sigs = {
                         {"showLogin", "javafx.stage.Window"},
                         {"showLogin", "javafx.stage.Stage"},
@@ -144,7 +140,7 @@ public class AdminUserManagementView {
 
                 for (String[] sig : sigs) {
                     try {
-                        Method m;
+                        final Method m;
                         if (!sig[1].isEmpty()) {
                             Class<?> param = Class.forName(sig[1]);
                             m = cls.getMethod(sig[0], param);
@@ -152,14 +148,43 @@ public class AdminUserManagementView {
                             m = cls.getMethod(sig[0]);
                         }
                         m.setAccessible(true);
-                        if (m.getParameterCount() == 1) {
-                            m.invoke(null, owner);
-                        } else {
-                            m.invoke(null);
-                        }
-                        return; // erfolgreich
+
+                        // Führt den UI-Aufruf sicher auf dem JavaFX-Application-Thread aus.
+                        final boolean takesParam = m.getParameterCount() == 1;
+                        javafx.application.Platform.runLater(() -> {
+                            try {
+                                if (takesParam) {
+                                    m.invoke(null, owner);
+                                } else {
+                                    m.invoke(null);
+                                }
+                            } catch (InvocationTargetException ite) {
+                                Throwable cause = ite.getCause() != null ? ite.getCause() : ite;
+                                lastThrowableRef.set(cause);
+                                System.err.println("openLoginWithReflection: InvocationTargetException beim Aufruf von " + clsName + "." + sig[0]);
+                                cause.printStackTrace(System.err);
+                                // Zeige sofort einen Alert mit der Ursache
+                                javafx.application.Platform.runLater(() -> {
+                                    Alert a = new Alert(Alert.AlertType.ERROR);
+                                    a.setHeaderText("Fehler beim Öffnen des Logins");
+                                    a.setContentText(cause.toString());
+                                    a.showAndWait();
+                                });
+                            } catch (Throwable t) {
+                                lastThrowableRef.set(t);
+                                System.err.println("openLoginWithReflection: Fehler beim Aufruf von " + clsName + "." + sig[0] + " - " + t);
+                                t.printStackTrace(System.err);
+                                javafx.application.Platform.runLater(() -> {
+                                    Alert a = new Alert(Alert.AlertType.ERROR);
+                                    a.setHeaderText("Fehler beim Öffnen des Logins");
+                                    a.setContentText(t.toString());
+                                    a.showAndWait();
+                                });
+                            }
+                        });
+
+                        return;
                     } catch (NoSuchMethodException nsme) {
-                        // versuche Instanzmethode als Fallback
                         try {
                             Method mInst;
                             if (!sig[1].isEmpty()) {
@@ -170,29 +195,76 @@ public class AdminUserManagementView {
                             }
                             Object inst = cls.getDeclaredConstructor().newInstance();
                             mInst.setAccessible(true);
-                            if (mInst.getParameterCount() == 1) {
-                                mInst.invoke(inst, owner);
-                            } else {
-                                mInst.invoke(inst);
-                            }
+
+                            final boolean takesParamInst = mInst.getParameterCount() == 1;
+                            final Method toInvoke = mInst;
+                            final Object instance = inst;
+
+                            javafx.application.Platform.runLater(() -> {
+                                try {
+                                    if (takesParamInst) {
+                                        toInvoke.invoke(instance, owner);
+                                    } else {
+                                        toInvoke.invoke(instance);
+                                    }
+                                } catch (InvocationTargetException ite) {
+                                    Throwable cause = ite.getCause() != null ? ite.getCause() : ite;
+                                    lastThrowableRef.set(cause);
+                                    System.err.println("openLoginWithReflection: InvocationTargetException beim Instanz-Aufruf von " + clsName + "." + sig[0]);
+                                    cause.printStackTrace(System.err);
+                                    javafx.application.Platform.runLater(() -> {
+                                        Alert a = new Alert(Alert.AlertType.ERROR);
+                                        a.setHeaderText("Fehler beim Öffnen des Logins");
+                                        a.setContentText(cause.toString());
+                                        a.showAndWait();
+                                    });
+                                } catch (Throwable t) {
+                                    lastThrowableRef.set(t);
+                                    System.err.println("openLoginWithReflection: Fehler beim Instanz-Aufruf von " + clsName + "." + sig[0] + " - " + t);
+                                    t.printStackTrace(System.err);
+                                    javafx.application.Platform.runLater(() -> {
+                                        Alert a = new Alert(Alert.AlertType.ERROR);
+                                        a.setHeaderText("Fehler beim Öffnen des Logins");
+                                        a.setContentText(t.toString());
+                                        a.showAndWait();
+                                    });
+                                }
+                            });
+
                             return;
                         } catch (NoSuchMethodException | InstantiationException | IllegalAccessException |
                                  InvocationTargetException | ClassNotFoundException instEx) {
-                            // nicht gefunden/erzeugbar — weiter probieren
+                            lastThrowableRef.set(instEx);
+                            // weiter probieren
                         }
                     }
                 }
             } catch (Throwable t) {
-                // Logge Fehler für späteres Debugging, aber probiere nächsten Kandidaten
+                lastThrowableRef.set(t);
                 System.err.println("openLoginWithReflection: Fehler bei Kandidat " + clsName + " - " + t);
                 t.printStackTrace(System.err);
             }
         }
 
-        Alert a = new Alert(Alert.AlertType.INFORMATION);
-        a.setHeaderText(null);
-        a.setContentText("LoginView/Screen konnte nicht geöffnet werden. Bitte Anwendung neu starten.");
-        a.showAndWait();
+        final String content = "loginscreen/view konnte nicht geöffnet werden, starten sie die anwendung erneut";
+        Throwable last = lastThrowableRef.get();
+        if (last != null && last.getMessage() != null) {
+            final String extended = content + "\n\nFehler: " + last.toString();
+            javafx.application.Platform.runLater(() -> {
+                Alert a = new Alert(Alert.AlertType.INFORMATION);
+                a.setHeaderText(null);
+                a.setContentText(extended);
+                a.showAndWait();
+            });
+            return;
+        }
+
+        javafx.application.Platform.runLater(() -> {
+            Alert a = new Alert(Alert.AlertType.INFORMATION);
+            a.setHeaderText(null);
+            a.setContentText(content);
+            a.showAndWait();
+        });
     }
 
     private static void showInfo(String msg) {
