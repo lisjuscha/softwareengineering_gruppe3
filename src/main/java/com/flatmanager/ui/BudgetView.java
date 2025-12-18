@@ -1,7 +1,7 @@
 package com.flatmanager.ui;
 
 import com.flatmanager.database.DatabaseManager;
-import com.flatmanager.model.BudgetTransaction;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -12,8 +12,6 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.sql.*;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -40,7 +38,6 @@ public class BudgetView {
         view.setPadding(new Insets(18));
         view.setMaxWidth(Double.MAX_VALUE);
 
-        // Topbar: Titel links, Spacer (Admin-Button zentral in DashboardScreen)
         Label title = new Label("Haushaltsbudget");
         title.setFont(Font.font("Arial", FontWeight.BOLD, 35));
         title.setPadding(new Insets(0, 8, 0, 0));
@@ -53,10 +50,8 @@ public class BudgetView {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
-        // Admin-Node entfernt, da zentral in DashboardScreen eingefügt
         topBar.getChildren().addAll(title, spacer);
 
-        // --- Formular zum Hinzufügen ---
         GridPane form = new GridPane();
         form.setHgap(10);
         form.setVgap(10);
@@ -82,7 +77,6 @@ public class BudgetView {
         ComboBox<String> personBox = new ComboBox<>();
         personBox.setPromptText("Wähle eine Person");
 
-        // Lade Benutzer aus DB und setze Auswahl (final, nicht neu zuweisen)
         final List<String> users = loadUsernames();
         if (!users.isEmpty()) {
             personBox.getItems().addAll(users);
@@ -112,23 +106,34 @@ public class BudgetView {
                 return;
             }
 
-            addTransaction(beschreibung, betrag, kategorie, datum.toString(), person);
+            int newId = addTransaction(beschreibung, betrag, person, datum.toString(), kategorie);
+            if (newId == -1) {
+                return;
+            }
+
+            BudgetTransaction newT = new BudgetTransaction();
+            newT.setId(newId > 0 ? newId : 0);
+            newT.setDescription(beschreibung);
+            newT.setAmount(betrag);
+            newT.setDate(datum.toString());
+            newT.setCategory(kategorie);
+            // Direkter Aufruf der jetzt vorhandenen Setter
+            newT.setPaidBy(person);
+
+            transactions.add(0, newT);
+            rebuildCategoryTables();
 
             beschreibungField.clear();
             betragField.clear();
             kategorieBox.setValue(categories.get(0));
             datePicker.setValue(LocalDate.now());
 
-            // Lade Benutzer neu und aktualisiere die ComboBox ohne die ursprüngliche lokale Variable neu zuzuweisen
             List<String> refreshed = loadUsernames();
             personBox.getItems().setAll(refreshed);
             if (refreshed.contains(currentUser)) personBox.setValue(currentUser);
             else if (!refreshed.isEmpty()) personBox.setValue(refreshed.get(0));
-
-            loadTransactions();
         });
 
-        // Layout des Formulars
         form.add(beschreibungLabel, 0, 0);
         form.add(beschreibungField, 1, 0, 3, 1);
 
@@ -148,7 +153,6 @@ public class BudgetView {
         GridPane.setMargin(addButton, new Insets(8, 0, 0, 0));
         addButton.setMaxWidth(Double.MAX_VALUE);
 
-        // --- Container für Kategorien/Tables ---
         categoriesContainer = new VBox(18);
         categoriesContainer.setPadding(new Insets(8));
 
@@ -156,25 +160,24 @@ public class BudgetView {
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
 
-        // Zusammensetzen der View: Topbar, Formular, Listenbereich
         view.getChildren().addAll(topBar, form, scroll);
     }
 
     private void loadTransactions() {
         transactions.clear();
 
+        String sql = "SELECT id, description, amount, paid_by, date, category FROM budget_transactions ORDER BY date DESC";
         try (Connection conn = DatabaseManager.getConnection();
              Statement stmt = conn.createStatement();
-             ResultSet rs = stmt.executeQuery("SELECT * FROM budget_transactions ORDER BY date DESC")) {
+             ResultSet rs = stmt.executeQuery(sql)) {
 
             while (rs.next()) {
-                double amount = rs.getDouble("amount");
-
                 BudgetTransaction t = new BudgetTransaction();
                 t.setId(rs.getInt("id"));
-                t.setAmount(amount);
+                t.setAmount(rs.getDouble("amount"));
                 t.setDescription(rs.getString("description"));
-                setPaidByIfPresent(t, rs.getString("paid_by"));
+                String paidBy = rs.getString("paid_by");
+                t.setPaidBy(paidBy);
                 t.setDate(rs.getString("date"));
                 t.setCategory(rs.getString("category"));
 
@@ -197,12 +200,15 @@ public class BudgetView {
 
         for (BudgetTransaction t : transactions) {
             String cat = t.getCategory();
+            if (cat == null) cat = "Sonstiges";
             if (grouped.containsKey(cat)) {
                 grouped.get(cat).add(t);
             } else {
                 grouped.computeIfAbsent("Sonstiges", k -> new ArrayList<>()).add(t);
             }
         }
+
+        boolean adminView = isAdminUser();
 
         for (String category : grouped.keySet()) {
             List<BudgetTransaction> list = grouped.get(category);
@@ -248,30 +254,39 @@ public class BudgetView {
             dateCol.setPrefWidth(120);
 
             TableColumn<BudgetTransaction, String> personCol = new TableColumn<>("Person");
-            personCol.setCellValueFactory(new PropertyValueFactory<>("paidBy"));
             personCol.setPrefWidth(120);
-
-            TableColumn<BudgetTransaction, Void> deleteCol = new TableColumn<>("Löschen");
-            deleteCol.setPrefWidth(90);
-            deleteCol.setCellFactory(param -> new TableCell<>() {
-                private final Button delBtn = new Button("Löschen");
-
-                {
-                    delBtn.setOnAction(e -> {
-                        BudgetTransaction bt = getTableView().getItems().get(getIndex());
-                        deleteTransaction(bt.getId());
-                        loadTransactions();
-                    });
-                }
-
-                @Override
-                protected void updateItem(Void item, boolean empty) {
-                    super.updateItem(item, empty);
-                    setGraphic(empty ? null : delBtn);
-                }
+            personCol.setCellValueFactory(cellData -> {
+                BudgetTransaction t = cellData.getValue();
+                String pb = t.getPaidBy();
+                return new ReadOnlyStringWrapper(pb != null ? pb : "");
             });
 
-            tv.getColumns().addAll(beschrCol, betragCol, dateCol, personCol, deleteCol);
+            if (adminView) {
+                TableColumn<BudgetTransaction, Void> deleteCol = new TableColumn<>("Löschen");
+                deleteCol.setPrefWidth(90);
+                deleteCol.setCellFactory(param -> new TableCell<>() {
+                    private final Button delBtn = new Button("Löschen");
+
+                    {
+                        delBtn.setOnAction(e -> {
+                            BudgetTransaction t = getTableView().getItems().get(getIndex());
+                            deleteTransaction(t.getId());
+                            transactions.remove(t);
+                            rebuildCategoryTables();
+                        });
+                    }
+
+                    @Override
+                    protected void updateItem(Void item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setGraphic(empty ? null : delBtn);
+                    }
+                });
+                tv.getColumns().addAll(beschrCol, betragCol, dateCol, personCol, deleteCol);
+            } else {
+                tv.getColumns().addAll(beschrCol, betragCol, dateCol, personCol);
+            }
+
             tv.getItems().addAll(list);
 
             double sum = 0.0;
@@ -287,21 +302,48 @@ public class BudgetView {
         }
     }
 
-    private void addTransaction(String description, double amount, String category, String date, String paidBy) {
-        String sql = "INSERT INTO budget_transactions (description, amount, paid_by, date, category) VALUES (?, ?, ?, ?, ?)";
+    /**
+     * Einfacher Insert: schreibt description, amount, paid_by, date, category
+     */
+    private int addTransaction(String description, double amount, String paidBy, String date, String category) {
+        final String sql = "INSERT INTO budget_transactions (description, amount, paid_by, date, category) VALUES (?, ?, ?, ?, ?)";
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+             PreparedStatement pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
 
             pstmt.setString(1, description);
             pstmt.setDouble(2, amount);
             pstmt.setString(3, paidBy);
             pstmt.setString(4, date);
             pstmt.setString(5, category);
-            pstmt.executeUpdate();
 
+            int affected = pstmt.executeUpdate();
+            if (affected == 0) {
+                showAlert("Fehler beim Hinzufügen der Transaktion.");
+                return -1;
+            }
+
+            try (ResultSet keys = pstmt.getGeneratedKeys()) {
+                if (keys != null && keys.next()) {
+                    return keys.getInt(1);
+                }
+            } catch (Exception ignored) {
+            }
+
+            // Fallback für SQLite
+            try (Statement s2 = conn.createStatement();
+                 ResultSet rs = s2.executeQuery("SELECT last_insert_rowid()")) {
+                if (rs != null && rs.next()) {
+                    int id = rs.getInt(1);
+                    if (id > 0) return id;
+                }
+            } catch (Exception ignored) {
+            }
+
+            return 0;
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert("Fehler beim Hinzufügen der Transaktion.");
+            return -1;
         }
     }
 
@@ -326,24 +368,6 @@ public class BudgetView {
         a.showAndWait();
     }
 
-    private void setPaidByIfPresent(BudgetTransaction t, String paidBy) {
-        if (paidBy == null) return;
-        try {
-            Method m = t.getClass().getMethod("setPaidBy", String.class);
-            m.invoke(t, paidBy);
-            return;
-        } catch (NoSuchMethodException ignored) {
-        } catch (Exception ignored) {
-        }
-
-        try {
-            Field f = t.getClass().getDeclaredField("paidBy");
-            f.setAccessible(true);
-            f.set(t, paidBy);
-        } catch (Exception ignored) {
-        }
-    }
-
     private List<String> loadUsernames() {
         List<String> result = new ArrayList<>();
         String sql = "SELECT username FROM users ORDER BY username";
@@ -356,13 +380,112 @@ public class BudgetView {
             }
         } catch (SQLException e) {
             e.printStackTrace();
-            // Fallback: aktuellen Benutzer anzeigen, damit UI nicht leer bleibt
             if (currentUser != null && !currentUser.isEmpty()) result.add(currentUser);
         }
         return result;
     }
 
+    private boolean isAdminUser() {
+        if (currentUser == null) return false;
+        if ("admin".equalsIgnoreCase(currentUser.trim())) return true;
+
+        String sql = "SELECT is_admin FROM users WHERE username = ? LIMIT 1";
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+
+            ps.setString(1, currentUser.trim());
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    int val = rs.getInt("is_admin");
+                    return val == 1;
+                }
+            }
+        } catch (SQLException ex) {
+        }
+        return false;
+    }
+
     public VBox getView() {
         return view;
+    }
+
+    // Innere Model-Klasse mit den fehlenden Getter/Settern
+    public static class BudgetTransaction {
+        private int id;
+        private String description;
+        private double amount;
+        private String paidBy;
+        private Integer userId;
+        private String date;
+        private String category;
+
+        public BudgetTransaction() {
+        }
+
+        public BudgetTransaction(int id, String description, double amount, String paidBy, Integer userId, String date, String category) {
+            this.id = id;
+            this.description = description;
+            this.amount = amount;
+            this.paidBy = paidBy;
+            this.userId = userId;
+            this.date = date;
+            this.category = category;
+        }
+
+        public int getId() {
+            return id;
+        }
+
+        public void setId(int id) {
+            this.id = id;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public double getAmount() {
+            return amount;
+        }
+
+        public void setAmount(double amount) {
+            this.amount = amount;
+        }
+
+        public String getPaidBy() {
+            return paidBy;
+        }
+
+        public void setPaidBy(String paidBy) {
+            this.paidBy = paidBy;
+        }
+
+        public Integer getUserId() {
+            return userId;
+        }
+
+        public void setUserId(Integer userId) {
+            this.userId = userId;
+        }
+
+        public String getDate() {
+            return date;
+        }
+
+        public void setDate(String date) {
+            this.date = date;
+        }
+
+        public String getCategory() {
+            return category;
+        }
+
+        public void setCategory(String category) {
+            this.category = category;
+        }
     }
 }

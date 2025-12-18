@@ -9,6 +9,7 @@ import javafx.scene.image.ImageView;
 import javafx.scene.layout.Region;
 import javafx.stage.Window;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,16 +24,20 @@ public class AdminToolbar {
         if (!admin) return placeholder();
 
         Button adminBtn = new Button();
-        // Icon von Icons8 laden und als Graphic setzen; bei Fehler Fallback-Text verwenden
-        final String iconUrl = "https://img.icons8.com/ios/250/000000/settings.png";
-        try {
-            Image img = new Image(iconUrl, 20, 20, true, true);
-            ImageView iv = new ImageView(img);
-            iv.setFitWidth(20);
-            iv.setFitHeight(20);
-            adminBtn.setGraphic(iv);
-            adminBtn.setText(null);
-            adminBtn.setPrefSize(30, 30);
+        // Icon aus den Projekt-Ressourcen laden (/icons/Einstellungen.png), bei Fehler Fallback-Text verwenden
+        final String resourcePath = "/icons/Einstellungen.png";
+        try (InputStream is = AdminToolbar.class.getResourceAsStream(resourcePath)) {
+            if (is != null) {
+                Image img = new Image(is, 20, 20, true, true);
+                ImageView iv = new ImageView(img);
+                iv.setFitWidth(20);
+                iv.setFitHeight(20);
+                adminBtn.setGraphic(iv);
+                adminBtn.setText(null);
+                adminBtn.setPrefSize(30, 30);
+            } else {
+                adminBtn.setText("Admin");
+            }
         } catch (Exception ex) {
             adminBtn.setText("Admin");
         }

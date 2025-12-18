@@ -11,6 +11,8 @@ import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import java.net.URL;
+
 public class DashboardScreen {
     private BorderPane view;
     private String currentUser;
@@ -62,23 +64,14 @@ public class DashboardScreen {
         cleaningButton.setMaxWidth(Double.MAX_VALUE);
         cleaningButton.getStyleClass().add("nav-button");
         cleaningButton.setOnAction(e -> showCleaningSchedules());
-        // Inhalt linksbündig und Abstand zwischen Icon und Text
         cleaningButton.setAlignment(Pos.CENTER_LEFT);
         cleaningButton.setContentDisplay(ContentDisplay.LEFT);
         cleaningButton.setGraphicTextGap(8);
 
-        // Hand-Wash-Icon für Putzplan
-        final String cleaningIconUrl = "https://img.icons8.com/ios/250/000000/wash-your-hands.png";
-        try {
-            Image img = new Image(cleaningIconUrl, 18, 18, true, true);
-            if (!img.isError()) {
-                ImageView iv = new ImageView(img);
-                iv.setFitWidth(18);
-                iv.setFitHeight(18);
-                cleaningButton.setGraphic(iv);
-            }
-        } catch (Exception ignored) {
-            // Fallback: nur Text anzeigen
+        // Lokales Icon für Putzplan: `resources/icons/Putzplan.png`
+        ImageView cleaningIv = loadIconView("Putzplan.png");
+        if (cleaningIv != null) {
+            cleaningButton.setGraphic(cleaningIv);
         }
 
         // Einkaufsliste-Button
@@ -90,18 +83,10 @@ public class DashboardScreen {
         shoppingButton.setContentDisplay(ContentDisplay.LEFT);
         shoppingButton.setGraphicTextGap(8);
 
-        // Notizbuch-Icon für Einkaufsliste
-        final String shoppingIconUrl = "https://img.icons8.com/ios/250/000000/notepad.png";
-        try {
-            Image img = new Image(shoppingIconUrl, 18, 18, true, true);
-            if (!img.isError()) {
-                ImageView iv = new ImageView(img);
-                iv.setFitWidth(18);
-                iv.setFitHeight(18);
-                shoppingButton.setGraphic(iv);
-            }
-        } catch (Exception ignored) {
-            // Fallback: nur Text anzeigen
+        // Lokales Icon für Einkaufsliste: `resources/icons/Einkaufsliste.png`
+        ImageView shoppingIv = loadIconView("Einkaufsliste.png");
+        if (shoppingIv != null) {
+            shoppingButton.setGraphic(shoppingIv);
         }
 
         // Haushaltsbuch-Button
@@ -113,17 +98,10 @@ public class DashboardScreen {
         budgetButton.setContentDisplay(ContentDisplay.LEFT);
         budgetButton.setGraphicTextGap(8);
 
-        final String ledgerIconUrl = "https://img.icons8.com/ios/250/000000/ledger.png";
-        try {
-            Image img = new Image(ledgerIconUrl, 18, 18, true, true);
-            if (!img.isError()) {
-                ImageView iv = new ImageView(img);
-                iv.setFitWidth(18);
-                iv.setFitHeight(18);
-                budgetButton.setGraphic(iv);
-            }
-        } catch (Exception ignored) {
-            // Fallback: nur Text anzeigen
+        // Lokales Icon für Haushaltsbuch: `resources/icons/Haushaltsbuch.png`
+        ImageView budgetIv = loadIconView("Haushaltsbuch.png");
+        if (budgetIv != null) {
+            budgetButton.setGraphic(budgetIv);
         }
 
         sidebar.getChildren().addAll(navLabel, new Separator(),
@@ -140,6 +118,37 @@ public class DashboardScreen {
         view.setTop(topBar);
         view.setLeft(sidebar);
         view.setCenter(contentArea);
+    }
+
+    private ImageView loadIconView(String fileName) {
+        final String[] candidates = {"/icons/" + fileName, "icons/" + fileName, "/" + fileName, fileName};
+        URL url = null;
+        for (String p : candidates) {
+            // Versuche zuerst relative zur Klasse
+            url = DashboardScreen.class.getResource(p);
+            if (url != null) break;
+            // Dann über ClassLoader ohne führenden '/'
+            String lookup = p.startsWith("/") ? p.substring(1) : p;
+            url = DashboardScreen.class.getClassLoader().getResource(lookup);
+            if (url != null) break;
+        }
+
+        if (url != null) {
+            try {
+                Image img = new Image(url.toExternalForm(), 18, 18, true, true, true);
+                if (!img.isError()) {
+                    ImageView iv = new ImageView(img);
+                    iv.setFitWidth(18);
+                    iv.setFitHeight(18);
+                    return iv;
+                }
+            } catch (Exception ex) {
+                System.err.println("Fehler beim Laden des Icons `" + fileName + "`: " + ex);
+            }
+        } else {
+            System.err.println("Icon nicht gefunden im Klassenpfad: versuchte Pfade für `" + fileName + "`");
+        }
+        return null;
     }
 
     private void showWelcome() {
