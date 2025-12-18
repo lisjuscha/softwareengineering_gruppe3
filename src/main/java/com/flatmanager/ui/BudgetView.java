@@ -3,15 +3,19 @@ package com.flatmanager.ui;
 import com.flatmanager.database.DatabaseManager;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
 import javafx.scene.control.cell.PropertyValueFactory;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import java.io.InputStream;
 import java.sql.*;
 import java.text.NumberFormat;
 import java.time.LocalDate;
@@ -26,31 +30,64 @@ public class BudgetView {
     private VBox categoriesContainer;
     private final NumberFormat currencyFormat = NumberFormat.getCurrencyInstance(Locale.GERMANY);
 
+    // Neues Label oben
+    private Label totalLabel;
+
+    // Delete-Icon (geladen einmal)
+    private Image deleteIcon;
+
     public BudgetView(String username) {
         this.currentUser = username;
         this.transactions = FXCollections.observableArrayList();
+        // Listener aktualisiert TOTAL automatisch bei Änderungen
+        this.transactions.addListener((ListChangeListener<BudgetTransaction>) c -> updateTotal());
+
+        loadDeleteIcon();
         createView();
         loadTransactions();
     }
 
+    private void loadDeleteIcon() {
+        // Versuche das Bild aus resources zu laden. Pfad kann angepasst werden.
+        InputStream is = BudgetView.class.getResourceAsStream("/Löschen.png");
+        if (is == null) {
+            is = BudgetView.class.getResourceAsStream("/icons/Löschen.png");
+        }
+        if (is != null) {
+            try {
+                deleteIcon = new Image(is);
+            } catch (Exception ignored) {
+                deleteIcon = null;
+            }
+        } else {
+            deleteIcon = null;
+        }
+    }
+
     private void createView() {
-        view = new VBox(16);
-        view.setPadding(new Insets(18));
+        view = new VBox(12);
+        view.setPadding(new Insets(12));
         view.setMaxWidth(Double.MAX_VALUE);
 
+        // TOTAL ganz oben, rechtsbündig
+        totalLabel = new Label("TOTAL: " + currencyFormat.format(0.0));
+        totalLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        HBox totalBar = new HBox();
+        totalBar.setAlignment(Pos.CENTER_LEFT);
+        Region totalSpacer = new Region();
+        HBox.setHgrow(totalSpacer, Priority.ALWAYS);
+        totalBar.getChildren().addAll(totalSpacer, totalLabel);
+        totalBar.setPadding(new Insets(0, 0, 6, 0));
+
         Label title = new Label("Haushaltsbudget");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 35));
+        title.setFont(Font.font("Arial", FontWeight.BOLD, 28));
         title.setPadding(new Insets(0, 8, 0, 0));
 
         HBox topBar = new HBox();
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.setPadding(new Insets(0, 0, 6, 0));
         topBar.setSpacing(8);
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        topBar.getChildren().addAll(title, spacer);
+        topBar.getChildren().addAll(title);
 
         GridPane form = new GridPane();
         form.setHgap(10);
@@ -82,6 +119,9 @@ public class BudgetView {
             personBox.getItems().addAll(users);
             if (users.contains(currentUser)) personBox.setValue(currentUser);
             else personBox.setValue(users.get(0));
+        } else if (currentUser != null && !currentUser.isEmpty()) {
+            personBox.getItems().add(currentUser);
+            personBox.setValue(currentUser);
         }
 
         Button addButton = new Button("Transaktion hinzufügen");
@@ -117,7 +157,6 @@ public class BudgetView {
             newT.setAmount(betrag);
             newT.setDate(datum.toString());
             newT.setCategory(kategorie);
-            // Direkter Aufruf der jetzt vorhandenen Setter
             newT.setPaidBy(person);
 
             transactions.add(0, newT);
@@ -153,14 +192,15 @@ public class BudgetView {
         GridPane.setMargin(addButton, new Insets(8, 0, 0, 0));
         addButton.setMaxWidth(Double.MAX_VALUE);
 
-        categoriesContainer = new VBox(18);
+        categoriesContainer = new VBox(12);
         categoriesContainer.setPadding(new Insets(8));
 
         ScrollPane scroll = new ScrollPane(categoriesContainer);
         scroll.setFitToWidth(true);
         scroll.setStyle("-fx-background-color: transparent; -fx-border-color: transparent;");
 
-        view.getChildren().addAll(topBar, form, scroll);
+        // Reihenfolge: TOTAL oben, dann Titel/TopBar, Formular, Liste
+        view.getChildren().addAll(totalBar, topBar, form, scroll);
     }
 
     private void loadTransactions() {
@@ -190,6 +230,7 @@ public class BudgetView {
         }
 
         rebuildCategoryTables();
+        updateTotal();
     }
 
     private void rebuildCategoryTables() {
@@ -265,21 +306,48 @@ public class BudgetView {
                 TableColumn<BudgetTransaction, Void> deleteCol = new TableColumn<>("Löschen");
                 deleteCol.setPrefWidth(90);
                 deleteCol.setCellFactory(param -> new TableCell<>() {
-                    private final Button delBtn = new Button("Löschen");
+                    private final Button btn;
 
                     {
-                        delBtn.setOnAction(e -> {
+                        // Button ohne Text, mit Icon falls vorhanden
+                        btn = new Button();
+                        btn.setFocusTraversable(false);
+                        btn.getStyleClass().add("icon-button");
+                        btn.setStyle("-fx-background-color: transparent;");
+
+                        if (deleteIcon != null) {
+                            ImageView iv = new ImageView(deleteIcon);
+                            iv.setPreserveRatio(true);
+                            iv.setFitWidth(16);
+                            iv.setFitHeight(16);
+                            btn.setGraphic(iv);
+                            Tooltip.install(btn, new Tooltip("Löschen"));
+                        } else {
+                            // Fallback: Text und Tooltip
+                            btn.setText("Löschen");
+                            btn.setTooltip(new Tooltip("Löschen"));
+                        }
+
+                        btn.setOnAction(evt -> {
                             BudgetTransaction t = getTableView().getItems().get(getIndex());
-                            deleteTransaction(t.getId());
-                            transactions.remove(t);
-                            rebuildCategoryTables();
+                            if (t != null) {
+                                int id = t.getId();
+                                deleteTransaction(id);
+                                transactions.removeIf(x -> x.getId() == id);
+                                rebuildCategoryTables();
+                                updateTotal();
+                            }
                         });
                     }
 
                     @Override
                     protected void updateItem(Void item, boolean empty) {
                         super.updateItem(item, empty);
-                        setGraphic(empty ? null : delBtn);
+                        if (empty) {
+                            setGraphic(null);
+                        } else {
+                            setGraphic(btn);
+                        }
                     }
                 });
                 tv.getColumns().addAll(beschrCol, betragCol, dateCol, personCol, deleteCol);
@@ -326,18 +394,15 @@ public class BudgetView {
                 if (keys != null && keys.next()) {
                     return keys.getInt(1);
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) { }
 
             // Fallback für SQLite
             try (Statement s2 = conn.createStatement();
                  ResultSet rs = s2.executeQuery("SELECT last_insert_rowid()")) {
                 if (rs != null && rs.next()) {
-                    int id = rs.getInt(1);
-                    if (id > 0) return id;
+                    return rs.getInt(1);
                 }
-            } catch (Exception ignored) {
-            }
+            } catch (Exception ignored) { }
 
             return 0;
         } catch (SQLException e) {
@@ -409,6 +474,15 @@ public class BudgetView {
         return view;
     }
 
+    // Aktualisiert das obere TOTAL-Label
+    private void updateTotal() {
+        double sum = 0.0;
+        for (BudgetTransaction t : transactions) {
+            if (t != null) sum += t.getAmount();
+        }
+        totalLabel.setText("TOTAL: " + currencyFormat.format(sum));
+    }
+
     // Innere Model-Klasse mit den fehlenden Getter/Settern
     public static class BudgetTransaction {
         private int id;
@@ -419,8 +493,7 @@ public class BudgetView {
         private String date;
         private String category;
 
-        public BudgetTransaction() {
-        }
+        public BudgetTransaction() {}
 
         public BudgetTransaction(int id, String description, double amount, String paidBy, Integer userId, String date, String category) {
             this.id = id;
