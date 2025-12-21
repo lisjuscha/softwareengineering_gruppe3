@@ -7,10 +7,13 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.*;
 import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
+import java.io.InputStream;
 import java.sql.*;
 import java.util.*;
 
@@ -22,6 +25,13 @@ public class ShoppingListView {
 
     private VBox listContainer;
 
+    // Combo für Käufer-Zuweisung beim Hinzufügen (als Feld, damit loadUsers sie aktualisieren kann)
+    private ComboBox<String> assignOnAddCombo;
+
+    // Benutzer-Display -> username (zum Mapping)
+    private final Map<String, String> userDisplayToUsername = new LinkedHashMap<>();
+    private final List<String> userDisplayList = new ArrayList<>();
+
     public ShoppingListView(String username) {
         this.currentUser = username;
         this.items = FXCollections.observableArrayList();
@@ -31,11 +41,9 @@ public class ShoppingListView {
 
     private void createView() {
         root = new BorderPane();
-        // root style-class damit globales Styling greift
         root.getStyleClass().add("app-shell");
         root.setPadding(new Insets(0));
 
-        // Top bar: Header links, Spacer (Admin-Button zentral in DashboardScreen)
         Label header = new Label("Einkaufsliste");
         header.setFont(Font.font("Arial", FontWeight.BOLD, 26));
         header.setPadding(new Insets(12));
@@ -109,6 +117,42 @@ public class ShoppingListView {
         );
         categoryCombo.setValue("Sonstiges");
         categoryCombo.getStyleClass().add("combo-box");
+        categoryCombo.setMaxWidth(220);
+
+        // Combo zum Auswählen des Käufers (als Feld)
+        assignOnAddCombo = new ComboBox<>(FXCollections.observableArrayList(userDisplayList));
+        assignOnAddCombo.setVisible(false);
+        assignOnAddCombo.setMaxWidth(Double.MAX_VALUE);
+        assignOnAddCombo.setPromptText("Mitbewohner auswählen");
+
+        // Icon-Button ersetzt die Checkbox; füllt die freie Fläche neben dem Dropdown
+        Button assignBuyerBtn = new Button();
+        assignBuyerBtn.setMaxWidth(Double.MAX_VALUE);
+        HBox.setHgrow(assignBuyerBtn, Priority.ALWAYS);
+        assignBuyerBtn.getStyleClass().add("icon-button");
+        // Lade Icon
+        InputStream is = getClass().getResourceAsStream("/icons/Mitbewohner.png");
+        if (is != null) {
+            Image img = new Image(is, 20, 20, true, true);
+            ImageView iv = new ImageView(img);
+            assignBuyerBtn.setGraphic(iv);
+        } else {
+            assignBuyerBtn.setText("");
+        }
+        assignBuyerBtn.setTooltip(new Tooltip("Käufer zuweisen"));
+
+        // Klick toggelt die Sichtbarkeit der Käufer-Combo
+        assignBuyerBtn.setOnAction(e -> {
+            boolean now = !assignOnAddCombo.isVisible();
+            assignOnAddCombo.setVisible(now);
+            assignOnAddCombo.getItems().setAll(userDisplayList);
+        });
+
+        // Kategorie und Button in einer Zeile, Button füllt freie Fläche
+        HBox categoryRow = new HBox(8, categoryCombo, assignBuyerBtn);
+        categoryRow.setAlignment(Pos.CENTER_LEFT);
+        HBox.setHgrow(categoryCombo, Priority.NEVER);
+        HBox.setHgrow(assignBuyerBtn, Priority.ALWAYS);
 
         Button saveBtn = new Button("Speichern");
         saveBtn.getStyleClass().addAll("button", "button-primary");
@@ -119,10 +163,16 @@ public class ShoppingListView {
             String cat = categoryCombo.getValue();
 
             if (!name.isEmpty()) {
-                addItem(name, qty.isEmpty() ? "1" : qty, cat);
+                String purchasedFor = null;
+                if (assignOnAddCombo.isVisible() && assignOnAddCombo.getValue() != null) {
+                    purchasedFor = userDisplayToUsername.get(assignOnAddCombo.getValue());
+                }
+                addItem(name, qty.isEmpty() ? "1" : qty, cat, purchasedFor);
                 itemField.clear();
                 quantityField.clear();
                 categoryCombo.setValue("Sonstiges");
+                assignOnAddCombo.setVisible(false);
+                assignOnAddCombo.getSelectionModel().clearSelection();
                 loadItems();
             } else {
                 showAlert("Bitte einen Namen eingeben");
@@ -137,10 +187,9 @@ public class ShoppingListView {
             loadItems();
         });
 
-        form.getChildren().addAll(itemField, quantityField, categoryCombo, saveBtn);
+        form.getChildren().addAll(itemField, quantityField, categoryRow, assignOnAddCombo, saveBtn);
         rightBox.getChildren().addAll(formTitle, form, clearBtn);
 
-        // --- Wichtige Änderung: beide Bereiche in einer HBox platzieren und jeweils 50% Breite binden ---
         HBox mainColumns = new HBox(12);
         mainColumns.getChildren().addAll(centerBox, rightBox);
 
@@ -149,21 +198,50 @@ public class ShoppingListView {
         centerBox.setMaxWidth(Double.MAX_VALUE);
         rightBox.setMaxWidth(Double.MAX_VALUE);
 
-        // Bindet die Präferenzbreite jeder Spalte auf die Hälfte der Root-Breite (abzüglich etwas Abstand)
         centerBox.prefWidthProperty().bind(root.widthProperty().subtract(36).divide(2));
         rightBox.prefWidthProperty().bind(root.widthProperty().subtract(36).divide(2));
 
         root.setCenter(mainColumns);
 
         root.setStyle("-fx-font-family: Arial; -fx-background-color: white;");
+
+        // lade Benutzerliste initial (nachdem assignOnAddCombo existiert)
+        loadUsers();
+    }
+
+    private void loadUsers() {
+        userDisplayToUsername.clear();
+        userDisplayList.clear();
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT username, name FROM users ORDER BY username");
+             ResultSet rs = ps.executeQuery()) {
+
+            while (rs.next()) {
+                String username = rs.getString("username");
+                String name = rs.getString("name");
+                // Anzeige nur: eingetragener Name, ansonsten username
+                String display = (name != null && !name.trim().isEmpty()) ? name : username;
+                userDisplayToUsername.put(display, username);
+                userDisplayList.add(display);
+            }
+
+            // falls Combo existiert, Items aktualisieren und Prompt setzen
+            if (assignOnAddCombo != null) {
+                assignOnAddCombo.getItems().setAll(userDisplayList);
+                assignOnAddCombo.setPromptText("Mitbewohner auswählen");
+            }
+
+        } catch (SQLException e) {
+            System.out.println("[DB] Fehler beim Laden der User: " + e.getMessage());
+        }
     }
 
     private void loadItems() {
         items.clear();
 
         try (Connection conn = DatabaseManager.getConnection()) {
-            // Sicherstellen, dass die erwartete Spalte vorhanden ist (verhindert "no such column")
             ensureColumnExists(conn, "shopping_items", "category", "TEXT", "'Sonstiges'");
+            ensureColumnExists(conn, "shopping_items", "purchased_for", "TEXT", "NULL");
 
             try (Statement stmt = conn.createStatement();
                  ResultSet rs = stmt.executeQuery("SELECT * FROM shopping_items ORDER BY category, item_name")) {
@@ -175,6 +253,7 @@ public class ShoppingListView {
                             rs.getString("quantity"),
                             rs.getString("added_by"),
                             rs.getString("category"),
+                            rs.getString("purchased_for"),
                             rs.getInt("purchased") == 1
                     ));
                 }
@@ -184,6 +263,9 @@ public class ShoppingListView {
             e.printStackTrace();
             showAlert("Fehler beim Laden der Artikel: " + e.getMessage());
         }
+
+        // (re)lade Benutzeranzeige, falls sich DB geändert hat
+        loadUsers();
 
         rebuildCategoryLayout();
     }
@@ -221,7 +303,7 @@ public class ShoppingListView {
         Map<String, List<ShoppingItem>> grouped = new LinkedHashMap<>();
 
         for (ShoppingItem item : items) {
-            grouped.computeIfAbsent(item.getCategory(), c -> new ArrayList<>()).add(item);
+            grouped.computeIfAbsent(item.getCategory() == null ? "Sonstiges" : item.getCategory(), c -> new ArrayList<>()).add(item);
         }
 
         for (String category : grouped.keySet()) {
@@ -240,18 +322,57 @@ public class ShoppingListView {
                 CheckBox check = new CheckBox();
                 check.setSelected(item.isPurchased());
 
-                check.selectedProperty().addListener((obs, oldVal, newVal) -> {
-                    item.setPurchased(newVal);
-                    updatePurchased(item.getId(), newVal);
-                });
-
                 Label qty = new Label(item.getQuantity());
                 qty.setFont(Font.font(14));
 
                 Label name = new Label(item.getItemName());
                 name.setFont(Font.font(14));
 
-                row.getChildren().addAll(check, qty, name);
+                // Label für Käuferanzeige (klein unter dem Item)
+                Label purchaserLabel = new Label();
+                purchaserLabel.setStyle("-fx-font-size: 11px; -fx-text-fill: #666;");
+                purchaserLabel.setVisible(false);
+
+                // Wenn bereits ein purchased_for gesetzt ist, zeige ihn unter dem Item
+                if (item.getPurchasedFor() != null && !item.getPurchasedFor().isEmpty()) {
+                    String displayFor = userDisplayToUsername.entrySet()
+                            .stream()
+                            .filter(e -> e.getValue().equals(item.getPurchasedFor()))
+                            .map(Map.Entry::getKey)
+                            .findFirst()
+                            .orElse(item.getPurchasedFor());
+                    purchaserLabel.setText("für: " + displayFor);
+                    purchaserLabel.setVisible(true);
+                }
+
+                check.selectedProperty().addListener((obs, oldVal, newVal) -> {
+                    item.setPurchased(newVal);
+                    if (newVal) {
+                        String username = item.getPurchasedFor() != null && !item.getPurchasedFor().isEmpty()
+                                ? item.getPurchasedFor()
+                                : currentUser;
+
+                        String displayFor = userDisplayToUsername.entrySet()
+                                .stream()
+                                .filter(e -> e.getValue().equals(username))
+                                .map(Map.Entry::getKey)
+                                .findFirst()
+                                .orElse(username);
+
+                        item.setPurchasedFor(username);
+                        purchaserLabel.setText("für: " + displayFor);
+                        purchaserLabel.setVisible(true);
+                        updatePurchased(item.getId(), true, username);
+                    } else {
+                        item.setPurchasedFor(null);
+                        purchaserLabel.setVisible(false);
+                        updatePurchased(item.getId(), false, null);
+                    }
+                });
+
+                VBox nameBox = new VBox(2, name, purchaserLabel);
+
+                row.getChildren().addAll(check, qty, nameBox);
                 itemBox.getChildren().add(row);
             }
 
@@ -260,8 +381,8 @@ public class ShoppingListView {
         }
     }
 
-    private void addItem(String itemName, String quantity, String category) {
-        String sql = "INSERT INTO shopping_items (item_name, quantity, added_by, category) VALUES (?, ?, ?, ?)";
+    private void addItem(String itemName, String quantity, String category, String purchasedFor) {
+        String sql = "INSERT INTO shopping_items (item_name, quantity, added_by, category, purchased_for) VALUES (?, ?, ?, ?, ?)";
 
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
@@ -270,6 +391,8 @@ public class ShoppingListView {
             pstmt.setString(2, quantity);
             pstmt.setString(3, currentUser);
             pstmt.setString(4, category);
+            if (purchasedFor != null) pstmt.setString(5, purchasedFor);
+            else pstmt.setNull(5, Types.VARCHAR);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {
@@ -278,14 +401,16 @@ public class ShoppingListView {
         }
     }
 
-    private void updatePurchased(int id, boolean purchased) {
+    private void updatePurchased(int id, boolean purchased, String purchasedFor) {
         try (Connection conn = DatabaseManager.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(
-                     "UPDATE shopping_items SET purchased = ? WHERE id = ?"
+                     "UPDATE shopping_items SET purchased = ?, purchased_for = ? WHERE id = ?"
              )) {
 
             pstmt.setInt(1, purchased ? 1 : 0);
-            pstmt.setInt(2, id);
+            if (purchasedFor != null) pstmt.setString(2, purchasedFor);
+            else pstmt.setNull(2, Types.VARCHAR);
+            pstmt.setInt(3, id);
             pstmt.executeUpdate();
 
         } catch (SQLException e) {

@@ -124,7 +124,7 @@ public class BudgetView {
             personBox.setValue(currentUser);
         }
 
-        Button addButton = new Button("Transaktion hinzufügen");
+        Button addButton = new Button("Ausgabe hinzufügen");
         addButton.getStyleClass().add("primary-button");
         addButton.setOnAction(e -> {
             String beschreibung = beschreibungField.getText().trim();
