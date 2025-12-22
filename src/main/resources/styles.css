@@ -1,153 +1,121 @@
-/* css - JavaFX compatible */
-                    /* Datei: src/main/resources/styles.css */
+                              /* Entfernt linke/äußere Spaltenränder und sorgt für gleichbreite Buttons, fette Titel */
 
-                    /* ------------------  THEME (statische Werte für JavaFX) ------------------ */
-                    /* Farben / Werte: primär: #3B82F6, hover: #2563EB, bg: #F9FAFB, surface: #FFFFFF, text: #111827 */
+                              /* GLOBAL */
+                              .root {
+                                  -fx-background-color: #F9FAFB;
+                                  -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+                                  -fx-text-fill: #111827;
+                              }
 
-                    /* ------------------  GLOBAL / ROOT ------------------ */
-                    .root {
-                        -fx-background-color: #F9FAFB;
-                        -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-                        -fx-text-fill: #111827;
-                    }
+                              /* TOPBAR ohne grauen Kasten */
+                              .top-bar {
+                                  -fx-background-color: transparent;
+                                  -fx-padding: 8 16;
+                                  -fx-border-color: transparent;
+                                  -fx-border-width: 0;
+                                  -fx-alignment: center-left;
+                              }
 
-                    /* ------------------  TOPBAR ------------------ */
-                    .top-bar {
-                        -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #efefef 0%, #e2e2e2 100%);
-                        -fx-padding: 8 16;
-                        -fx-border-color: #cfcfcf;
-                        -fx-border-width: 0 0 1 0;
-                        -fx-alignment: center-left;
-                    }
-                    .top-bar .label.title {
-                        -fx-font-size: 18px;
-                        -fx-font-weight: 600;
-                        -fx-text-fill: #333333;
-                    }
-                    .top-bar .label.user {
-                        -fx-font-size: 13px;
-                        -fx-text-fill: #6B7280;
-                    }
+                              /* SIDEBAR (falls vorhanden) */
+                              .sidebar {
+                                  -fx-pref-width: 150px;
+                                  -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #fbfbfb 0%, #f4f4f4 100%);
+                                  -fx-border-color: transparent;
+                                  -fx-border-width: 0;
+                                  -fx-padding: 18 10;
+                              }
 
-                    /* ------------------  LAYOUT: SIDEBAR + CONTENT ------------------ */
-                    .app-shell { -fx-padding: 0; -fx-background-color: transparent; }
-                    .sidebar {
-                        -fx-pref-width: 150px;
-                        -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #fbfbfb 0%, #f4f4f4 100%);
-                        -fx-border-color: transparent #d0d0d0 transparent transparent;
-                        -fx-border-width: 0 1 0 0;
-                        -fx-padding: 18 10;
-                    }
-                    .sidebar .label.nav-item {
-                        -fx-padding: 8 6;
-                        -fx-alignment: center-left;
-                        -fx-text-fill: #444444;
-                        -fx-font-size: 13px;
-                        -fx-graphic-text-gap: 10;
-                        -fx-background-radius: 6;
-                    }
-                    .sidebar .label.nav-item:hover { -fx-background-color: #f0f0f0; }
+                              /* CONTENT / COLUMNS: keine unerwünschten Ränder mehr */
+                              .content {
+                                  -fx-padding: 20;
+                                  -fx-background-color: transparent;
+                                  -fx-border-color: transparent;
+                                  -fx-border-width: 0;
+                              }
+                              .columns {
+                                  -fx-spacing: 18;
+                                  -fx-fill-height: true;
+                                  -fx-border-color: transparent;
+                                  -fx-border-width: 0;
+                              }
 
-                    .content { -fx-padding: 20; -fx-background-color: transparent; }
-                    .columns { -fx-spacing: 18; -fx-fill-height: true; }
-                    .column {
-                        -fx-background-color: transparent;
-                        -fx-pref-width: 50%;
-                        -fx-padding: 6 8;
-                        -fx-border-color: transparent #cfcfcf transparent transparent;
-                        -fx-border-width: 0 1 0 0;
-                    }
-                    .column.empty { -fx-background-color: transparent; }
+                              /* RIGHT COLUMN: kein Trennstrich mehr */
+                              .column {
+                                  -fx-background-color: transparent;
+                                  -fx-pref-width: 50%;
+                                  -fx-padding: 6 8;
+                                  -fx-border-color: transparent;
+                                  -fx-border-width: 0;
+                              }
 
-                    /* ------------------  COLUMN HEADERS / LISTS ------------------ */
-                    .column .label.column-header {
-                        -fx-font-size: 16px;
-                        -fx-font-weight: 600;
-                        -fx-text-fill: #222222;
-                        -fx-alignment: center-left;
-                        -fx-padding: 6 10 12 10;
-                        -fx-border-color: transparent transparent #e2e2e2 transparent;
-                        -fx-border-width: 0 0 1 0;
-                    }
-                    .scroll-pane {
-                        -fx-background-color: transparent;
-                        -fx-background-radius: 6;
-                        -fx-border-radius: 6;
-                        -fx-padding: 8;
-                    }
-                    .scroll-pane .viewport { -fx-background-color: transparent; }
+                              /* SCROLLPANE */
+                              .scroll-pane {
+                                  -fx-background-color: transparent;
+                                  -fx-background-radius: 6;
+                                  -fx-border-radius: 6;
+                                  -fx-padding: 8;
+                              }
+                              .scroll-pane .viewport { -fx-background-color: transparent; }
 
-                    /* ------------------  CARD / TASK ITEM ------------------ */
-                    .task-card, .card, .list-cell .card {
-                        -fx-background-color: linear-gradient(#ffffff, #fbfbfb);
-                        -fx-border-color: #d0d0d0;
-                        -fx-border-width: 1;
-                        -fx-background-radius: 8;
-                        -fx-border-radius: 8;
-                        -fx-padding: 10;
-                        -fx-pref-height: 64;
-                        -fx-alignment: center-left;
-                    }
-                    .task-card .label.title { -fx-font-size: 14px; -fx-font-weight: 600; -fx-text-fill: #222222; }
-                    .task-card .label.meta { -fx-font-size: 12px; -fx-text-fill: #6B7280; -fx-padding: 6 0 0 0; }
-                    .task-card .label.overdue { -fx-text-fill: #EF4444; -fx-font-weight: 600; }
+                              /* BUTTONS: gleiche Breite möglich, maximale Breite erlaubt */
+                              .button {
+                                  -fx-background-color: linear-gradient(#FFFFFF, #efefef);
+                                  -fx-border-color: #E5E7EB;
+                                  -fx-border-width: 1;
+                                  -fx-background-radius: 8;
+                                  -fx-border-radius: 8;
+                                  -fx-text-fill: #111827;
+                                  -fx-padding: 6 12;
+                                  -fx-font-size: 13px;
+                                  -fx-background-insets: 0;
+                                  -fx-max-width: Infinity;
+                              }
+                              .button-primary {
+                                  -fx-background-color: linear-gradient(#3B82F6, #2563EB);
+                                  -fx-text-fill: white;
+                                  -fx-border-color: transparent;
+                                  -fx-background-insets: 0;
+                                  -fx-max-width: Infinity;
+                              }
+                              .button-danger {
+                                  -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
+                                  -fx-text-fill: white;
+                                  -fx-border-color: transparent;
+                                  -fx-background-insets: 0;
+                                  -fx-max-width: Infinity;
+                              }
 
-                    /* ------------------  BUTTONS ------------------ */
-                    /* JavaFX-Buttons haben standardmäßig die style-class "button" */
-                    .button {
-                        -fx-background-color: linear-gradient(#FFFFFF, #efefef);
-                        -fx-border-color: #E5E7EB;
-                        -fx-border-width: 1;
-                        -fx-background-radius: 8;
-                        -fx-border-radius: 8;
-                        -fx-text-fill: #111827;
-                        -fx-padding: 6 12;
-                        -fx-font-size: 13px;
-                    }
-                    .button:hover {
-                        -fx-background-color: linear-gradient(#FFFFFF, #F3F4F6);
-                    }
-                    .button-primary {
-                        -fx-background-color: linear-gradient(#3B82F6, #2563EB);
-                        -fx-text-fill: white;
-                        -fx-border-color: transparent;
-                    }
-                    .button-danger {
-                        -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
-                        -fx-text-fill: white;
-                        -fx-border-color: transparent;
-                    }
-                    .button-outline {
-                        -fx-background-color: transparent;
-                        -fx-border-color: #E5E7EB;
-                        -fx-text-fill: #111827;
-                    }
-                    .button:disabled { -fx-opacity: 0.6; -fx-cursor: default; }
+                              /* ICON BUTTON */
+                              .icon-button {
+                                  -fx-background-color: transparent;
+                                  -fx-background-radius: 6;
+                                  -fx-background-insets: 0;
+                                  -fx-padding: 6;
+                              }
+                              .icon-button:pressed {
+                                  -fx-background-color: rgba(0,0,0,0.06);
+                              }
 
-                    /* ------------------  FORM ELEMENTS / CONTROLS ------------------ */
-                    /* Standard JavaFX-Klassen verwenden (TextField, TextArea, ComboBox, DatePicker...) */
-                    .text-field, .text-area, .combo-box, .date-picker, .choice-box, .spinner {
-                        -fx-font-size: 16px;
-                        -fx-padding: 8 10;
-                        -fx-border-color: #E5E7EB;
-                        -fx-border-width: 1;
-                        -fx-background-color: #FFFFFF;
-                        -fx-background-radius: 6;
-                        -fx-border-radius: 6;
-                    }
-                    .text-field:focused, .combo-box:focused, .date-picker:focused {
-                        -fx-border-color: #3B82F6;
-                    }
+                              /* FORM CONTROLS */
+                              .text-field, .combo-box {
+                                  -fx-font-size: 16px;
+                                  -fx-padding: 8 10;
+                                  -fx-border-color: #E5E7EB;
+                                  -fx-border-width: 1;
+                                  -fx-background-color: #FFFFFF;
+                                  -fx-background-radius: 6;
+                                  -fx-border-radius: 6;
+                              }
+                              .text-field:focused, .combo-box:focused {
+                                  -fx-border-color: #3B82F6;
+                              }
 
-                    /* ------------------  TABLE / LIST ------------------ */
-                    .table-view .column-header-background { -fx-background-color: transparent; }
-                    .table-view .column-header, .table-view .table-row-cell { -fx-border-color: transparent; }
+                              /* TITLES: fett */
+                              .title {
+                                  -fx-font-size: 16px;
+                                  -fx-font-weight: 700;
+                                  -fx-text-fill: #222222;
+                              }
 
-                    /* ------------------  UTILITIES ------------------ */
-                    .title { -fx-font-size: 16px; -fx-font-weight: 600; -fx-text-fill: #222222; }
-                    .small-text { -fx-font-size: 14px; -fx-text-fill: #6B7280; }
-                    .mt-20 { -fx-padding: 20 0 0 0; } /* JavaFX verwendet padding/spacing statt margin in vielen Fällen */
-
-                    /* ------------------  RESPONSIVE / ALIASES ------------------ */
-                    /* JavaFX unterstützt kein @media\, bei Bedarf per Code anpassen */
-                    .topbar { -fx-padding: 8 12; } /* alternative Class-Name, falls verwendet */
+                              /* kleine Hilfsklassen */
+                              .small-text { -fx-font-size: 14px; -fx-text-fill: #6B7280; }
