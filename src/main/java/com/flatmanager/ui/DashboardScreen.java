@@ -1,5 +1,7 @@
 package com.flatmanager.ui;
 
+import com.flatmanager.database.DatabaseManager;
+import com.flatmanager.storage.Database;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
@@ -12,14 +14,31 @@ import javafx.scene.text.Font;
 import javafx.scene.text.FontWeight;
 
 import java.net.URL;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.application.Platform;
+import javafx.util.Duration;
 
 public class DashboardScreen {
     private BorderPane view;
     private String currentUser;
     private VBox contentArea;
+    // timeline for automatic refresh
+    private Timeline refreshTimeline;
+    // active instance for cross-component notify
+    private static DashboardScreen activeInstance = null;
 
     public DashboardScreen(String username) {
         this.currentUser = username;
+        // ensure DB initialized for dependent views
+        try { Database.init(); } catch (Exception ignored) {}
         createView();
     }
 
@@ -33,101 +52,409 @@ public class DashboardScreen {
         topBar.setAlignment(Pos.CENTER_LEFT);
         topBar.getStyleClass().add("top-bar");
 
-        Label titleLabel = new Label("WG Verwaltung - Willkommen, " + currentUser);
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        Label titleLabel = new Label("Unser Haushalt");
+        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         titleLabel.getStyleClass().add("dashboard-title");
+        titleLabel.setWrapText(true);
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
         Button logoutButton = new Button("Abmelden");
+        logoutButton.setWrapText(true);
+        logoutButton.setMaxWidth(Double.MAX_VALUE);
         logoutButton.getStyleClass().add("logout-button");
         logoutButton.setOnAction(e -> logout());
 
-        // Admin-Node erzeugen und VOR dem Logout-Button einfügen (dann steht er links vom Logout)
         Node adminNode = AdminToolbar.settingsNode(currentUser);
 
         topBar.getChildren().addAll(titleLabel, spacer, adminNode, logoutButton);
 
-        // Left sidebar with navigation
-        VBox sidebar = new VBox(10);
-        sidebar.setPadding(new Insets(20));
-        sidebar.setMinWidth(200);
-        sidebar.getStyleClass().add("sidebar");
-
-        Label navLabel = new Label("Navigation");
-        navLabel.setFont(Font.font("Arial", FontWeight.BOLD, 16));
-        navLabel.getStyleClass().add("nav-title");
-
-        // Putzplan-Button
-        Button cleaningButton = new Button("Putzplan");
-        cleaningButton.setMaxWidth(Double.MAX_VALUE);
-        cleaningButton.getStyleClass().add("nav-button");
-        cleaningButton.setOnAction(e -> showCleaningSchedules());
-        cleaningButton.setAlignment(Pos.CENTER_LEFT);
-        cleaningButton.setContentDisplay(ContentDisplay.LEFT);
-        cleaningButton.setGraphicTextGap(8);
-
-        // Lokales Icon für Putzplan: `resources/icons/Putzplan.png`
-        ImageView cleaningIv = loadIconView("Putzplan.png");
-        if (cleaningIv != null) {
-            cleaningButton.setGraphic(cleaningIv);
-        }
-
-        // Einkaufsliste-Button
-        Button shoppingButton = new Button("Einkaufsliste");
-        shoppingButton.setMaxWidth(Double.MAX_VALUE);
-        shoppingButton.getStyleClass().add("nav-button");
-        shoppingButton.setOnAction(e -> showShoppingLists());
-        shoppingButton.setAlignment(Pos.CENTER_LEFT);
-        shoppingButton.setContentDisplay(ContentDisplay.LEFT);
-        shoppingButton.setGraphicTextGap(8);
-
-        // Lokales Icon für Einkaufsliste: `resources/icons/Einkaufsliste.png`
-        ImageView shoppingIv = loadIconView("Einkaufsliste.png");
-        if (shoppingIv != null) {
-            shoppingButton.setGraphic(shoppingIv);
-        }
-
-        // Haushaltsbuch-Button
-        Button budgetButton = new Button("Haushaltsbuch");
-        budgetButton.setMaxWidth(Double.MAX_VALUE);
-        budgetButton.getStyleClass().add("nav-button");
-        budgetButton.setOnAction(e -> showHouseholdBudget());
-        budgetButton.setAlignment(Pos.CENTER_LEFT);
-        budgetButton.setContentDisplay(ContentDisplay.LEFT);
-        budgetButton.setGraphicTextGap(8);
-
-        // Lokales Icon für Haushaltsbuch: `resources/icons/Haushaltsbuch.png`
-        ImageView budgetIv = loadIconView("Haushaltsbuch.png");
-        if (budgetIv != null) {
-            budgetButton.setGraphic(budgetIv);
-        }
-
-        sidebar.getChildren().addAll(navLabel, new Separator(),
-                cleaningButton, shoppingButton, budgetButton);
-
-        // Content area
-        contentArea = new VBox(20);
-        contentArea.setPadding(new Insets(20));
+        // Content area: stack of cards (default center)
+        contentArea = new VBox(18);
+        contentArea.setPadding(new Insets(18));
         contentArea.setAlignment(Pos.TOP_CENTER);
-        contentArea.getStyleClass().add("content-area");
 
-        showWelcome();
+        // Create three summary cards and add as default dashboard center
+        TitledPane tasksCard = createTasksCard();
+        TitledPane shoppingCard = createShoppingCard();
+        TitledPane financeCard = createFinanceCard();
+        tasksCard.setCollapsible(false);
+        shoppingCard.setCollapsible(false);
+        financeCard.setCollapsible(false);
+        contentArea.getChildren().addAll(tasksCard, shoppingCard, financeCard);
+
+        // left navigation sidebar (keeps layout consistent with other views)
+        VBox sidebar = createSidebar();
+        view.setLeft(sidebar);
 
         view.setTop(topBar);
-        view.setLeft(sidebar);
         view.setCenter(contentArea);
+
+        // refresh values when shown / could add listeners to stage size if needed
+        refreshAll();
+
+        // create a periodic refresh timeline (every 5 seconds)
+        if (refreshTimeline == null) {
+            refreshTimeline = new Timeline(new KeyFrame(Duration.seconds(5), ev -> {
+                // only refresh when dashboard content is currently visible in center
+                Platform.runLater(() -> {
+                    if (view.getCenter() == contentArea) refreshAll();
+                });
+            }));
+            refreshTimeline.setCycleCount(Timeline.INDEFINITE);
+        }
+
+        // start/stop timeline based on scene visibility
+        view.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene != null) {
+                // scene set, start timeline
+                if (refreshTimeline != null) refreshTimeline.play();
+                // register as active instance
+                DashboardScreen.registerActive(DashboardScreen.this);
+            } else {
+                // removed from scene, stop timeline to avoid leaks
+                if (refreshTimeline != null) refreshTimeline.stop();
+                // unregister
+                DashboardScreen.unregisterActive(DashboardScreen.this);
+            }
+        });
+
+        // Also pause if center is changed away from dashboard, resume when returned
+        view.centerProperty().addListener((obs, oldC, newC) -> {
+            if (refreshTimeline == null) return;
+            if (newC == contentArea) refreshTimeline.play();
+            else refreshTimeline.pause();
+        });
+    }
+
+    // Static helpers so other views can trigger an immediate dashboard refresh
+    private static synchronized void registerActive(DashboardScreen instance) { activeInstance = instance; }
+    private static synchronized void unregisterActive(DashboardScreen instance) { if (activeInstance == instance) activeInstance = null; }
+    public static void notifyRefreshNow() {
+        DashboardScreen inst = activeInstance;
+        if (inst == null) return;
+        Platform.runLater(() -> inst.refreshAll());
+    }
+
+    private TitledPane createTasksCard() {
+        // Card header with icon and title
+        HBox header = new HBox(8);
+        header.setAlignment(Pos.CENTER_LEFT);
+        ImageView iv = loadIconView("Putzplan.png");
+        if (iv != null) iv.setFitWidth(22);
+        Label lbl = new Label("Aufgaben");
+        lbl.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        header.getChildren().addAll(iv, lbl);
+
+        // content: two boxes side by side
+        HBox boxes = new HBox(12);
+        boxes.setPadding(new Insets(12));
+        boxes.setAlignment(Pos.CENTER);
+
+        VBox myTasksBox = createStatBox("Deine Aufgaben", "0");
+        VBox openTasksBox = createStatBox("Offene Aufgaben", "0");
+
+        HBox.setHgrow(myTasksBox, Priority.ALWAYS);
+        HBox.setHgrow(openTasksBox, Priority.ALWAYS);
+        boxes.getChildren().addAll(myTasksBox, openTasksBox);
+
+        TitledPane pane = new TitledPane();
+        pane.setGraphic(header);
+        pane.setContent(boxes);
+        pane.setPadding(new Insets(0));
+        pane.setMaxWidth(Double.MAX_VALUE);
+        pane.setPrefWidth(720);
+        pane.setUserData(new VBox[] { myTasksBox, openTasksBox }); // store references
+        return pane;
+    }
+
+    private TitledPane createShoppingCard() {
+        HBox header = new HBox(8);
+        header.setAlignment(Pos.CENTER_LEFT);
+        ImageView iv = loadIconView("Einkaufsliste.png");
+        if (iv != null) iv.setFitWidth(22);
+        Label lbl = new Label("Einkaufsliste");
+        lbl.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        header.getChildren().addAll(iv, lbl);
+
+        HBox boxes = new HBox(12);
+        boxes.setPadding(new Insets(12));
+        boxes.setAlignment(Pos.CENTER);
+
+        VBox totalBox = createStatBox("Einträge gesamt", "0");
+        VBox mineBox = createStatBox("Für dich", "0");
+
+        HBox.setHgrow(totalBox, Priority.ALWAYS);
+        HBox.setHgrow(mineBox, Priority.ALWAYS);
+        boxes.getChildren().addAll(totalBox, mineBox);
+
+        TitledPane pane = new TitledPane();
+        pane.setGraphic(header);
+        pane.setContent(boxes);
+        pane.setCollapsible(false);
+        pane.setMaxWidth(Double.MAX_VALUE);
+        pane.setPrefWidth(720);
+        pane.setUserData(new VBox[] { totalBox, mineBox });
+        return pane;
+    }
+
+    private TitledPane createFinanceCard() {
+        HBox header = new HBox(8);
+        header.setAlignment(Pos.CENTER_LEFT);
+        ImageView iv = loadIconView("Haushaltsbuch.png");
+        if (iv != null) iv.setFitWidth(22);
+        Label lbl = new Label("Finanzen");
+        lbl.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        header.getChildren().addAll(iv, lbl);
+
+        HBox boxes = new HBox(12);
+        boxes.setPadding(new Insets(12));
+        boxes.setAlignment(Pos.CENTER);
+
+        VBox owedToMe = createStatBox("Du bekommst zurück", "0,00 €");
+        VBox oweOthers = createStatBox("Du musst abgeben", "0,00 €");
+
+        HBox.setHgrow(owedToMe, Priority.ALWAYS);
+        HBox.setHgrow(oweOthers, Priority.ALWAYS);
+        boxes.getChildren().addAll(owedToMe, oweOthers);
+
+        TitledPane pane = new TitledPane();
+        pane.setGraphic(header);
+        pane.setContent(boxes);
+        pane.setCollapsible(false);
+        pane.setMaxWidth(Double.MAX_VALUE);
+        pane.setPrefWidth(720);
+        pane.setUserData(new VBox[] { owedToMe, oweOthers });
+        return pane;
+    }
+
+    private VBox createStatBox(String labelText, String valueText) {
+        VBox box = new VBox(6);
+        box.setPadding(new Insets(12));
+        box.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-radius:10; -fx-border-color: transparent;");
+        box.setAlignment(Pos.CENTER_LEFT);
+        box.setPrefWidth(320);
+
+        Label value = new Label(valueText);
+        value.setFont(Font.font("Arial", FontWeight.BOLD, 22));
+        value.setWrapText(true);
+        value.setId("stat-value");
+
+        Label label = new Label(labelText);
+        label.setFont(Font.font("Arial", 12));
+        label.setWrapText(true);
+
+        box.getChildren().addAll(value, label);
+        return box;
+    }
+
+    private void refreshAll() {
+        refreshTasks();
+        refreshShopping();
+        refreshFinance();
+    }
+
+    private void refreshTasks() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // count tasks assigned to currentUser
+            int myCount = 0;
+            int openCount = 0;
+
+            try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM cleaning_tasks WHERE assigned_to = ?")) {
+                ps.setString(1, currentUser);
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) myCount = rs.getInt("c");
+                }
+            } catch (Exception ignored) {}
+
+            try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM cleaning_tasks WHERE completed = 0")) {
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) openCount = rs.getInt("c");
+                }
+            } catch (Exception ignored) {}
+
+            // update UI
+            for (Node n : contentArea.getChildren()) {
+                if (n instanceof TitledPane) {
+                    TitledPane tp = (TitledPane) n;
+                    if ("Aufgaben".equals(((Label)((HBox)tp.getGraphic()).getChildren().get(1)).getText())) {
+                        VBox[] boxes = (VBox[]) tp.getUserData();
+                        ((Label) boxes[0].lookup("#stat-value")).setText(String.valueOf(myCount));
+                        ((Label) boxes[1].lookup("#stat-value")).setText(String.valueOf(openCount));
+                        break;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("Fehler beim Laden der Aufgaben-Daten: " + e.getMessage());
+        }
+    }
+
+    private void refreshShopping() {
+        try (Connection conn = DatabaseManager.getConnection()) {
+            int total = 0;
+            int mine = 0;
+
+            try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM shopping_items")) {
+                try (ResultSet rs = ps.executeQuery()) { if (rs.next()) total = rs.getInt("c"); }
+            } catch (Exception ignored) {}
+
+            try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM shopping_items WHERE purchased_for = ?")) {
+                ps.setString(1, currentUser);
+                try (ResultSet rs = ps.executeQuery()) { if (rs.next()) mine = rs.getInt("c"); }
+            } catch (Exception ignored) {}
+
+            for (Node n : contentArea.getChildren()) {
+                if (n instanceof TitledPane) {
+                    TitledPane tp = (TitledPane) n;
+                    if ("Einkaufsliste".equals(((Label)((HBox)tp.getGraphic()).getChildren().get(1)).getText())) {
+                        VBox[] boxes = (VBox[]) tp.getUserData();
+                        ((Label) boxes[0].lookup("#stat-value")).setText(String.valueOf(total));
+                        ((Label) boxes[1].lookup("#stat-value")).setText(String.valueOf(mine));
+                        break;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("Fehler beim Laden der Einkaufs-Daten: " + e.getMessage());
+        }
+    }
+
+    private void refreshFinance() {
+        // We'll compute per-user balances from transactions and shares similarly to BudgetView
+        try (Connection conn = DatabaseManager.getConnection()) {
+            // resolve currentUser to actual username stored in users table (handles display names)
+            String resolvedUser = resolveUsername(conn, currentUser);
+             // Load all transactions
+             String txSql = "SELECT id, amount, paid_by FROM budget_transactions";
+            List<TransactionRow> txs = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement(txSql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int id = rs.getInt("id");
+                    double amount = rs.getDouble("amount");
+                    String paidBy = rs.getString("paid_by");
+                    txs.add(new TransactionRow(id, amount, paidBy));
+                }
+            }
+
+            // Load shares for transactions
+            Map<Integer, Map<String, Double>> sharesMap = new HashMap<>();
+            String shareSql = "SELECT transaction_id, username, share FROM budget_shares";
+            try (PreparedStatement ps = conn.prepareStatement(shareSql);
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    int tid = rs.getInt("transaction_id");
+                    String user = rs.getString("username");
+                    double share = rs.getDouble("share");
+                    sharesMap.computeIfAbsent(tid, k -> new HashMap<>()).put(user, share);
+                }
+            }
+
+            // Load all users for equal-split fallback
+            List<String> users = new ArrayList<>();
+            try (PreparedStatement ps = conn.prepareStatement("SELECT username FROM users");
+                 ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) users.add(rs.getString("username"));
+            }
+
+            // compute balances map
+            Map<String, Double> balances = new HashMap<>();
+            for (TransactionRow tr : txs) {
+                if (tr.paidBy != null) balances.put(tr.paidBy, balances.getOrDefault(tr.paidBy, 0.0) + tr.amount);
+                Map<String, Double> shares = sharesMap.get(tr.id);
+                if (shares != null && !shares.isEmpty()) {
+                    for (Map.Entry<String, Double> e : shares.entrySet()) {
+                        String u = e.getKey();
+                        double debt = e.getValue() * tr.amount;
+                        balances.put(u, balances.getOrDefault(u, 0.0) - debt);
+                    }
+                } else {
+                    List<String> participants = users.isEmpty() ? (tr.paidBy != null ? List.of(tr.paidBy) : List.of()) : users;
+                    if (!participants.isEmpty()) {
+                        double share = 1.0 / participants.size();
+                        for (String u : participants) {
+                            double debt = share * tr.amount;
+                            balances.put(u, balances.getOrDefault(u, 0.0) - debt);
+                        }
+                    }
+                }
+            }
+
+            double owedToMe = 0.0;
+            double oweOthers = 0.0;
+            if (resolvedUser != null) {
+                double bal = balances.getOrDefault(resolvedUser, 0.0);
+                // as fallback, try case-insensitive match if exact key not found
+                if (Math.abs(bal) < 0.000001) {
+                    for (Map.Entry<String, Double> e : balances.entrySet()) {
+                        if (e.getKey() != null && resolvedUser.equalsIgnoreCase(e.getKey())) { bal = e.getValue(); break; }
+                    }
+                }
+                if (bal > 0) owedToMe = bal;
+                else oweOthers = -bal;
+            } else if (currentUser != null) {
+                // last attempt: use raw currentUser as key (case-insensitive lookup)
+                double bal = balances.getOrDefault(currentUser, 0.0);
+                if (Math.abs(bal) < 0.000001) {
+                    for (Map.Entry<String, Double> e : balances.entrySet()) {
+                        if (e.getKey() != null && currentUser.equalsIgnoreCase(e.getKey())) { bal = e.getValue(); break; }
+                    }
+                }
+                if (bal > 0) owedToMe = bal;
+                else oweOthers = -bal;
+            }
+
+            for (Node n : contentArea.getChildren()) {
+                if (n instanceof TitledPane) {
+                    TitledPane tp = (TitledPane) n;
+                    if ("Finanzen".equals(((Label)((HBox)tp.getGraphic()).getChildren().get(1)).getText())) {
+                        VBox[] boxes = (VBox[]) tp.getUserData();
+                        ((Label) boxes[0].lookup("#stat-value")).setText(String.format("%.2f €", owedToMe));
+                        ((Label) boxes[1].lookup("#stat-value")).setText(String.format("%.2f €", oweOthers));
+                        break;
+                    }
+                }
+            }
+
+        } catch (Exception e) {
+            System.out.println("Fehler beim Laden der Finanz-Daten: " + e.getMessage());
+        }
+    }
+
+    // try to resolve display username to actual username from users table
+    private String resolveUsername(Connection conn, String user) {
+        if (conn == null || user == null) return null;
+        String trimmed = user.trim();
+        // if format like "Name (username)" extract inside parentheses
+        int p = trimmed.indexOf('(');
+        if (p >= 0) {
+            int q = trimmed.indexOf(')', p);
+            if (q > p) {
+                String inside = trimmed.substring(p+1, q).trim();
+                if (!inside.isEmpty()) return inside;
+            }
+        }
+        // try exact match on username or name (case-insensitive)
+        try (PreparedStatement ps = conn.prepareStatement("SELECT username FROM users WHERE username = ? OR name = ? COLLATE NOCASE LIMIT 1")) {
+            ps.setString(1, trimmed);
+            ps.setString(2, trimmed);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return rs.getString("username");
+            }
+        } catch (Exception ignored) {}
+        return null;
     }
 
     private ImageView loadIconView(String fileName) {
         final String[] candidates = {"/icons/" + fileName, "icons/" + fileName, "/" + fileName, fileName};
         URL url = null;
         for (String p : candidates) {
-            // Versuche zuerst relative zur Klasse
             url = DashboardScreen.class.getResource(p);
             if (url != null) break;
-            // Dann über ClassLoader ohne führenden '/'
             String lookup = p.startsWith("/") ? p.substring(1) : p;
             url = DashboardScreen.class.getClassLoader().getResource(lookup);
             if (url != null) break;
@@ -151,48 +478,67 @@ public class DashboardScreen {
         return null;
     }
 
-    private void showWelcome() {
-        contentArea.getChildren().clear();
-
-        Label welcomeLabel = new Label("Willkommen bei der WG Verwaltung!");
-        welcomeLabel.setFont(Font.font("Arial", FontWeight.BOLD, 28));
-        welcomeLabel.getStyleClass().add("welcome-title");
-
-        Label instructionLabel = new Label(
-                "Verwende das Navigationsmenü links, um:\n\n" +
-                        "• Putzpläne zu verwalten\n" +
-                        "• Einkaufsliste(n) zu erstellen\n" +
-                        "• das Haushaltsbudget zu verwalten"
-        );
-        instructionLabel.setFont(Font.font("Arial", 16));
-        instructionLabel.getStyleClass().add("welcome-text");
-
-        contentArea.getChildren().addAll(welcomeLabel, instructionLabel);
-    }
-
-    private void showCleaningSchedules() {
-        contentArea.getChildren().clear();
-        CleaningScheduleView cleaningView = new CleaningScheduleView(currentUser);
-        contentArea.getChildren().add(cleaningView.getView());
-    }
-
-    private void showShoppingLists() {
-        contentArea.getChildren().clear();
-        ShoppingListView shoppingView = new ShoppingListView(currentUser);
-        contentArea.getChildren().add(shoppingView.getView());
-    }
-
-    private void showHouseholdBudget() {
-        contentArea.getChildren().clear();
-        BudgetView budgetView = new BudgetView(currentUser);
-        contentArea.getChildren().add(budgetView.getView());
-    }
-
     private void logout() {
         com.flatmanager.App.showLoginScreen();
+    }
+
+    private VBox createSidebar() {
+        VBox sb = new VBox(8);
+        sb.getStyleClass().add("sidebar");
+        sb.setPadding(new Insets(12));
+        sb.setPrefWidth(160);
+
+        Button dashBtn = new Button("Dashboard");
+        dashBtn.setMaxWidth(Double.MAX_VALUE);
+        dashBtn.setOnAction(e -> view.setCenter(contentArea));
+
+        Button cleaningBtn = new Button("Putzplan");
+        cleaningBtn.setMaxWidth(Double.MAX_VALUE);
+        cleaningBtn.setOnAction(e -> {
+            try {
+                CleaningScheduleView csv = new CleaningScheduleView(currentUser);
+                view.setCenter(csv.getView());
+            } catch (Exception ex) {
+                showError("Fehler beim Öffnen des Putzplans: " + ex.getMessage());
+            }
+        });
+
+        Button shoppingBtn = new Button("Einkaufsliste");
+        shoppingBtn.setMaxWidth(Double.MAX_VALUE);
+        shoppingBtn.setOnAction(e -> {
+            try {
+                ShoppingListView slv = new ShoppingListView(currentUser);
+                view.setCenter(slv.getView());
+            } catch (Exception ex) {
+                showError("Fehler beim Öffnen der Einkaufsliste: " + ex.getMessage());
+            }
+        });
+
+        Button budgetBtn = new Button("Haushaltsbuch");
+        budgetBtn.setMaxWidth(Double.MAX_VALUE);
+        budgetBtn.setOnAction(e -> {
+            try {
+                BudgetView bv = new BudgetView(currentUser);
+                view.setCenter(bv.getView());
+            } catch (Exception ex) {
+                showError("Fehler beim Öffnen des Haushaltsbuchs: " + ex.getMessage());
+            }
+        });
+
+        sb.getChildren().addAll(dashBtn, cleaningBtn, shoppingBtn, budgetBtn);
+        return sb;
+    }
+
+    private void showError(String message) {
+        Alert a = new Alert(Alert.AlertType.ERROR);
+        a.setHeaderText(null);
+        a.setContentText(message);
+        a.showAndWait();
     }
 
     public BorderPane getView() {
         return view;
     }
+
+    private static class TransactionRow { final int id; final double amount; final String paidBy; TransactionRow(int id,double amount,String paidBy){this.id=id;this.amount=amount;this.paidBy=paidBy;} }
 }

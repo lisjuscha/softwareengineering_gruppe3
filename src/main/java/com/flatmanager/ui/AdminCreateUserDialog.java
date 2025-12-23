@@ -36,29 +36,22 @@ public class AdminCreateUserDialog {
 
         TextField usernameField = new TextField();
         usernameField.setPromptText("Benutzername");
+        usernameField.setMaxWidth(Double.MAX_VALUE);
 
         CheckBox adminCheck = new CheckBox("Admin");
 
-        Label passwordLabel = new Label("Passwort:");
+        Label passwordLabel = new Label("Passwort:"); passwordLabel.setWrapText(true); passwordLabel.setMaxWidth(Double.MAX_VALUE);
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Passwort");
+        passwordField.setMaxWidth(Double.MAX_VALUE);
 
-        Label confirmLabel = new Label("Passwort bestätigen:");
+        Label confirmLabel = new Label("Passwort bestätigen:"); confirmLabel.setWrapText(true); confirmLabel.setMaxWidth(Double.MAX_VALUE);
         PasswordField confirmField = new PasswordField();
         confirmField.setPromptText("Passwort bestätigen");
+        confirmField.setMaxWidth(Double.MAX_VALUE);
 
-        // Standardmäßig Passwortfelder und Labels ausblenden (sichtbar nur bei Admin)
-        passwordLabel.setVisible(false);
-        passwordLabel.setManaged(false);
-        passwordField.setVisible(false);
-        passwordField.setManaged(false);
-
-        confirmLabel.setVisible(false);
-        confirmLabel.setManaged(false);
-        confirmField.setVisible(false);
-        confirmField.setManaged(false);
-
-        grid.add(new Label("Benutzername:"), 0, 0);
+        Label unameLabel = new Label("Benutzername:"); unameLabel.setWrapText(true); unameLabel.setMaxWidth(Double.MAX_VALUE);
+        grid.add(unameLabel, 0, 0);
         grid.add(usernameField, 1, 0);
         grid.add(adminCheck, 1, 1);
         grid.add(passwordLabel, 0, 2);

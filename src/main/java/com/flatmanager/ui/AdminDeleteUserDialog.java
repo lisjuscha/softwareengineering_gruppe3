@@ -42,8 +42,11 @@ public class AdminDeleteUserDialog {
         stage.setTitle("Benutzer / WG löschen");
 
         Label label = new Label("Benutzer zum Löschen auswählen:");
+        label.setWrapText(true);
+        label.setMaxWidth(Double.MAX_VALUE);
         List<String> usernames = loadUsernames(owner, currentAdminUsername);
         ComboBox<String> userCombo = new ComboBox<>(FXCollections.observableArrayList(usernames));
+        userCombo.setMaxWidth(Double.MAX_VALUE);
         userCombo.setPromptText("Benutzer auswählen");
 
         Button deleteBtn = new Button("Löschen");

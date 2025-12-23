@@ -11,6 +11,8 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -27,11 +29,23 @@ public class AdminUserManagementView {
         if (owner != null) stage.initOwner(owner);
         stage.setTitle("Benutzerverwaltung");
 
+        Label header = new Label("Benutzerverwaltung");
+        header.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        header.setWrapText(true);
+        if (com.flatmanager.App.getPrimaryStage() != null) {
+            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
+                double scale = Math.max(0.8, Math.min(1.0, newW.doubleValue() / 1100.0));
+                header.setFont(Font.font("Arial", FontWeight.BOLD, 18 * scale));
+            });
+        }
+
         Label label = new Label("Wähle eine Aktion:");
-        Button createBtn = new Button("Benutzer anlegen");
-        Button deleteBtn = new Button("Benutzer löschen");
-        Button deleteWgBtn = new Button("WG löschen");
-        Button cancelBtn = new Button("Abbrechen");
+        label.setWrapText(true);
+        label.setMaxWidth(Double.MAX_VALUE);
+        Button createBtn = new Button("Benutzer anlegen"); createBtn.setWrapText(true); createBtn.setMaxWidth(Double.MAX_VALUE);
+        Button deleteBtn = new Button("Benutzer löschen"); deleteBtn.setWrapText(true); deleteBtn.setMaxWidth(Double.MAX_VALUE);
+        Button deleteWgBtn = new Button("WG löschen"); deleteWgBtn.setWrapText(true); deleteWgBtn.setMaxWidth(Double.MAX_VALUE);
+        Button cancelBtn = new Button("Abbrechen"); cancelBtn.setWrapText(true); cancelBtn.setMaxWidth(Double.MAX_VALUE);
 
         createBtn.setOnAction(e -> {
             try {
@@ -90,7 +104,7 @@ public class AdminUserManagementView {
         HBox actions = new HBox(10, createBtn, deleteBtn, deleteWgBtn, cancelBtn);
         actions.setAlignment(Pos.CENTER);
 
-        VBox root = new VBox(12, label, actions);
+        VBox root = new VBox(12, header, label, actions);
         root.setPadding(new Insets(12));
         root.setAlignment(Pos.CENTER);
 

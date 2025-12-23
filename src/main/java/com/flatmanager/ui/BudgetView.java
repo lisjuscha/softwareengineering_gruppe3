@@ -122,6 +122,18 @@ public class BudgetView {
 
         // Reihenfolge: TOTAL oben, dann Tabs
         view.getChildren().addAll(totalBar, tabPane);
+
+        Label header = new Label("Haushaltsbuch");
+        header.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        header.setWrapText(true);
+        if (com.flatmanager.App.getPrimaryStage() != null) {
+            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
+                double scale = Math.max(0.8, Math.min(1.0, newW.doubleValue() / 1100.0));
+                header.setFont(Font.font("Arial", FontWeight.BOLD, 18 * scale));
+            });
+        }
+
+        view.getChildren().add(0, header);
     }
 
     private GridPane buildAddForm() {
@@ -265,7 +277,55 @@ public class BudgetView {
         GridPane.setMargin(addButton, new Insets(8, 0, 0, 0));
         addButton.setMaxWidth(Double.MAX_VALUE);
 
+        // Admin-only: vollständiges Haushaltsbuch löschen (nur sichtbar für Admins)
+        Button deleteAllBtn = new Button("Haushaltsbuch löschen");
+        deleteAllBtn.getStyleClass().addAll("button", "button-danger");
+        deleteAllBtn.setWrapText(true);
+        deleteAllBtn.setMaxWidth(Double.MAX_VALUE);
+        deleteAllBtn.setOnAction(e -> {
+            Alert a = new Alert(Alert.AlertType.CONFIRMATION);
+            a.setHeaderText(null);
+            a.setContentText("Möchtest du alle Einträge im Haushaltsbuch löschen?");
+            ButtonType yes = new ButtonType("Ja", ButtonBar.ButtonData.YES);
+            ButtonType cancel = new ButtonType("Abbrechen", ButtonBar.ButtonData.CANCEL_CLOSE);
+            a.getButtonTypes().setAll(yes, cancel);
+            a.initOwner(view.getScene() != null ? view.getScene().getWindow() : null);
+            a.showAndWait().ifPresent(bt -> {
+                if (bt == yes) {
+                    deleteAllBudget();
+                }
+            });
+        });
+
+        // Only show the deleteAllBtn for admin users
+        if (isAdminUser()) {
+            form.add(deleteAllBtn, 0, 5, 4, 1);
+            GridPane.setMargin(deleteAllBtn, new Insets(8, 0, 0, 0));
+            deleteAllBtn.setMaxWidth(Double.MAX_VALUE);
+        }
+
         return form;
+    }
+
+    private void deleteAllBudget() {
+        String delShares = "DELETE FROM budget_shares";
+        String delTrans = "DELETE FROM budget_transactions";
+        try (Connection conn = DatabaseManager.getConnection()) {
+            try (PreparedStatement ps = conn.prepareStatement(delShares)) { ps.executeUpdate(); }
+            try (PreparedStatement ps2 = conn.prepareStatement(delTrans)) { ps2.executeUpdate(); }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            showAlert("Fehler beim Löschen des Haushaltsbuchs.");
+            return;
+        }
+
+        // Clear in-memory and update UI
+        transactions.clear();
+        rebuildCategoryTables();
+        updateTotal();
+        showAlert("Haushaltsbuch wurde gelöscht.");
+        // Notify dashboard to refresh immediately
+        try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
     }
 
     private void buildParticipantButtons(List<String> users) {
@@ -400,6 +460,25 @@ public class BudgetView {
             TableColumn<BudgetTransaction, String> beschrCol = new TableColumn<>("Beschreibung");
             beschrCol.setCellValueFactory(new PropertyValueFactory<>("description"));
             beschrCol.setPrefWidth(300);
+            // Use a wrapping label inside cells so long descriptions wrap to next line
+            beschrCol.setCellFactory(col -> new TableCell<BudgetTransaction, String>() {
+                private final Label lbl = new Label();
+                {
+                    lbl.setWrapText(true);
+                    lbl.setMaxWidth(Double.MAX_VALUE);
+                }
+                @Override
+                protected void updateItem(String item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty || item == null) {
+                        setGraphic(null);
+                    } else {
+                        lbl.setText(item);
+                        lbl.setPrefWidth(getTableColumn().getWidth() - 10);
+                        setGraphic(lbl);
+                    }
+                }
+            });
 
             TableColumn<BudgetTransaction, Double> betragCol = new TableColumn<>("Betrag");
             betragCol.setCellValueFactory(new PropertyValueFactory<>("amount"));
@@ -509,6 +588,9 @@ public class BudgetView {
                 } catch (SQLException ex) { ex.printStackTrace(); }
             }
 
+            // notify dashboard to refresh immediately
+            try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
+
             return newId;
         } catch (SQLException e) {
             e.printStackTrace();
@@ -523,6 +605,7 @@ public class BudgetView {
         try (Connection conn = DatabaseManager.getConnection()) {
             try (PreparedStatement ps = conn.prepareStatement(delShares)) { ps.setInt(1, id); ps.executeUpdate(); }
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) { pstmt.setInt(1, id); pstmt.executeUpdate(); }
+            try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert("Fehler beim Löschen der Transaktion.");
@@ -583,13 +666,15 @@ public class BudgetView {
     public VBox getView() { return view; }
 
     private void updateTotal() {
+        // Global total: sum of all transaction amounts
         double globalSum = 0.0;
         for (BudgetTransaction t : transactions) {
             if (t == null) continue;
-            if (!t.isSplit()) globalSum += t.getAmount();
+            globalSum += t.getAmount();
         }
         totalLabel.setText("TOTAL: " + currencyFormat.format(globalSum));
 
+        // Per-user balances (positive => others owe this user)
         Map<String, Double> balances = computeBalances();
         double userBalance = 0.0;
         if (currentUser != null && balances.containsKey(currentUser)) userBalance = balances.get(currentUser);
@@ -704,3 +789,4 @@ public class BudgetView {
         public void setSplit(boolean split) { isSplit = split; }
     }
 }
+

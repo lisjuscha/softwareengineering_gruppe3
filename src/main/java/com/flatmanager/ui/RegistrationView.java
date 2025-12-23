@@ -47,15 +47,19 @@ public class RegistrationView {
         TextArea membersArea = new TextArea();
         membersArea.setPromptText("Zusätzliche Mitglieder (eine pro Zeile: displayName,username,password)");
 
-        form.getChildren().addAll(new Label("WG Name:"), wgField,
-                new Label("Admin Benutzername:"), adminUser,
-                new Label("Admin Passwort:"), adminPass,
-                new Label("Zusätzliche Mitglieder (optional):"), membersArea);
+        Label wgLabel = new Label("WG Name:"); wgLabel.setWrapText(true); wgLabel.setMaxWidth(Double.MAX_VALUE);
+        Label adminUserLabel = new Label("Admin Benutzername:"); adminUserLabel.setWrapText(true); adminUserLabel.setMaxWidth(Double.MAX_VALUE);
+        Label adminPassLabel = new Label("Admin Passwort:"); adminPassLabel.setWrapText(true); adminPassLabel.setMaxWidth(Double.MAX_VALUE);
+        Label membersLabel = new Label("Zusätzliche Mitglieder (optional):"); membersLabel.setWrapText(true); membersLabel.setMaxWidth(Double.MAX_VALUE);
+        form.getChildren().addAll(wgLabel, wgField,
+                adminUserLabel, adminUser,
+                adminPassLabel, adminPass,
+                membersLabel, membersArea);
 
         root.setCenter(form);
 
-        Button createBtn = new Button("Erstellen");
-        Button cancelBtn = new Button("Abbrechen");
+        Button createBtn = new Button("Erstellen"); createBtn.setWrapText(true); createBtn.setMaxWidth(Double.MAX_VALUE);
+        Button cancelBtn = new Button("Abbrechen"); cancelBtn.setWrapText(true); cancelBtn.setMaxWidth(Double.MAX_VALUE);
         createBtn.setDefaultButton(true);
         cancelBtn.setCancelButton(true);
 
@@ -104,6 +108,18 @@ public class RegistrationView {
         bottom.setAlignment(Pos.CENTER_RIGHT);
 
         root.setBottom(bottom);
+
+        Label title = new Label("Registrierung");
+        title.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+        title.setWrapText(true);
+        if (com.flatmanager.App.getPrimaryStage() != null) {
+            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
+                double scale = Math.max(0.85, Math.min(1.0, newW.doubleValue() / 1100.0));
+                title.setStyle(String.format("-fx-font-size: %.0fpx; -fx-font-weight: bold;", 20 * scale));
+            });
+        }
+
+        root.setTop(title);
 
         Scene scene = new Scene(root);
         stage.setScene(scene);

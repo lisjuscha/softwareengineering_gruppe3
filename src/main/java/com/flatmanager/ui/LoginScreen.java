@@ -48,10 +48,14 @@ public class LoginScreen {
         Label titleLabel = new Label("WG Verwaltung");
         titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 36));
         titleLabel.getStyleClass().add("title");
+        titleLabel.setWrapText(true);
+        titleLabel.maxWidthProperty().bind(view.widthProperty().subtract(80));
 
         Label subtitleLabel = new Label("Wähle dein Profil");
         subtitleLabel.setFont(Font.font("Arial", 14));
         subtitleLabel.setStyle("-fx-text-fill: #666;");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.maxWidthProperty().bind(view.widthProperty().subtract(80));
 
         usersPane = new FlowPane();
         usersPane.setHgap(24);
@@ -111,6 +115,9 @@ public class LoginScreen {
 
         if (loaded == 0) {
             Button registerBtn = new Button("Neue WG erstellen");
+            registerBtn.setWrapText(true);
+            registerBtn.setMaxWidth(Double.MAX_VALUE);
+            registerBtn.setPrefWidth(180);
             registerBtn.setOnAction(ev -> {
                 Stage owner = com.flatmanager.App.getPrimaryStage();
                 RegistrationView.showRegistration(owner, success -> {
@@ -173,6 +180,7 @@ public class LoginScreen {
         nameLabel.setWrapText(true);
         nameLabel.setTextAlignment(TextAlignment.CENTER);
         nameLabel.setMaxWidth(120);
+        nameLabel.setPrefWidth(120);
 
         VBox wrapper = new VBox(8, square, nameLabel);
         wrapper.setAlignment(Pos.CENTER);
@@ -364,3 +372,4 @@ public class LoginScreen {
         });
     }
 }
+

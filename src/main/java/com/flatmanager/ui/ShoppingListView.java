@@ -45,7 +45,15 @@ public class ShoppingListView {
 
         // Header (kein grauer Kasten), fett
         Label header = new Label("Einkaufsliste");
-        header.setFont(Font.font("Arial", FontWeight.BOLD, 26));
+        header.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        header.setWrapText(true);
+        if (com.flatmanager.App.getPrimaryStage() != null) {
+            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
+                double scale = Math.max(0.8, Math.min(1.0, newW.doubleValue() / 1100.0));
+                header.setFont(Font.font("Arial", FontWeight.BOLD, 18 * scale));
+            });
+        }
+
         header.setPadding(new Insets(12, 12, 8, 12));
         header.getStyleClass().add("title");
 
@@ -85,6 +93,8 @@ public class ShoppingListView {
         form.setPadding(new Insets(0, 8, 8, 8));
         form.setStyle("-fx-border-color: transparent; -fx-background-color: transparent;");
         form.setMaxWidth(Double.MAX_VALUE);
+        // Ensure children expand horizontally to fill the form width
+        form.setFillWidth(true);
 
         TextField itemField = new TextField();
         itemField.setPromptText("Name");
@@ -143,6 +153,10 @@ public class ShoppingListView {
         HBox.setHgrow(assignBuyerBtn, Priority.ALWAYS);
 
         Button saveBtn = new Button("Speichern");
+        saveBtn.setWrapText(true);
+        saveBtn.setMaxWidth(Double.MAX_VALUE);
+        // encourage the layout to stretch the button horizontally
+        VBox.setVgrow(saveBtn, Priority.NEVER);
         saveBtn.getStyleClass().addAll("button", "button-primary");
         saveBtn.setMaxWidth(Double.MAX_VALUE);
 
@@ -172,6 +186,9 @@ public class ShoppingListView {
 
         // Clear Buttons — gleiche Breite wie Save (Binding erfolgt weiter unten)
         Button clearCompletedBtn = new Button("Erledigte leeren");
+        clearCompletedBtn.setWrapText(true);
+        clearCompletedBtn.setMaxWidth(Double.MAX_VALUE);
+        VBox.setVgrow(clearCompletedBtn, Priority.NEVER);
         clearCompletedBtn.getStyleClass().addAll("button");
         clearCompletedBtn.setMaxWidth(Double.MAX_VALUE);
         clearCompletedBtn.setOnAction(e -> {
@@ -180,6 +197,9 @@ public class ShoppingListView {
         });
 
         Button clearBtn = new Button("Liste leeren");
+        clearBtn.setWrapText(true);
+        clearBtn.setMaxWidth(Double.MAX_VALUE);
+        VBox.setVgrow(clearBtn, Priority.NEVER);
         clearBtn.getStyleClass().addAll("button", "button-danger");
         clearBtn.setMaxWidth(Double.MAX_VALUE);
         clearBtn.setOnAction(e -> {
@@ -187,14 +207,16 @@ public class ShoppingListView {
             loadItems();
         });
 
+        // Form-Title oben in der rechten Spalte, direkt über dem Formular (bündig)
+        // Die Clear-Buttons werden INSIDE des `form` platziert, damit sie dieselbe Einrückung/Breite wie der Save-Button haben.
+        form.getChildren().addAll(clearCompletedBtn, clearBtn);
         VBox rightBox = new VBox(8);
         rightBox.setPadding(new Insets(10));
         rightBox.getStyleClass().add("column");
         rightBox.setFillWidth(true);
         HBox.setHgrow(rightBox, Priority.ALWAYS);
 
-        // Form-Title oben in der rechten Spalte, direkt über dem Formular (bündig)
-        rightBox.getChildren().addAll(formTitle, form, clearCompletedBtn, clearBtn);
+        rightBox.getChildren().addAll(formTitle, form);
 
         HBox mainColumns = new HBox(12, centerBox, rightBox);
         mainColumns.setPadding(new Insets(0));
@@ -202,10 +224,23 @@ public class ShoppingListView {
 
         root.setCenter(mainColumns);
 
-        // Buttons gleiche Breite: an rightBox bind
-        saveBtn.prefWidthProperty().bind(rightBox.widthProperty().subtract(16));
-        clearCompletedBtn.prefWidthProperty().bind(rightBox.widthProperty().subtract(16));
-        clearBtn.prefWidthProperty().bind(rightBox.widthProperty().subtract(16));
+        // Ensure form fills the rightBox usable width but don't force preferred widths
+        form.prefWidthProperty().bind(rightBox.widthProperty().subtract(16));
+        // Revert to computed preferred width so buttons use natural/CSS sizing
+        saveBtn.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        clearCompletedBtn.setPrefWidth(Region.USE_COMPUTED_SIZE);
+        clearBtn.setPrefWidth(Region.USE_COMPUTED_SIZE);
+
+        // Ensure the buttons are direct children of the form (remove any HBox wrappers if present)
+        form.getChildren().removeIf(node -> node instanceof HBox && ((HBox) node).getChildren().contains(saveBtn));
+        form.getChildren().removeIf(node -> node instanceof HBox && ((HBox) node).getChildren().contains(clearCompletedBtn));
+        form.getChildren().removeIf(node -> node instanceof HBox && ((HBox) node).getChildren().contains(clearBtn));
+        // Remove possible duplicate button entries then add the plain buttons in order
+        form.getChildren().remove(saveBtn);
+        form.getChildren().remove(clearCompletedBtn);
+        form.getChildren().remove(clearBtn);
+        form.getChildren().add(saveBtn);
+        form.getChildren().addAll(clearCompletedBtn, clearBtn);
 
         // lade Benutzerliste initial (nachdem assignOnAddCombo existiert)
         loadUsers();
@@ -314,6 +349,8 @@ public class ShoppingListView {
         for (String category : grouped.keySet()) {
 
             Label catLabel = new Label(category);
+            catLabel.setWrapText(true);
+            catLabel.setMaxWidth(Double.MAX_VALUE);
             catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
             catLabel.setPadding(new Insets(4, 0, 4, 0));
             catLabel.getStyleClass().add("title");
@@ -343,6 +380,8 @@ public class ShoppingListView {
 
                 Label name = new Label(item.getItemName());
                 name.setFont(Font.font(14));
+                name.setWrapText(true);
+                name.setMaxWidth(400);
 
                 HBox topLine = new HBox(spacingBetweenQtyAndName, qty, name);
                 topLine.setAlignment(Pos.CENTER_LEFT);
@@ -407,6 +446,9 @@ public class ShoppingListView {
             else pstmt.setNull(5, Types.VARCHAR);
             pstmt.executeUpdate();
 
+            // notify dashboard for immediate refresh
+            try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
+
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert("Fehler beim Hinzufügen");
@@ -420,6 +462,8 @@ public class ShoppingListView {
             pstmt.setInt(1, purchased ? 1 : 0);
             pstmt.setInt(2, id);
             pstmt.executeUpdate();
+
+            try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -438,6 +482,8 @@ public class ShoppingListView {
             pstmt.setInt(3, id);
             pstmt.executeUpdate();
 
+            try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
+
         } catch (SQLException e) {
             e.printStackTrace();
         }
@@ -448,6 +494,7 @@ public class ShoppingListView {
              PreparedStatement ps = conn.prepareStatement("DELETE FROM shopping_items WHERE purchased = 1")) {
             int deleted = ps.executeUpdate();
             System.out.println("[DB] Gelöschte erledigte Einträge: " + deleted);
+            try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
         } catch (SQLException e) {
             e.printStackTrace();
             showAlert("Fehler beim Löschen der erledigten Einträge");
@@ -459,6 +506,7 @@ public class ShoppingListView {
              Statement stmt = conn.createStatement()) {
 
             stmt.executeUpdate("DELETE FROM shopping_items");
+            try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
 
         } catch (SQLException e) {
             e.printStackTrace();
@@ -477,3 +525,4 @@ public class ShoppingListView {
         return root;
     }
 }
+

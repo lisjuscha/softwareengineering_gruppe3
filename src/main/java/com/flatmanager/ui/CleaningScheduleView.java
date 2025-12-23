@@ -148,6 +148,7 @@ public class CleaningScheduleView {
         newTaskBtn.setOnAction(e -> showNewTaskDialog());
 
         Button deleteCompletedBtn = new Button("Erledigte Aufgaben löschen");
+        deleteCompletedBtn.setWrapText(true);
         deleteCompletedBtn.setMaxWidth(Double.MAX_VALUE);
         deleteCompletedBtn.setStyle("-fx-background-color: #f0625e; -fx-text-fill: white;");
         deleteCompletedBtn.setOnAction(e -> deleteCompletedTasks());
@@ -212,6 +213,7 @@ public class CleaningScheduleView {
             task.setCompleted(cb.isSelected());
             try {
                 dao.update(task);
+                try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
             } catch (Exception ex) {
                 showError("Fehler beim Aktualisieren: " + ex.getMessage());
             }
@@ -220,16 +222,16 @@ public class CleaningScheduleView {
 
         Label title = new Label(task.getTitle());
         title.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        title.setWrapText(true);
 
         Label meta = new Label(getDueText(task));
         meta.setStyle("-fx-text-fill: #b00020;"); // rot für Fälligkeit
-        if (!task.hasAssignee()) {
-            meta.setStyle("-fx-text-fill: -fx-text-inner-color;");
-        }
+        meta.setWrapText(true);
 
         String recText = task.getRecurrence() == null ? "Einmalig" : task.getRecurrence();
         Label recurring = new Label(recText);
         recurring.setStyle("-fx-text-fill: gray; -fx-font-size: 11;");
+        recurring.setWrapText(true);
 
         Label urgentLbl = new Label(task.isUrgent() ? "DRINGEND" : "");
         urgentLbl.setStyle(task.isUrgent() ? "-fx-text-fill: #d32f2f; -fx-font-weight: bold; -fx-font-size: 11;" : "");
@@ -244,7 +246,7 @@ public class CleaningScheduleView {
         assigneeChoices.add("Nicht zugewiesen");
         for (String u : users) {
             if (u == null) continue;
-            if ("admin".equalsIgnoreCase(u.trim())) continue;
+            // admin wird jetzt mit angezeigt
             assigneeChoices.add(u);
         }
         ComboBox<String> assigneeCombo = new ComboBox<>(assigneeChoices);
@@ -264,6 +266,7 @@ public class CleaningScheduleView {
             try {
                 dao.update(task);
                 clearError();
+                try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
             } catch (Exception ex) {
                 showError("Fehler beim Aktualisieren der Zuweisung: " + ex.getMessage());
             }
@@ -290,6 +293,21 @@ public class CleaningScheduleView {
         } else {
             title.setStyle("");
             root.setOpacity(1.0);
+        }
+
+        // make labels responsive to available width
+        textBox.maxWidthProperty().bind(view.widthProperty().multiply(0.5));
+        title.maxWidthProperty().bind(textBox.maxWidthProperty().subtract(20));
+        meta.maxWidthProperty().bind(textBox.maxWidthProperty().subtract(20));
+        recurring.maxWidthProperty().bind(textBox.maxWidthProperty().subtract(20));
+        // also shrink font slightly when very narrow
+        if (com.flatmanager.App.getPrimaryStage() != null) {
+            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
+                double w = newW.doubleValue();
+                double scale = Math.max(0.8, Math.min(1.0, w / 1100.0));
+                title.setFont(Font.font("Arial", FontWeight.BOLD, 14 * scale));
+                recurring.setFont(Font.font("Arial", FontWeight.NORMAL, 11 * scale));
+            });
         }
 
         return root;
@@ -327,7 +345,7 @@ public class CleaningScheduleView {
         assigneeChoices.add("Nicht zugewiesen");
         for (String u : users) {
             if (u == null) continue;
-            if ("admin".equalsIgnoreCase(u.trim())) continue;
+            // admin wird nun in der Auswahl angezeigt
             assigneeChoices.add(u);
         }
         ComboBox<String> assigneeCombo = new ComboBox<>(assigneeChoices);
@@ -390,6 +408,8 @@ public class CleaningScheduleView {
                 else openTasks.add(task);
                 refreshLists();
                 clearError();
+                // notify dashboard immediately
+                try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
             } catch (Exception ex) {
                 showError("Fehler beim Anlegen der Aufgabe: " + ex.getMessage());
             }
@@ -406,6 +426,8 @@ public class CleaningScheduleView {
         assignedTasks.removeIf(CleaningTask::isCompleted);
         openTasks.removeIf(CleaningTask::isCompleted);
         refreshLists();
+        // notify dashboard immediately
+        try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
     }
 
     public Node getView() {
@@ -422,7 +444,7 @@ public class CleaningScheduleView {
             while (rs.next()) {
                 String u = rs.getString("username");
                 if (u != null && !u.trim().isEmpty()) {
-                    if ("admin".equalsIgnoreCase(u.trim())) continue; // admin nicht in Auswahl
+                    // admin wird ebenfalls in die Auswahl aufgenommen
                     users.add(u.trim());
                 }
             }
@@ -450,3 +472,4 @@ public class CleaningScheduleView {
         });
     }
 }
+

@@ -13,8 +13,9 @@ public class App extends Application {
     public void start(Stage stage) {
         primaryStage = stage;
         primaryStage.setTitle("Flat Manager");
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(600);
+        // Startfenster etwas größer öffnen
+        primaryStage.setWidth(1024);
+        primaryStage.setHeight(768);
 
         // Show login screen
         showLoginScreen();
