@@ -87,6 +87,14 @@ public class CleaningScheduleView {
         title.setFont(Font.font("Arial", FontWeight.BOLD, 22));
         title.getStyleClass().add("cleaning-title");
         title.setPadding(new Insets(10, 0, 10, 0));
+        title.setWrapText(true);
+        // responsive font shrink when window narrows
+        if (com.flatmanager.App.getPrimaryStage() != null) {
+            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
+                double scale = Math.max(0.75, Math.min(1.0, newW.doubleValue() / 1100.0));
+                title.setFont(Font.font("Arial", FontWeight.BOLD, 22 * scale));
+            });
+        }
 
         HBox topBar = new HBox();
         topBar.setAlignment(Pos.CENTER_LEFT);
@@ -144,6 +152,7 @@ public class CleaningScheduleView {
 
         // Buttons under open list
         Button newTaskBtn = new Button("Neue Aufgabe");
+        newTaskBtn.setWrapText(true);
         newTaskBtn.setMaxWidth(Double.MAX_VALUE);
         newTaskBtn.setOnAction(e -> showNewTaskDialog());
 
