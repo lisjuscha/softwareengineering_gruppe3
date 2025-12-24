@@ -84,17 +84,11 @@ public class CleaningScheduleView {
 
         // Top-Bar: Header links und Spacer (Admin-Button zentral in DashboardScreen)
         Label title = new Label("Putzplan");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 22));
-        title.getStyleClass().add("cleaning-title");
+        title.getStyleClass().addAll("cleaning-title", "title");
         title.setPadding(new Insets(10, 0, 10, 0));
         title.setWrapText(true);
         // responsive font shrink when window narrows
-        if (com.flatmanager.App.getPrimaryStage() != null) {
-            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
-                double scale = Math.max(0.75, Math.min(1.0, newW.doubleValue() / 1100.0));
-                title.setFont(Font.font("Arial", FontWeight.BOLD, 22 * scale));
-            });
-        }
+        // font sizing handled centrally via CSS (styles.css)
 
         HBox topBar = new HBox();
         topBar.setAlignment(Pos.CENTER_LEFT);
@@ -129,9 +123,9 @@ public class CleaningScheduleView {
 
         // Headers
         Label assignedHeader = new Label("Zugewiesene Aufgaben");
-        assignedHeader.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        assignedHeader.getStyleClass().add("title");
         Label openHeader = new Label("Offene Aufgaben");
-        openHeader.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        openHeader.getStyleClass().add("title");
 
         // Scroll panes
         ScrollPane assignedScroll = new ScrollPane(assignedContainer);
@@ -230,7 +224,7 @@ public class CleaningScheduleView {
         });
 
         Label title = new Label(task.getTitle());
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        title.getStyleClass().add("title");
         title.setWrapText(true);
 
         Label meta = new Label(getDueText(task));
@@ -239,8 +233,7 @@ public class CleaningScheduleView {
 
         String recText = task.getRecurrence() == null ? "Einmalig" : task.getRecurrence();
         Label recurring = new Label(recText);
-        recurring.setStyle("-fx-text-fill: gray; -fx-font-size: 11;");
-        recurring.setWrapText(true);
+        recurring.getStyleClass().add("small-text");
 
         Label urgentLbl = new Label(task.isUrgent() ? "DRINGEND" : "");
         urgentLbl.setStyle(task.isUrgent() ? "-fx-text-fill: #d32f2f; -fx-font-weight: bold; -fx-font-size: 11;" : "");
@@ -310,14 +303,7 @@ public class CleaningScheduleView {
         meta.maxWidthProperty().bind(textBox.maxWidthProperty().subtract(20));
         recurring.maxWidthProperty().bind(textBox.maxWidthProperty().subtract(20));
         // also shrink font slightly when very narrow
-        if (com.flatmanager.App.getPrimaryStage() != null) {
-            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
-                double w = newW.doubleValue();
-                double scale = Math.max(0.8, Math.min(1.0, w / 1100.0));
-                title.setFont(Font.font("Arial", FontWeight.BOLD, 14 * scale));
-                recurring.setFont(Font.font("Arial", FontWeight.NORMAL, 11 * scale));
-            });
-        }
+        // Responsive scaling is disabled to preserve unified CSS sizes
 
         return root;
     }

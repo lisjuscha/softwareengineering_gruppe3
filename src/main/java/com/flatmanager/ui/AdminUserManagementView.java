@@ -30,14 +30,8 @@ public class AdminUserManagementView {
         stage.setTitle("Benutzerverwaltung");
 
         Label header = new Label("Benutzerverwaltung");
-        header.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        header.getStyleClass().add("title");
         header.setWrapText(true);
-        if (com.flatmanager.App.getPrimaryStage() != null) {
-            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
-                double scale = Math.max(0.8, Math.min(1.0, newW.doubleValue() / 1100.0));
-                header.setFont(Font.font("Arial", FontWeight.BOLD, 18 * scale));
-            });
-        }
 
         Label label = new Label("Wähle eine Aktion:");
         label.setWrapText(true);

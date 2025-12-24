@@ -46,13 +46,12 @@ public class LoginScreen {
         view.getStyleClass().add("login-container");
 
         Label titleLabel = new Label("WG Verwaltung");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 36));
-        titleLabel.getStyleClass().add("title");
+        titleLabel.getStyleClass().addAll("title");
         titleLabel.setWrapText(true);
         titleLabel.maxWidthProperty().bind(view.widthProperty().subtract(80));
 
         Label subtitleLabel = new Label("Wähle dein Profil");
-        subtitleLabel.setFont(Font.font("Arial", 14));
+        subtitleLabel.getStyleClass().add("small-text");
         subtitleLabel.setStyle("-fx-text-fill: #666;");
         subtitleLabel.setWrapText(true);
         subtitleLabel.maxWidthProperty().bind(view.widthProperty().subtract(80));
@@ -171,12 +170,12 @@ public class LoginScreen {
         );
 
         Label initialLabel = new Label(initial);
-        initialLabel.setFont(Font.font("Arial", FontWeight.BOLD, 48));
-        initialLabel.setStyle("-fx-text-fill: #333;");
+        initialLabel.getStyleClass().addAll("title");
+        initialLabel.setStyle("-fx-text-fill: #333; -fx-font-size: 36px;");
         square.getChildren().add(initialLabel);
 
         Label nameLabel = new Label(displayName + (isAdmin ? " \u2605" : ""));
-        nameLabel.setFont(Font.font("Arial", 14));
+        nameLabel.getStyleClass().add("small-text");
         nameLabel.setWrapText(true);
         nameLabel.setTextAlignment(TextAlignment.CENTER);
         nameLabel.setMaxWidth(120);

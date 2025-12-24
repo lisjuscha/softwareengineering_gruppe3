@@ -26,6 +26,19 @@ public class ShoppingItem {
         this.selected = new SimpleBooleanProperty(purchased);
     }
 
+    // No-arg constructor for reflection-based DAO fallback
+    public ShoppingItem() {
+        this.id = new SimpleIntegerProperty(0);
+        this.itemName = new SimpleStringProperty("");
+        this.quantity = new SimpleStringProperty("1");
+        this.addedBy = new SimpleStringProperty("");
+        this.category = new SimpleStringProperty("");
+        this.purchasedFor = new SimpleStringProperty("");
+
+        this.purchased = new SimpleBooleanProperty(false);
+        this.selected = new SimpleBooleanProperty(false);
+    }
+
     public int getId() {
         return id.get();
     }
@@ -42,12 +55,25 @@ public class ShoppingItem {
         return itemName;
     }
 
+    // Compatibility alias for DAO which expects getName()/setName()
+    public String getName() {
+        return getItemName();
+    }
+
+    public void setName(String name) {
+        this.itemName.set(name);
+    }
+
     public String getQuantity() {
         return quantity.get();
     }
 
     public StringProperty quantityProperty() {
         return quantity;
+    }
+
+    public void setQuantity(String q) {
+        this.quantity.set(q);
     }
 
     public String getAddedBy() {
@@ -100,5 +126,28 @@ public class ShoppingItem {
 
     public void setPurchased(boolean value) {
         purchased.set(value);
+    }
+
+    // Compatibility for DAO expecting 'bought' boolean accessor
+    public boolean isBought() {
+        return isPurchased();
+    }
+
+    public void setBought(boolean b) {
+        setPurchased(b);
+    }
+
+    // Compatibility: allow DAO to set id via setId(int)
+    public void setId(int newId) {
+        this.id.set(newId);
+    }
+
+    // Compatibility: note field accessors (DAO may query getNote)
+    public String getNote() {
+        return null; // ShoppingItem does not persist note currently
+    }
+
+    public void setNote(String note) {
+        // no-op placeholder to satisfy reflection-based DAO
     }
 }

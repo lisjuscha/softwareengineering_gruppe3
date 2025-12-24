@@ -45,14 +45,9 @@ public class ShoppingListView {
 
         // Header (kein grauer Kasten), fett
         Label header = new Label("Einkaufsliste");
-        header.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        header.getStyleClass().add("title");
         header.setWrapText(true);
-        if (com.flatmanager.App.getPrimaryStage() != null) {
-            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
-                double scale = Math.max(0.8, Math.min(1.0, newW.doubleValue() / 1100.0));
-                header.setFont(Font.font("Arial", FontWeight.BOLD, 18 * scale));
-            });
-        }
+        // font sizing by CSS
 
         header.setPadding(new Insets(12, 12, 8, 12));
         header.getStyleClass().add("title");
@@ -74,7 +69,6 @@ public class ShoppingListView {
         scrollPane.getStyleClass().add("scroll-pane");
 
         Label sectionTitle = new Label("Unsere Einkäufe");
-        sectionTitle.setFont(Font.font("Arial", FontWeight.BOLD, 20));
         sectionTitle.getStyleClass().add("title");
 
         VBox centerBox = new VBox(8, sectionTitle, scrollPane);
@@ -85,7 +79,6 @@ public class ShoppingListView {
 
         // Rechte Spalte (Form) — enthält Titel oben und Form direkt darunter (bündig)
         Label formTitle = new Label("Neues Produkt hinzufügen");
-        formTitle.setFont(Font.font("Arial", FontWeight.BOLD, 16));
         formTitle.getStyleClass().add("title");
 
         VBox form = new VBox(8);
@@ -351,7 +344,6 @@ public class ShoppingListView {
             Label catLabel = new Label(category);
             catLabel.setWrapText(true);
             catLabel.setMaxWidth(Double.MAX_VALUE);
-            catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
             catLabel.setPadding(new Insets(4, 0, 4, 0));
             catLabel.getStyleClass().add("title");
 
@@ -372,14 +364,14 @@ public class ShoppingListView {
                 check.setTranslateY(-9);
 
                 Label qty = new Label(item.getQuantity() == null ? "" : item.getQuantity());
-                qty.setFont(Font.font(14));
+                qty.getStyleClass().add("small-text");
                 qty.setMinWidth(qtyWidth);
                 qty.setPrefWidth(qtyWidth);
                 qty.setMaxWidth(qtyWidth);
                 qty.setAlignment(Pos.CENTER_RIGHT);
 
                 Label name = new Label(item.getItemName());
-                name.setFont(Font.font(14));
+                name.getStyleClass().add("small-text");
                 name.setWrapText(true);
                 name.setMaxWidth(400);
 

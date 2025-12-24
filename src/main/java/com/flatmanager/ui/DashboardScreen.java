@@ -53,8 +53,8 @@ public class DashboardScreen {
         topBar.getStyleClass().add("top-bar");
 
         Label titleLabel = new Label("Unser Haushalt");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 20));
-        titleLabel.getStyleClass().add("dashboard-title");
+        // styling via CSS: unified heading size and weight
+        titleLabel.getStyleClass().addAll("dashboard-title", "title");
         titleLabel.setWrapText(true);
 
         Region spacer = new Region();
@@ -144,7 +144,7 @@ public class DashboardScreen {
         ImageView iv = loadIconView("Putzplan.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Aufgaben");
-        lbl.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        lbl.getStyleClass().add("title");
         header.getChildren().addAll(iv, lbl);
 
         // content: two boxes side by side
@@ -175,7 +175,7 @@ public class DashboardScreen {
         ImageView iv = loadIconView("Einkaufsliste.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Einkaufsliste");
-        lbl.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        lbl.getStyleClass().add("title");
         header.getChildren().addAll(iv, lbl);
 
         HBox boxes = new HBox(12);
@@ -205,7 +205,7 @@ public class DashboardScreen {
         ImageView iv = loadIconView("Haushaltsbuch.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Finanzen");
-        lbl.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        lbl.getStyleClass().add("title");
         header.getChildren().addAll(iv, lbl);
 
         HBox boxes = new HBox(12);
@@ -237,12 +237,12 @@ public class DashboardScreen {
         box.setPrefWidth(320);
 
         Label value = new Label(valueText);
-        value.setFont(Font.font("Arial", FontWeight.BOLD, 22));
+        value.getStyleClass().add("title");
         value.setWrapText(true);
         value.setId("stat-value");
 
         Label label = new Label(labelText);
-        label.setFont(Font.font("Arial", 12));
+        label.getStyleClass().add("small-text");
         label.setWrapText(true);
 
         box.getChildren().addAll(value, label);

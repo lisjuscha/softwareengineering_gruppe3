@@ -72,9 +72,9 @@ public class BudgetView {
 
         // TOTAL ganz oben (bleibt sichtbar)
         totalLabel = new Label("TOTAL: " + currencyFormat.format(0.0));
-        totalLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        totalLabel.getStyleClass().add("title");
         userTotalLabel = new Label("Ihr Saldo: " + currencyFormat.format(0.0));
-        userTotalLabel.setFont(Font.font("Arial", FontWeight.NORMAL, 14));
+        userTotalLabel.getStyleClass().add("small-text");
         VBox totalsBox = new VBox(2, totalLabel, userTotalLabel);
         totalsBox.setAlignment(Pos.CENTER_RIGHT);
 
@@ -102,7 +102,7 @@ public class BudgetView {
         VBox debtsBox = new VBox(8);
         debtsBox.setPadding(new Insets(8));
         Label debtsLabel = new Label("Schuldenzuweisungen:");
-        debtsLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        debtsLabel.getStyleClass().add("title");
         debtsListView = new ListView<>();
         debtsListView.setPrefHeight(220);
         debtsListView.setFocusTraversable(false);
@@ -124,7 +124,7 @@ public class BudgetView {
         view.getChildren().addAll(totalBar, tabPane);
 
         Label header = new Label("Haushaltsbuch");
-        header.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+        header.getStyleClass().add("title");
         header.setWrapText(true);
         if (com.flatmanager.App.getPrimaryStage() != null) {
             com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
@@ -442,7 +442,7 @@ public class BudgetView {
             List<BudgetTransaction> list = grouped.get(category);
             if (list.isEmpty()) {
                 Label catLabel = new Label(category);
-                catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+                catLabel.getStyleClass().add("title");
                 Label empty = new Label("Keine Einträge");
                 empty.setPadding(new Insets(4, 0, 8, 6));
                 VBox box = new VBox(6, catLabel, empty);
@@ -451,7 +451,7 @@ public class BudgetView {
             }
 
             Label catLabel = new Label(category);
-            catLabel.setFont(Font.font("Arial", FontWeight.BOLD, 18));
+            catLabel.getStyleClass().add("title");
 
             TableView<BudgetTransaction> tv = new TableView<>();
             tv.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
@@ -540,8 +540,7 @@ public class BudgetView {
             double sum = 0.0;
             for (BudgetTransaction t : list) sum += t.getAmount();
             Label sumLabel = new Label("Summe " + category + ": " + currencyFormat.format(sum));
-            sumLabel.setFont(Font.font("Arial", FontWeight.BOLD, 14));
-            sumLabel.setPadding(new Insets(6, 0, 0, 0));
+            sumLabel.getStyleClass().add("small-text");
 
             VBox box = new VBox(8, catLabel, tv, sumLabel);
             box.setPadding(new Insets(6, 0, 12, 0));

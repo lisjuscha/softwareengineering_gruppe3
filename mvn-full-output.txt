@@ -1,0 +1,47 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< com.flatmanager:flat-manager >--------------------
+[INFO] Building Flat Manager 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-controls:jar:21.0.1 during dependency collection step for project (use -X to see details)
+[INFO] 
+[INFO] --- jacoco:0.8.10:prepare-agent (prepare-agent) @ flat-manager ---
+[INFO] argLine set to -javaagent:/Users/I740819/.m2/repository/org/jacoco/org.jacoco.agent/0.8.10/org.jacoco.agent-0.8.10-runtime.jar=destfile=/Users/I740819/Documents/GitHub/softwareengineering_gruppe3/target/jacoco.exec
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ flat-manager ---
+[INFO] Copying 9 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ flat-manager ---
+[INFO] Nothing to compile - all classes are up to date
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ flat-manager ---
+[INFO] skip non existing resourceDirectory /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ flat-manager ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 6 source files with javac [debug target 17 module-path] to target/test-classes
+[INFO] /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/test/java/com/flatmanager/model/CleaningTaskTest.java: /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/test/java/com/flatmanager/model/CleaningTaskTest.java uses or overrides a deprecated API.
+[INFO] /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/test/java/com/flatmanager/model/CleaningTaskTest.java: Recompile with -Xlint:deprecation for details.
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/test/java/com/flatmanager/model/CleaningTaskTest.java:[56,1] com.flatmanager.model.ResultSetStub is not abstract and does not override abstract method updateNClob(java.lang.String,java.io.Reader) in java.sql.ResultSet
+[INFO] 1 error
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  1.357 s
+[INFO] Finished at: 2025-12-25T00:24:33+01:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.11.0:testCompile (default-testCompile) on project flat-manager: Compilation failure
+[ERROR] /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/test/java/com/flatmanager/model/CleaningTaskTest.java:[56,1] com.flatmanager.model.ResultSetStub is not abstract and does not override abstract method updateNClob(java.lang.String,java.io.Reader) in java.sql.ResultSet
+[ERROR] 
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
