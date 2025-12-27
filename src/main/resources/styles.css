@@ -1,143 +1,285 @@
-                              /* Entfernt linke/äußere Spaltenränder und sorgt für gleichbreite Buttons, fette Titel */
+/* ===========================
+Global / Basis
+=========================== */
+                                      .root {
+                                          -fx-background-color: #CAE3FE;
+                                          -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+                                          -fx-text-fill: #111827;
+                                          -fx-font-size: 14px;
+                                          -fx-base: #ffffff;
+                                      }
 
-                              /* GLOBAL */
-                              .root {
-                                  -fx-background-color: #BAD6E5; /* unified app background requested */
-                                  -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-                                  -fx-text-fill: #111827;
-                                  -fx-font-size: 14px; /* unified body text size */
-                              }
+                                      /* Utility: reset default padding/margins falls benötigt */
+                                      .pane, .vbox, .hbox {
+                                          -fx-padding: 0;
+                                          -fx-spacing: 0;
+                                      }
 
-                              /* TOPBAR ohne grauen Kasten */
-                              .top-bar {
-                                  -fx-background-color: transparent;
-                                  -fx-padding: 8 16;
-                                  -fx-border-color: transparent;
-                                  -fx-border-width: 0;
-                                  -fx-alignment: center-left;
-                              }
+                                      /* ===========================
+                                         Topbar / Sidebar / Layout
+                                         =========================== */
+                                      .top-bar {
+                                          -fx-background-color: #D2E8FE; /* angepasst */
+                                          -fx-padding: 8 16;
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                          -fx-alignment: center-left;
+                                      }
 
-                              /* SIDEBAR (falls vorhanden) */
-                              .sidebar {
-                                  -fx-pref-width: 150px;
-                                  -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, rgba(255,255,255,0.85) 0%, rgba(255,255,255,0.7) 100%);
-                                  -fx-border-color: transparent;
-                                  -fx-border-width: 0;
-                                  -fx-padding: 18 10;
-                              }
+                                      .sidebar {
+                                          -fx-pref-width: 150px;
+                                          -fx-background-color: #D2E8FE; /* angepasst */
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                          -fx-padding: 18 10;
+                                      }
 
-                              /* CONTENT / COLUMNS: keine unerwünschten Ränder mehr */
-                              .content {
-                                  -fx-padding: 20;
-                                  -fx-background-color: transparent;
-                                  -fx-border-color: transparent;
-                                  -fx-border-width: 0;
-                              }
-                              .columns {
-                                  -fx-spacing: 18;
-                                  -fx-fill-height: true;
-                                  -fx-border-color: transparent;
-                                  -fx-border-width: 0;
-                              }
+                                      .content {
+                                          -fx-padding: 20;
+                                          -fx-background-color: transparent;
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                      }
+                                      .columns {
+                                          -fx-spacing: 18;
+                                          -fx-fill-height: true;
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                      }
+                                      .column {
+                                          -fx-background-color: transparent;
+                                          -fx-pref-width: 50%;
+                                          -fx-padding: 6 8;
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                      }
 
-                              /* RIGHT COLUMN: kein Trennstrich mehr */
-                              .column {
-                                  -fx-background-color: transparent;
-                                  -fx-pref-width: 50%;
-                                  -fx-padding: 6 8;
-                                  -fx-border-color: transparent;
-                                  -fx-border-width: 0;
-                              }
+                                      /* ===========================
+                                         ScrollPane
+                                         =========================== */
+                                      .scroll-pane {
+                                          -fx-background-color: transparent;
+                                          -fx-background-radius: 6;
+                                          -fx-border-radius: 6;
+                                          -fx-padding: 8;
+                                      }
+                                      .scroll-pane .viewport {
+                                          -fx-background-color: transparent;
+                                      }
 
-                              /* SCROLLPANE */
-                              .scroll-pane {
-                                  -fx-background-color: transparent;
-                                  -fx-background-radius: 6;
-                                  -fx-border-radius: 6;
-                                  -fx-padding: 8;
-                              }
-                              .scroll-pane .viewport { -fx-background-color: transparent; }
+                                      /* ===========================
+                                         Buttons
+                                         =========================== */
+                                      .button {
+                                          -fx-background-color: linear-gradient(#FFFFFF, #efefef);
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-width: 1;
+                                          -fx-background-radius: 8;
+                                          -fx-border-radius: 8;
+                                          -fx-text-fill: #111827;
+                                          -fx-padding: 8 12;
+                                          -fx-font-size: 14px;
+                                          -fx-background-insets: 0;
+                                          -fx-max-width: Infinity;
+                                          -fx-cursor: hand;
+                                      }
+                                      .button:hover {
+                                          -fx-effect: dropshadow(two-pass-box, rgba(0,0,0,0.04), 4, 0.0, 0, 1);
+                                      }
+                                      .button:focused {
+                                          -fx-outline: none;
+                                          -fx-border-color: #3B82F6;
+                                      }
 
-                              /* BUTTONS: gleiche Breite möglich, maximale Breite erlaubt */
-                              .button {
-                                  -fx-background-color: linear-gradient(#FFFFFF, #efefef);
-                                  -fx-border-color: #E5E7EB;
-                                  -fx-border-width: 1;
-                                  -fx-background-radius: 8;
-                                  -fx-border-radius: 8;
-                                  -fx-text-fill: #111827;
-                                  -fx-padding: 8 12;
-                                  -fx-font-size: 14px; /* unified */
-                                  -fx-background-insets: 0;
-                                  -fx-max-width: Infinity;
-                              }
-                              .button-primary {
-                                  -fx-background-color: linear-gradient(#3B82F6, #2563EB);
-                                  -fx-text-fill: white;
-                                  -fx-border-color: transparent;
-                                  -fx-background-insets: 0;
-                                  -fx-max-width: Infinity;
-                                  -fx-font-size: 14px;
-                              }
-                              .button-danger {
-                                  -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
-                                  -fx-text-fill: white;
-                                  -fx-border-color: transparent;
-                                  -fx-background-insets: 0;
-                                  -fx-max-width: Infinity;
-                                  -fx-font-size: 14px;
-                              }
+                                      .button-primary {
+                                          -fx-background-color: linear-gradient(#3B82F6, #2563EB);
+                                          -fx-text-fill: white;
+                                          -fx-border-color: transparent;
+                                          -fx-background-insets: 0;
+                                          -fx-max-width: Infinity;
+                                          -fx-font-size: 14px;
+                                      }
+                                      .button-danger {
+                                          -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
+                                          -fx-text-fill: white;
+                                          -fx-border-color: transparent;
+                                          -fx-background-insets: 0;
+                                          -fx-max-width: Infinity;
+                                          -fx-font-size: 14px;
+                                      }
 
-                              /* ICON BUTTON */
-                              .icon-button {
-                                  -fx-background-color: transparent;
-                                  -fx-background-radius: 6;
-                                  -fx-background-insets: 0;
-                                  -fx-padding: 6;
-                              }
-                              .icon-button:pressed {
-                                  -fx-background-color: rgba(0,0,0,0.06);
-                              }
+                                      /* Sidebar: Buttons auf #CAE3FE */
+                                      .sidebar .button,
+                                      .sidebar .icon-button {
+                                          -fx-background-color: #CAE3FE;
+                                          -fx-border-color: transparent;
+                                          -fx-text-fill: #111827;
+                                          -fx-background-radius: 8;
+                                          -fx-border-radius: 8;
+                                          -fx-padding: 8 12;
+                                          -fx-cursor: hand;
+                                      }
 
-                              /* FORM CONTROLS */
-                              .text-field, .combo-box {
-                                  -fx-font-size: 14px; /* unified */
-                                  -fx-padding: 8 10;
-                                  -fx-border-color: #E5E7EB;
-                                  -fx-border-width: 1;
-                                  -fx-background-color: #FFFFFF;
-                                  -fx-background-radius: 6;
-                                  -fx-border-radius: 6;
-                              }
-                              .text-field:focused, .combo-box:focused {
-                                  -fx-border-color: #3B82F6;
-                              }
+                                      /* dezenter Hover-Effekt für Sidebar-Buttons */
+                                      .sidebar .button:hover,
+                                      .sidebar .icon-button:hover {
+                                          -fx-background-color: linear-gradient(#E6F3FF, #D7EEFF);
+                                      }
 
-                              /* TITLES: fett */
-                              .title {
-                                  -fx-font-size: 18px; /* unified heading size */
-                                  -fx-font-weight: 700;
-                                  -fx-text-fill: #111827;
-                              }
+                                      /* gedrückter Zustand für Sidebar-Buttons */
+                                      .sidebar .button:pressed,
+                                      .sidebar .icon-button:pressed {
+                                          -fx-background-color: linear-gradient(#CFE7FF, #B6DCFF);
+                                      }
 
-                              /* kleine Hilfsklassen */
-                              .small-text { -fx-font-size: 14px; -fx-text-fill: #6B7280; }
+                                      /* Icon button */
+                                      .icon-button {
+                                          -fx-background-color: transparent;
+                                          -fx-background-radius: 6;
+                                          -fx-background-insets: 0;
+                                          -fx-padding: 6;
+                                          -fx-cursor: hand;
+                                      }
+                                      .icon-button:pressed {
+                                          -fx-background-color: rgba(0,0,0,0.06);
+                                      }
 
-                              /* Card-like boxes to contrast with background */
-                              .vbox.card, .card {
-                                  -fx-background-color: rgba(255,255,255,0.95);
-                                  -fx-background-radius: 10;
-                                  -fx-padding: 12;
-                                  -fx-border-radius: 10;
-                              }
+                                      /* Spezifischer Stil für den Abmelden-Button in der Topbar */
+                                      .top-bar .logout-button {
+                                          -fx-background-color: #D2E8FE;
+                                          -fx-background-insets: 0;
+                                          -fx-border-color: transparent;
+                                          -fx-text-fill: #111827;
+                                          -fx-cursor: hand;
+                                      }
 
-                              /* stat box value alignment */
-                              #stat-value {
-                                  -fx-font-size: 20px;
-                                  -fx-font-weight: 700;
-                              }
+                                      /* ===========================
+                                         Form Controls (einheitlich)
+                                         =========================== */
+                                      .text-field, .combo-box, .choice-box {
+                                          -fx-font-size: 14px;
+                                          -fx-padding: 8 10;
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-width: 1;
+                                          -fx-background-color: #FFFFFF;
+                                          -fx-background-radius: 6;
+                                          -fx-border-radius: 6;
+                                          -fx-prompt-text-fill: rgba(0,0,0,0.4);
+                                      }
+                                      .text-field:focused, .combo-box:focused, .choice-box:focused {
+                                          -fx-border-color: #3B82F6;
+                                          -fx-effect: none;
+                                      }
 
-                              /* Ensure table cells wrap text */
-                              .table-view .table-cell .label { -fx-wrap-text: true; }
+                                      /* PasswordField & TextArea spezifisch */
+                                      .password-field, .text-area {
+                                          -fx-font-size: 14px;
+                                          -fx-padding: 8 10;
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-width: 1;
+                                          -fx-background-color: #FFFFFF;
+                                          -fx-background-radius: 6;
+                                          -fx-border-radius: 6;
+                                      }
 
-                              /* end of edits */
+                                      /* TextArea zusätzliche Anpassungen */
+                                      .text-area {
+                                          -fx-pref-row-count: 4;
+                                          -fx-wrap-text: true;
+                                      }
+
+                                      /* Labels und Wrap */
+                                      .label {
+                                          -fx-wrap-text: true;
+                                          -fx-font-size: 14px;
+                                          -fx-text-fill: #111827;
+                                      }
+
+                                      /* ===========================
+                                         Titles / Section Headers
+                                         =========================== */
+                                      .title {
+                                          -fx-font-size: 18px;
+                                          -fx-font-weight: 700;
+                                          -fx-text-fill: #111827;
+                                      }
+
+                                      /* Spezifischer Titel der RegistrationView */
+                                      .registration-title {
+                                          -fx-font-size: 20px;
+                                          -fx-font-weight: 700;
+                                          -fx-text-fill: #111827;
+                                          -fx-padding: 8 12 12 12;
+                                      }
+
+                                      /* kleine Hilfsklassen */
+                                      .small-text {
+                                          -fx-font-size: 12px;
+                                          -fx-text-fill: #6B7280;
+                                      }
+
+                                      /* ===========================
+                                         Cards / Panels
+                                         =========================== */
+                                      .vbox.card, .card {
+                                          -fx-background-color: rgba(255,255,255,0.95);
+                                          -fx-background-radius: 10;
+                                          -fx-padding: 12;
+                                          -fx-border-radius: 10;
+                                      }
+
+                                      /* Stat box */
+                                      #stat-value {
+                                          -fx-font-size: 20px;
+                                          -fx-font-weight: 700;
+                                      }
+
+                                      /* Table cell wrapping */
+                                      .table-view .table-cell .label {
+                                          -fx-wrap-text: true;
+                                      }
+
+                                      /* ===========================
+                                         Dialog / Alert Styling
+                                         =========================== */
+                                      .dialog-pane {
+                                          -fx-font-family: inherit;
+                                          -fx-font-size: 14px;
+                                          -fx-background-color: white;
+                                          -fx-background-radius: 8;
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-radius: 8;
+                                      }
+
+                                      .dialog-pane .header-panel {
+                                          -fx-padding: 10 12 6 12;
+                                      }
+                                      .dialog-pane .content {
+                                          -fx-padding: 8 12 12 12;
+                                      }
+                                      .dialog-pane .content .label, .dialog-pane .content-label {
+                                          -fx-wrap-text: true;
+                                      }
+
+                                      .dialog-pane .button {
+                                          -fx-font-size: 13px;
+                                      }
+
+                                      .alert {
+                                          -fx-font-family: inherit;
+                                      }
+                                      .alert .graphic {
+                                          -fx-padding: 6;
+                                      }
+
+                                      /* Accessibility / Focus visuals */
+                                      :focused {
+                                          -fx-effect: none;
+                                      }
+
+                                      /* Misc / Specific IDs */
+                                      #some-specific-id {
+                                          /* Anpassungen hier */
+                                      }
+
+                                      /* End of file */

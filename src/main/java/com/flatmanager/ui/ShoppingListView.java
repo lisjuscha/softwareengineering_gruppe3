@@ -124,7 +124,7 @@ public class ShoppingListView {
         assignBuyerBtn.setMaxWidth(Double.MAX_VALUE);
         HBox.setHgrow(assignBuyerBtn, Priority.ALWAYS);
         assignBuyerBtn.getStyleClass().add("icon-button");
-        InputStream is = getClass().getResourceAsStream("/icons/Mitbewohner.png");
+        InputStream is = getClass().getResourceAsStream("/icons/Mitbewohner_icon.png");
         if (is != null) {
             Image img = new Image(is, 20, 20, true, true);
             ImageView iv = new ImageView(img);
@@ -242,26 +242,38 @@ public class ShoppingListView {
     private void loadUsers() {
         userDisplayToUsername.clear();
         userDisplayList.clear();
+
         try (Connection conn = DatabaseManager.getConnection();
-             PreparedStatement ps = conn.prepareStatement("SELECT username, name FROM users ORDER BY username");
+             PreparedStatement ps = conn.prepareStatement("SELECT username, name FROM users ORDER BY name COLLATE NOCASE");
              ResultSet rs = ps.executeQuery()) {
 
             while (rs.next()) {
                 String username = rs.getString("username");
                 String name = rs.getString("name");
-                if (username == null || username.trim().isEmpty()) continue;
-                String display = (name == null || name.trim().isEmpty()) ? username : name + " (" + username + ")";
+                String display;
+
+                // Fallback: wenn kein Anzeige-Name gesetzt ist, nutze username
+                if (name == null || name.trim().isEmpty()) {
+                    display = username;
+                } else if ("admin".equalsIgnoreCase(username)) {
+                    // Für den Admin nur den festgelegten Namen anzeigen (ohne "(admin)")
+                    display = name;
+                } else {
+                    // Für alle anderen: "Name (username)"
+                    display = name + " (" + username + ")";
+                }
+
                 userDisplayToUsername.put(display, username);
                 userDisplayList.add(display);
             }
 
-            if (assignOnAddCombo != null) {
-                assignOnAddCombo.getItems().setAll(userDisplayList);
-                assignOnAddCombo.setPromptText("Mitbewohner auswählen");
-            }
-
         } catch (SQLException e) {
-            System.out.println("[DB] Fehler beim Laden der User: " + e.getMessage());
+            e.printStackTrace();
+        }
+
+        // Aktualisiere das Combo (falls bereits initialisiert)
+        if (assignOnAddCombo != null) {
+            assignOnAddCombo.getItems().setAll(userDisplayList);
         }
     }
 

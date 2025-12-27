@@ -24,8 +24,8 @@ public class AdminToolbar {
         if (!admin) return placeholder();
 
         Button adminBtn = new Button();
-        // Icon aus den Projekt-Ressourcen laden (/icons/Einstellungen.png), bei Fehler Fallback-Text verwenden
-        final String resourcePath = "/icons/Einstellungen.png";
+        // Icon aus den Projekt-Ressourcen laden (/icons/Einstellungen_icon.png), bei Fehler Fallback-Text verwenden
+        final String resourcePath = "/icons/Einstellungen_icon.png";
         try (InputStream is = AdminToolbar.class.getResourceAsStream(resourcePath)) {
             if (is != null) {
                 Image img = new Image(is, 20, 20, true, true);

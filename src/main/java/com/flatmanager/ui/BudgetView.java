@@ -58,8 +58,8 @@ public class BudgetView {
     }
 
     private void loadDeleteIcon() {
-        InputStream is = BudgetView.class.getResourceAsStream("/Löschen.png");
-        if (is == null) is = BudgetView.class.getResourceAsStream("/icons/Löschen.png");
+        InputStream is = BudgetView.class.getResourceAsStream("/Löschen_icon.png");
+        if (is == null) is = BudgetView.class.getResourceAsStream("/icons/Löschen_icon.png");
         if (is != null) {
             try { deleteIcon = new Image(is); } catch (Exception ignored) { deleteIcon = null; }
         } else deleteIcon = null;

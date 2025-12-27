@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
@@ -38,7 +39,10 @@ public class DashboardScreen {
     public DashboardScreen(String username) {
         this.currentUser = username;
         // ensure DB initialized for dependent views
-        try { Database.init(); } catch (Exception ignored) {}
+        try {
+            Database.init();
+        } catch (Exception ignored) {
+        }
         createView();
     }
 
@@ -84,7 +88,7 @@ public class DashboardScreen {
         financeCard.setCollapsible(false);
         contentArea.getChildren().addAll(tasksCard, shoppingCard, financeCard);
 
-        // left navigation sidebar (keeps layout consistent with other views)
+        // linke Navigationsleiste
         VBox sidebar = createSidebar();
         view.setLeft(sidebar);
 
@@ -129,8 +133,14 @@ public class DashboardScreen {
     }
 
     // Static helpers so other views can trigger an immediate dashboard refresh
-    private static synchronized void registerActive(DashboardScreen instance) { activeInstance = instance; }
-    private static synchronized void unregisterActive(DashboardScreen instance) { if (activeInstance == instance) activeInstance = null; }
+    private static synchronized void registerActive(DashboardScreen instance) {
+        activeInstance = instance;
+    }
+
+    private static synchronized void unregisterActive(DashboardScreen instance) {
+        if (activeInstance == instance) activeInstance = null;
+    }
+
     public static void notifyRefreshNow() {
         DashboardScreen inst = activeInstance;
         if (inst == null) return;
@@ -141,7 +151,7 @@ public class DashboardScreen {
         // Card header with icon and title
         HBox header = new HBox(8);
         header.setAlignment(Pos.CENTER_LEFT);
-        ImageView iv = loadIconView("Putzplan.png");
+        ImageView iv = loadIconView("Putzplan_icon.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Aufgaben");
         lbl.getStyleClass().add("title");
@@ -165,14 +175,14 @@ public class DashboardScreen {
         pane.setPadding(new Insets(0));
         pane.setMaxWidth(Double.MAX_VALUE);
         pane.setPrefWidth(720);
-        pane.setUserData(new VBox[] { myTasksBox, openTasksBox }); // store references
+        pane.setUserData(new VBox[]{myTasksBox, openTasksBox}); // store references
         return pane;
     }
 
     private TitledPane createShoppingCard() {
         HBox header = new HBox(8);
         header.setAlignment(Pos.CENTER_LEFT);
-        ImageView iv = loadIconView("Einkaufsliste.png");
+        ImageView iv = loadIconView("Einkaufsliste_icon.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Einkaufsliste");
         lbl.getStyleClass().add("title");
@@ -195,14 +205,14 @@ public class DashboardScreen {
         pane.setCollapsible(false);
         pane.setMaxWidth(Double.MAX_VALUE);
         pane.setPrefWidth(720);
-        pane.setUserData(new VBox[] { totalBox, mineBox });
+        pane.setUserData(new VBox[]{totalBox, mineBox});
         return pane;
     }
 
     private TitledPane createFinanceCard() {
         HBox header = new HBox(8);
         header.setAlignment(Pos.CENTER_LEFT);
-        ImageView iv = loadIconView("Haushaltsbuch.png");
+        ImageView iv = loadIconView("Haushaltsbuch_icon.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Finanzen");
         lbl.getStyleClass().add("title");
@@ -225,7 +235,7 @@ public class DashboardScreen {
         pane.setCollapsible(false);
         pane.setMaxWidth(Double.MAX_VALUE);
         pane.setPrefWidth(720);
-        pane.setUserData(new VBox[] { owedToMe, oweOthers });
+        pane.setUserData(new VBox[]{owedToMe, oweOthers});
         return pane;
     }
 
@@ -266,19 +276,21 @@ public class DashboardScreen {
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) myCount = rs.getInt("c");
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
             try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM cleaning_tasks WHERE completed = 0")) {
                 try (ResultSet rs = ps.executeQuery()) {
                     if (rs.next()) openCount = rs.getInt("c");
                 }
-            } catch (Exception ignored) {}
+            } catch (Exception ignored) {
+            }
 
             // update UI
             for (Node n : contentArea.getChildren()) {
                 if (n instanceof TitledPane) {
                     TitledPane tp = (TitledPane) n;
-                    if ("Aufgaben".equals(((Label)((HBox)tp.getGraphic()).getChildren().get(1)).getText())) {
+                    if ("Aufgaben".equals(((Label) ((HBox) tp.getGraphic()).getChildren().get(1)).getText())) {
                         VBox[] boxes = (VBox[]) tp.getUserData();
                         ((Label) boxes[0].lookup("#stat-value")).setText(String.valueOf(myCount));
                         ((Label) boxes[1].lookup("#stat-value")).setText(String.valueOf(openCount));
@@ -298,18 +310,24 @@ public class DashboardScreen {
             int mine = 0;
 
             try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM shopping_items")) {
-                try (ResultSet rs = ps.executeQuery()) { if (rs.next()) total = rs.getInt("c"); }
-            } catch (Exception ignored) {}
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) total = rs.getInt("c");
+                }
+            } catch (Exception ignored) {
+            }
 
             try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM shopping_items WHERE purchased_for = ?")) {
                 ps.setString(1, currentUser);
-                try (ResultSet rs = ps.executeQuery()) { if (rs.next()) mine = rs.getInt("c"); }
-            } catch (Exception ignored) {}
+                try (ResultSet rs = ps.executeQuery()) {
+                    if (rs.next()) mine = rs.getInt("c");
+                }
+            } catch (Exception ignored) {
+            }
 
             for (Node n : contentArea.getChildren()) {
                 if (n instanceof TitledPane) {
                     TitledPane tp = (TitledPane) n;
-                    if ("Einkaufsliste".equals(((Label)((HBox)tp.getGraphic()).getChildren().get(1)).getText())) {
+                    if ("Einkaufsliste".equals(((Label) ((HBox) tp.getGraphic()).getChildren().get(1)).getText())) {
                         VBox[] boxes = (VBox[]) tp.getUserData();
                         ((Label) boxes[0].lookup("#stat-value")).setText(String.valueOf(total));
                         ((Label) boxes[1].lookup("#stat-value")).setText(String.valueOf(mine));
@@ -328,8 +346,8 @@ public class DashboardScreen {
         try (Connection conn = DatabaseManager.getConnection()) {
             // resolve currentUser to actual username stored in users table (handles display names)
             String resolvedUser = resolveUsername(conn, currentUser);
-             // Load all transactions
-             String txSql = "SELECT id, amount, paid_by FROM budget_transactions";
+            // Load all transactions
+            String txSql = "SELECT id, amount, paid_by FROM budget_transactions";
             List<TransactionRow> txs = new ArrayList<>();
             try (PreparedStatement ps = conn.prepareStatement(txSql);
                  ResultSet rs = ps.executeQuery()) {
@@ -391,7 +409,10 @@ public class DashboardScreen {
                 // as fallback, try case-insensitive match if exact key not found
                 if (Math.abs(bal) < 0.000001) {
                     for (Map.Entry<String, Double> e : balances.entrySet()) {
-                        if (e.getKey() != null && resolvedUser.equalsIgnoreCase(e.getKey())) { bal = e.getValue(); break; }
+                        if (e.getKey() != null && resolvedUser.equalsIgnoreCase(e.getKey())) {
+                            bal = e.getValue();
+                            break;
+                        }
                     }
                 }
                 if (bal > 0) owedToMe = bal;
@@ -401,7 +422,10 @@ public class DashboardScreen {
                 double bal = balances.getOrDefault(currentUser, 0.0);
                 if (Math.abs(bal) < 0.000001) {
                     for (Map.Entry<String, Double> e : balances.entrySet()) {
-                        if (e.getKey() != null && currentUser.equalsIgnoreCase(e.getKey())) { bal = e.getValue(); break; }
+                        if (e.getKey() != null && currentUser.equalsIgnoreCase(e.getKey())) {
+                            bal = e.getValue();
+                            break;
+                        }
                     }
                 }
                 if (bal > 0) owedToMe = bal;
@@ -411,7 +435,7 @@ public class DashboardScreen {
             for (Node n : contentArea.getChildren()) {
                 if (n instanceof TitledPane) {
                     TitledPane tp = (TitledPane) n;
-                    if ("Finanzen".equals(((Label)((HBox)tp.getGraphic()).getChildren().get(1)).getText())) {
+                    if ("Finanzen".equals(((Label) ((HBox) tp.getGraphic()).getChildren().get(1)).getText())) {
                         VBox[] boxes = (VBox[]) tp.getUserData();
                         ((Label) boxes[0].lookup("#stat-value")).setText(String.format("%.2f €", owedToMe));
                         ((Label) boxes[1].lookup("#stat-value")).setText(String.format("%.2f €", oweOthers));
@@ -434,7 +458,7 @@ public class DashboardScreen {
         if (p >= 0) {
             int q = trimmed.indexOf(')', p);
             if (q > p) {
-                String inside = trimmed.substring(p+1, q).trim();
+                String inside = trimmed.substring(p + 1, q).trim();
                 if (!inside.isEmpty()) return inside;
             }
         }
@@ -445,7 +469,8 @@ public class DashboardScreen {
             try (ResultSet rs = ps.executeQuery()) {
                 if (rs.next()) return rs.getString("username");
             }
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+        }
         return null;
     }
 
@@ -487,13 +512,38 @@ public class DashboardScreen {
         sb.getStyleClass().add("sidebar");
         sb.setPadding(new Insets(12));
         sb.setPrefWidth(160);
+        sb.setAlignment(Pos.TOP_LEFT); // linksbündig für die Sidebar-Kinder
 
+        // Dashboard button with icon (changed to Dashboard_icon.png)
         Button dashBtn = new Button("Dashboard");
         dashBtn.setMaxWidth(Double.MAX_VALUE);
+        dashBtn.setAlignment(Pos.CENTER_LEFT);
+        dashBtn.setStyle("-fx-alignment: CENTER_LEFT;"); // Fallback falls setAlignment nicht greift
+        ImageView dashIv = loadIconView("Dashboard_icon.png");
+        if (dashIv != null) {
+            dashIv.setFitWidth(18);
+            dashIv.setFitHeight(18);
+            dashBtn.setGraphic(dashIv);
+            dashBtn.setContentDisplay(ContentDisplay.LEFT);
+            dashBtn.setGraphicTextGap(8);
+            dashBtn.getStyleClass().add("icon-button");
+        }
         dashBtn.setOnAction(e -> view.setCenter(contentArea));
 
+        // Putzplan button
         Button cleaningBtn = new Button("Putzplan");
         cleaningBtn.setMaxWidth(Double.MAX_VALUE);
+        cleaningBtn.setAlignment(Pos.CENTER_LEFT);
+        cleaningBtn.setStyle("-fx-alignment: CENTER_LEFT;");
+        ImageView cleanIv = loadIconView("Putzplan_icon.png");
+        if (cleanIv != null) {
+            cleanIv.setFitWidth(18);
+            cleanIv.setFitHeight(18);
+            cleaningBtn.setGraphic(cleanIv);
+            cleaningBtn.setContentDisplay(ContentDisplay.LEFT);
+            cleaningBtn.setGraphicTextGap(8);
+            cleaningBtn.getStyleClass().add("icon-button");
+        }
         cleaningBtn.setOnAction(e -> {
             try {
                 CleaningScheduleView csv = new CleaningScheduleView(currentUser);
@@ -503,8 +553,20 @@ public class DashboardScreen {
             }
         });
 
+        // Einkaufsliste button
         Button shoppingBtn = new Button("Einkaufsliste");
         shoppingBtn.setMaxWidth(Double.MAX_VALUE);
+        shoppingBtn.setAlignment(Pos.CENTER_LEFT);
+        shoppingBtn.setStyle("-fx-alignment: CENTER_LEFT;");
+        ImageView shopIv = loadIconView("Einkaufsliste_icon.png");
+        if (shopIv != null) {
+            shopIv.setFitWidth(18);
+            shopIv.setFitHeight(18);
+            shoppingBtn.setGraphic(shopIv);
+            shoppingBtn.setContentDisplay(ContentDisplay.LEFT);
+            shoppingBtn.setGraphicTextGap(8);
+            shoppingBtn.getStyleClass().add("icon-button");
+        }
         shoppingBtn.setOnAction(e -> {
             try {
                 ShoppingListView slv = new ShoppingListView(currentUser);
@@ -514,8 +576,20 @@ public class DashboardScreen {
             }
         });
 
+        // Haushaltsbuch button
         Button budgetBtn = new Button("Haushaltsbuch");
         budgetBtn.setMaxWidth(Double.MAX_VALUE);
+        budgetBtn.setAlignment(Pos.CENTER_LEFT);
+        budgetBtn.setStyle("-fx-alignment: CENTER_LEFT;");
+        ImageView budIv = loadIconView("Haushaltsbuch_icon.png");
+        if (budIv != null) {
+            budIv.setFitWidth(18);
+            budIv.setFitHeight(18);
+            budgetBtn.setGraphic(budIv);
+            budgetBtn.setContentDisplay(ContentDisplay.LEFT);
+            budgetBtn.setGraphicTextGap(8);
+            budgetBtn.getStyleClass().add("icon-button");
+        }
         budgetBtn.setOnAction(e -> {
             try {
                 BudgetView bv = new BudgetView(currentUser);
@@ -540,5 +614,15 @@ public class DashboardScreen {
         return view;
     }
 
-    private static class TransactionRow { final int id; final double amount; final String paidBy; TransactionRow(int id,double amount,String paidBy){this.id=id;this.amount=amount;this.paidBy=paidBy;} }
+    private static class TransactionRow {
+        final int id;
+        final double amount;
+        final String paidBy;
+
+        TransactionRow(int id, double amount, String paidBy) {
+            this.id = id;
+            this.amount = amount;
+            this.paidBy = paidBy;
+        }
+    }
 }
