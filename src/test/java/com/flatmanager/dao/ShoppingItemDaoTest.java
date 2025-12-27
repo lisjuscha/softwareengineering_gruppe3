@@ -7,9 +7,11 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import java.io.File;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,27 +25,55 @@ public class ShoppingItemDaoTest {
         // Use a shared in-memory SQLite DB so multiple connections share the same data/schema
         System.setProperty("db.url", "jdbc:sqlite:file:memdb1?mode=memory&cache=shared");
         DatabaseManager.closeConnection();
-        // Create a table schema compatible with ShoppingItemDao (name, quantity, note, bought)
-        // Use the DatabaseManager connection and keep it open for DAO usage
-        java.sql.Connection c = DatabaseManager.getConnection();
-        try (java.sql.Statement s = c.createStatement()) {
+        // Create a table schema compatible with ShoppingItemDao (ensure both bought and purchased columns plus purchased_for)
+        try (Connection c = DatabaseManager.getConnection();
+             Statement s = c.createStatement()) {
             // drop any existing table (ensure a clean start)
             s.executeUpdate("DROP TABLE IF EXISTS shopping_items");
             s.executeUpdate("CREATE TABLE shopping_items (" +
                     "id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     "item_name TEXT, " +
                     "name TEXT, " +
-                    "quantity INTEGER DEFAULT 1, " +
-                    "purchased INTEGER DEFAULT 0, " +
+                    "quantity TEXT DEFAULT '1', " +         // string quantity to allow empty string entries
+                    "bought INTEGER DEFAULT 0, " +          // DAO may reference 'bought'
+                    "purchased INTEGER DEFAULT 0, " +       // keep 'purchased' for compatibility
                     "category TEXT, " +
                     "added_by TEXT, " +
                     "purchased_for TEXT)");
         }
+
+        // Ensure the DAO performs any required schema adjustments (adds missing optional columns)
+        dao.init();
     }
 
     @AfterEach
     void after() {
         DatabaseManager.closeConnection();
+    }
+
+    @Test
+    void testInitIsIdempotentAndTableExists() throws Exception {
+        // ensure calling init multiple times does not throw and table still exists
+        dao.init();
+        dao.init();
+
+        try (Connection conn = DatabaseManager.getConnection();
+             Statement st = conn.createStatement();
+             ResultSet rs = st.executeQuery("SELECT name FROM sqlite_master WHERE type='table' AND name='shopping_items'")) {
+            assertTrue(rs.next(), "Tabelle shopping_items sollte existieren");
+        }
+    }
+
+    @Test
+    void testDeleteBoughtDoesNotThrowWhenNone() throws Exception {
+        // no items present, should not throw and count remains 0
+        dao.deleteBought();
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM shopping_items");
+             ResultSet rs = ps.executeQuery()) {
+            assertTrue(rs.next());
+            assertEquals(0, rs.getInt("c"));
+        }
     }
 
     @Test
@@ -84,7 +114,10 @@ public class ShoppingItemDaoTest {
         for (int i = 0; i < 20; i++) {
             List<ShoppingItem> after = dao.listAll();
             ShoppingItem updated = after.stream().filter(x -> x.getId() == rowId[0]).findFirst().orElse(null);
-            if (updated != null && updated.isPurchased()) { seen = true; break; }
+            if (updated != null && updated.isPurchased()) {
+                seen = true;
+                break;
+            }
             Thread.sleep(50);
         }
         assertTrue(seen, "DAO: purchased flag should become true after update (timed out)");
@@ -130,5 +163,94 @@ public class ShoppingItemDaoTest {
         ShoppingItem f = list.stream().filter(x -> "Yogurt".equals(x.getItemName())).findFirst().orElse(null);
         assertNotNull(f);
         assertTrue(f.isPurchased());
+    }
+
+    // ----- zusätzliche Tests für höhere Abdeckung -----
+
+    @Test
+    void testInsertWithNullFieldsUsesDefaultsOnLoad() throws Exception {
+        // quantity and addedBy set to null on the model
+        ShoppingItem item = new ShoppingItem(0, "Eggs", null, null, null, null, false);
+        dao.insert(item);
+
+        List<ShoppingItem> all = dao.listAll();
+        ShoppingItem loaded = all.stream().filter(x -> "Eggs".equals(x.getItemName())).findFirst().orElse(null);
+        assertNotNull(loaded);
+        // when DB value is NULL, listAll treats quantity==null as "1"
+        assertEquals("1", loaded.getQuantity(), "NULL quantity sollte beim Laden als \"1\" interpretiert werden");
+        // createByConstructor sets addedBy to empty string when null
+        assertEquals("", loaded.getAddedBy(), "NULL added_by sollte als leerer String geladen werden");
+    }
+
+    @Test
+    void testDirectInsertWithEmptyQuantityRemainsEmptyString() throws Exception {
+        // insert via DAO using an explicit empty string for quantity
+        dao.insert(new ShoppingItem(0, "EmptyQty", "", null, null, null, false));
+
+        List<ShoppingItem> all = dao.listAll();
+        ShoppingItem loaded = all.stream().filter(x -> "EmptyQty".equals(x.getItemName())).findFirst().orElse(null);
+        assertNotNull(loaded, "Eintrag mit leerer quantity sollte vorhanden sein");
+        // empty string is not null -> listAll returns the empty string
+        assertEquals("", loaded.getQuantity(), "Leere quantity-Zeichenkette bleibt leerer String");
+    }
+
+    @Test
+    void testUpdateNonExistingIdDoesNotCreate() throws Exception {
+        // Update mit nicht existierender ID darf keine neue Zeile erzeugen
+        ShoppingItem ghost = new ShoppingItem(999999, "Nope", "1", "x", "x", null, true);
+        dao.update(ghost);
+
+        try (Connection conn = DatabaseManager.getConnection();
+             PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM shopping_items");
+             ResultSet rs = ps.executeQuery()) {
+            assertTrue(rs.next());
+            // DB war leer zu Beginn dieses Tests, bleibt leer
+            assertEquals(0, rs.getInt("c"));
+        }
+    }
+
+    @Test
+    void testInitAddsMissingOptionalColumns() throws Exception {
+        // use a file-based DB to test column addition by init()
+        File db = new File("target/shopping_addcol_test.db");
+        if (db.exists()) db.delete();
+        try {
+            System.setProperty("db.url", "jdbc:sqlite:" + db.getAbsolutePath());
+            DatabaseManager.closeConnection();
+            // create minimal table without optional columns
+            try (Connection conn = DatabaseManager.getConnection();
+                 Statement st = conn.createStatement()) {
+                st.executeUpdate("DROP TABLE IF EXISTS shopping_items");
+                st.executeUpdate("CREATE TABLE shopping_items (id INTEGER PRIMARY KEY AUTOINCREMENT, item_name TEXT, name TEXT)");
+            }
+
+            ShoppingItemDao localDao = new ShoppingItemDao();
+            // should add purchased, bought, purchased_for columns if missing
+            localDao.init();
+
+            try (Connection conn = DatabaseManager.getConnection();
+                 Statement st = conn.createStatement();
+                 ResultSet rs = st.executeQuery("PRAGMA table_info(shopping_items)")) {
+                boolean hasPurchased = false, hasBought = false, hasPurchasedFor = false;
+                while (rs.next()) {
+                    String col = rs.getString("name");
+                    if ("purchased".equalsIgnoreCase(col)) hasPurchased = true;
+                    if ("bought".equalsIgnoreCase(col)) hasBought = true;
+                    if ("purchased_for".equalsIgnoreCase(col)) hasPurchasedFor = true;
+                }
+                assertTrue(hasPurchased, "purchased column sollte hinzugefügt worden sein");
+                assertTrue(hasBought || hasPurchased, "bought oder purchased column sollte vorhanden sein");
+                assertTrue(hasPurchasedFor, "purchased_for column sollte hinzugefügt worden sein");
+            }
+        } finally {
+            DatabaseManager.closeConnection();
+            try {
+                java.nio.file.Files.deleteIfExists(java.nio.file.Path.of("target/shopping_addcol_test.db"));
+            } catch (Exception ignore) {
+            }
+            // restore in-memory db for other tests
+            System.setProperty("db.url", "jdbc:sqlite:file:memdb1?mode=memory&cache=shared");
+            DatabaseManager.closeConnection();
+        }
     }
 }
