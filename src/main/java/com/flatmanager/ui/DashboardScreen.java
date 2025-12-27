@@ -64,6 +64,20 @@ public class DashboardScreen {
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
 
+        // Theme toggle button (sun / moon)
+        Button themeToggle = new Button();
+        themeToggle.setWrapText(true);
+        themeToggle.setMaxWidth(Double.MAX_VALUE);
+        themeToggle.getStyleClass().addAll("icon-button", "theme-toggle");
+        // initial icon
+        String icon = com.flatmanager.ui.ThemeManager.isDark() ? "🌙" : "☀";
+        themeToggle.setText(icon);
+        themeToggle.setOnAction(e -> {
+            com.flatmanager.ui.ThemeManager.toggle();
+            // update icon after toggle
+            themeToggle.setText(com.flatmanager.ui.ThemeManager.isDark() ? "🌙" : "☀");
+        });
+
         Button logoutButton = new Button("Abmelden");
         logoutButton.setWrapText(true);
         logoutButton.setMaxWidth(Double.MAX_VALUE);
@@ -72,7 +86,7 @@ public class DashboardScreen {
 
         Node adminNode = AdminToolbar.settingsNode(currentUser);
 
-        topBar.getChildren().addAll(titleLabel, spacer, adminNode, logoutButton);
+        topBar.getChildren().addAll(titleLabel, spacer, adminNode, themeToggle, logoutButton);
 
         // Content area: stack of cards (default center)
         contentArea = new VBox(18);
@@ -149,13 +163,20 @@ public class DashboardScreen {
 
     private TitledPane createTasksCard() {
         // Card header with icon and title
-        HBox header = new HBox(8);
-        header.setAlignment(Pos.CENTER_LEFT);
+        HBox header = new HBox();
+        header.setAlignment(Pos.CENTER);
+        // Use expanding spacers so the title stays centered regardless of width
+        Region leftSpacer = new Region();
+        Region rightSpacer = new Region();
+        HBox.setHgrow(leftSpacer, Priority.ALWAYS);
+        HBox.setHgrow(rightSpacer, Priority.ALWAYS);
         ImageView iv = loadIconView("Putzplan_icon.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Aufgaben");
         lbl.getStyleClass().add("title");
-        header.getChildren().addAll(iv, lbl);
+        HBox content = new HBox(8, iv, lbl);
+        content.setAlignment(Pos.CENTER);
+        header.getChildren().addAll(leftSpacer, content, rightSpacer);
 
         // content: two boxes side by side
         HBox boxes = new HBox(12);
@@ -180,13 +201,19 @@ public class DashboardScreen {
     }
 
     private TitledPane createShoppingCard() {
-        HBox header = new HBox(8);
-        header.setAlignment(Pos.CENTER_LEFT);
+        HBox header = new HBox();
+        header.setAlignment(Pos.CENTER);
+        Region leftSpacer = new Region();
+        Region rightSpacer = new Region();
+        HBox.setHgrow(leftSpacer, Priority.ALWAYS);
+        HBox.setHgrow(rightSpacer, Priority.ALWAYS);
         ImageView iv = loadIconView("Einkaufsliste_icon.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Einkaufsliste");
         lbl.getStyleClass().add("title");
-        header.getChildren().addAll(iv, lbl);
+        HBox content = new HBox(8, iv, lbl);
+        content.setAlignment(Pos.CENTER);
+        header.getChildren().addAll(leftSpacer, content, rightSpacer);
 
         HBox boxes = new HBox(12);
         boxes.setPadding(new Insets(12));
@@ -210,13 +237,19 @@ public class DashboardScreen {
     }
 
     private TitledPane createFinanceCard() {
-        HBox header = new HBox(8);
-        header.setAlignment(Pos.CENTER_LEFT);
+        HBox header = new HBox();
+        header.setAlignment(Pos.CENTER);
+        Region leftSpacer = new Region();
+        Region rightSpacer = new Region();
+        HBox.setHgrow(leftSpacer, Priority.ALWAYS);
+        HBox.setHgrow(rightSpacer, Priority.ALWAYS);
         ImageView iv = loadIconView("Haushaltsbuch_icon.png");
         if (iv != null) iv.setFitWidth(22);
         Label lbl = new Label("Finanzen");
         lbl.getStyleClass().add("title");
-        header.getChildren().addAll(iv, lbl);
+        HBox content = new HBox(8, iv, lbl);
+        content.setAlignment(Pos.CENTER);
+        header.getChildren().addAll(leftSpacer, content, rightSpacer);
 
         HBox boxes = new HBox(12);
         boxes.setPadding(new Insets(12));
@@ -242,7 +275,7 @@ public class DashboardScreen {
     private VBox createStatBox(String labelText, String valueText) {
         VBox box = new VBox(6);
         box.setPadding(new Insets(12));
-        box.setStyle("-fx-background-color: white; -fx-background-radius: 10; -fx-border-radius:10; -fx-border-color: transparent;");
+        box.getStyleClass().add("card");
         box.setAlignment(Pos.CENTER_LEFT);
         box.setPrefWidth(320);
 
@@ -607,6 +640,8 @@ public class DashboardScreen {
         Alert a = new Alert(Alert.AlertType.ERROR);
         a.setHeaderText(null);
         a.setContentText(message);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
         a.showAndWait();
     }
 
@@ -626,3 +661,4 @@ public class DashboardScreen {
         }
     }
 }
+

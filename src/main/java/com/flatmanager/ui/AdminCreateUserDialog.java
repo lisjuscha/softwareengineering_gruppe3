@@ -24,6 +24,14 @@ public class AdminCreateUserDialog {
     public static Optional<Boolean> showAndWait(Window owner) {
         Dialog<Boolean> dialog = new Dialog<>();
         dialog.setTitle("Neuen Benutzer anlegen");
+        // dialog style class + theme
+        dialog.getDialogPane().getStyleClass().add("dialog-pane");
+        // Ensure the dialog pane uses the main stylesheet so our dark-mode rules apply
+        try {
+            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+            dialog.getDialogPane().getStylesheets().add(css);
+        } catch (Exception ignored) {}
+        if (com.flatmanager.ui.ThemeManager.isDark()) dialog.getDialogPane().getStyleClass().add("dark-mode");
         if (owner != null) dialog.initOwner(owner);
         dialog.initModality(Modality.APPLICATION_MODAL);
 
@@ -200,6 +208,9 @@ public class AdminCreateUserDialog {
                     Alert a = new Alert(Alert.AlertType.INFORMATION);
                     a.setHeaderText(null);
                     a.setContentText("Benutzer erfolgreich angelegt.");
+                    // style the alert's dialog pane
+                    com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                    a.initOwner(dialog.getDialogPane().getScene() != null ? dialog.getDialogPane().getScene().getWindow() : null);
                     a.showAndWait();
                     return true;
 
@@ -228,6 +239,8 @@ public class AdminCreateUserDialog {
         Alert a = new Alert(Alert.AlertType.ERROR);
         a.setHeaderText(null);
         a.setContentText(msg);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
         a.showAndWait();
     }
 

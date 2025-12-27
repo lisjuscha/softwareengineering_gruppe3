@@ -140,6 +140,7 @@ public class RegistrationView {
         a.initOwner(owner);
         a.setHeaderText(null);
         a.setContentText(message);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
         a.showAndWait();
     }
 }

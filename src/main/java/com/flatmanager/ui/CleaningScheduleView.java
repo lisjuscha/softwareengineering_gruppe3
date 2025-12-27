@@ -90,15 +90,11 @@ public class CleaningScheduleView {
         // responsive font shrink when window narrows
         // font sizing handled centrally via CSS (styles.css)
 
-        HBox topBar = new HBox();
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(10, 12, 10, 12));
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        // Admin-Node entfernt, da zentral in DashboardScreen eingefügt
-        topBar.getChildren().addAll(title, spacer);
+        HBox pageHeader = new HBox();
+        pageHeader.getStyleClass().add("page-header");
+        pageHeader.setAlignment(Pos.CENTER);
+        // Center the title in the header bar
+        pageHeader.getChildren().add(title);
 
         // Fehlerlabel (versteckt, wird bei Problemen sichtbar)
         errorLabel = new Label();
@@ -109,7 +105,7 @@ public class CleaningScheduleView {
         errorBox.setAlignment(Pos.CENTER);
         errorBox.setPadding(new Insets(6, 0, 6, 0));
 
-        VBox top = new VBox(topBar, errorBox);
+        VBox top = new VBox(pageHeader, errorBox);
         view.setTop(top);
 
         // Two columns: assigned + open
@@ -286,7 +282,7 @@ public class CleaningScheduleView {
         HBox root = new HBox(10, cb, textBox, assigneeCombo);
         root.setPadding(new Insets(8));
         root.setAlignment(Pos.CENTER_LEFT);
-        root.setStyle("-fx-background-color: #f6f6f6; -fx-border-color: #dcdcdc; -fx-border-radius: 4; -fx-background-radius: 4;");
+        root.getStyleClass().add("card");
         HBox.setHgrow(textBox, Priority.ALWAYS);
 
         if (task.isCompleted()) {

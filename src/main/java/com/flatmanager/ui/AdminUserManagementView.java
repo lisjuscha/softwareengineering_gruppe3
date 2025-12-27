@@ -103,6 +103,8 @@ public class AdminUserManagementView {
         root.setAlignment(Pos.CENTER);
 
         stage.setScene(new Scene(root));
+        // apply current theme to this new stage
+        com.flatmanager.ui.ThemeManager.applyToScene(stage.getScene());
         stage.showAndWait();
 
         return Optional.ofNullable(result.get());
@@ -176,6 +178,8 @@ public class AdminUserManagementView {
                                     Alert a = new Alert(Alert.AlertType.ERROR);
                                     a.setHeaderText("Fehler beim Öffnen des Logins");
                                     a.setContentText(cause.toString());
+                                    com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                                    if (owner != null) a.initOwner(owner);
                                     a.showAndWait();
                                 });
                             } catch (Throwable t) {
@@ -186,6 +190,8 @@ public class AdminUserManagementView {
                                     Alert a = new Alert(Alert.AlertType.ERROR);
                                     a.setHeaderText("Fehler beim Öffnen des Logins");
                                     a.setContentText(t.toString());
+                                    com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                                    if (owner != null) a.initOwner(owner);
                                     a.showAndWait();
                                 });
                             }
@@ -224,6 +230,8 @@ public class AdminUserManagementView {
                                         Alert a = new Alert(Alert.AlertType.ERROR);
                                         a.setHeaderText("Fehler beim Öffnen des Logins");
                                         a.setContentText(cause.toString());
+                                        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                                        if (owner != null) a.initOwner(owner);
                                         a.showAndWait();
                                     });
                                 } catch (Throwable t) {
@@ -234,6 +242,8 @@ public class AdminUserManagementView {
                                         Alert a = new Alert(Alert.AlertType.ERROR);
                                         a.setHeaderText("Fehler beim Öffnen des Logins");
                                         a.setContentText(t.toString());
+                                        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                                        if (owner != null) a.initOwner(owner);
                                         a.showAndWait();
                                     });
                                 }
@@ -262,6 +272,8 @@ public class AdminUserManagementView {
                 Alert a = new Alert(Alert.AlertType.INFORMATION);
                 a.setHeaderText(null);
                 a.setContentText(extended);
+                com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                if (owner != null) a.initOwner(owner);
                 a.showAndWait();
             });
             return;
@@ -271,6 +283,8 @@ public class AdminUserManagementView {
             Alert a = new Alert(Alert.AlertType.INFORMATION);
             a.setHeaderText(null);
             a.setContentText(content);
+            com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+            if (owner != null) a.initOwner(owner);
             a.showAndWait();
         });
     }
@@ -279,6 +293,9 @@ public class AdminUserManagementView {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setHeaderText(null);
         a.setContentText(msg);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        Stage primary = com.flatmanager.App.getPrimaryStage();
+        if (primary != null) a.initOwner(primary);
         a.showAndWait();
     }
 }

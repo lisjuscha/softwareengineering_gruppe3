@@ -41,22 +41,17 @@ public class ShoppingListView {
 
     private void createView() {
         root = new BorderPane();
+        root.getStyleClass().add("shopping-view");
         root.setPadding(new Insets(0));
 
-        // Header (kein grauer Kasten), fett
+        // Page header bar (full width)
         Label header = new Label("Einkaufsliste");
-        header.getStyleClass().add("title");
+        header.getStyleClass().addAll("shopping-title");
         header.setWrapText(true);
-        // font sizing by CSS
-
-        header.setPadding(new Insets(12, 12, 8, 12));
-        header.getStyleClass().add("title");
-
-        HBox topBar = new HBox();
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(0));
-        topBar.getChildren().add(header);
-        root.setTop(topBar);
+        HBox pageHeader = new HBox(header);
+        pageHeader.getStyleClass().add("page-header");
+        pageHeader.setAlignment(Pos.CENTER);
+        root.setTop(pageHeader);
 
         // Linke Spalte (Liste) — enthält Titel oben
         listContainer = new VBox(8);
@@ -522,6 +517,8 @@ public class ShoppingListView {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setHeaderText(null);
         a.setContentText(msg);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
         a.showAndWait();
     }
 

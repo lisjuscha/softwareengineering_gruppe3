@@ -14,8 +14,8 @@ public class App extends Application {
         primaryStage = stage;
         primaryStage.setTitle("Flat Manager");
         // Startfenster etwas größer öffnen
-        primaryStage.setWidth(1024);
-        primaryStage.setHeight(768);
+        primaryStage.setWidth(1280);
+        primaryStage.setHeight(800);
 
         // Show login screen
         showLoginScreen();
@@ -29,6 +29,9 @@ public class App extends Application {
 
         // styles.css aus src/main/resources laden
         scene.getStylesheets().add(App.class.getResource("/styles.css").toExternalForm());
+
+        // Apply current theme (light/dark)
+        com.flatmanager.ui.ThemeManager.applyToScene(scene);
 
         primaryStage.setScene(scene);
     }

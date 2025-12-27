@@ -67,6 +67,7 @@ public class BudgetView {
 
     private void createView() {
         view = new VBox(12);
+        view.getStyleClass().add("budget-view");
         view.setPadding(new Insets(12));
         view.setMaxWidth(Double.MAX_VALUE);
 
@@ -87,6 +88,7 @@ public class BudgetView {
 
         // TabPane mit 3 Tabs
         TabPane tabPane = new TabPane();
+        tabPane.getStyleClass().add("page-tabpane");
         tabPane.setTabClosingPolicy(TabPane.TabClosingPolicy.UNAVAILABLE);
 
         // Tab 1: Ausgabe hinzufügen (Form)
@@ -124,16 +126,13 @@ public class BudgetView {
         view.getChildren().addAll(totalBar, tabPane);
 
         Label header = new Label("Haushaltsbuch");
-        header.getStyleClass().add("title");
+        header.getStyleClass().addAll("budget-title");
         header.setWrapText(true);
-        if (com.flatmanager.App.getPrimaryStage() != null) {
-            com.flatmanager.App.getPrimaryStage().widthProperty().addListener((obs, oldW, newW) -> {
-                double scale = Math.max(0.8, Math.min(1.0, newW.doubleValue() / 1100.0));
-                header.setFont(Font.font("Arial", FontWeight.BOLD, 18 * scale));
-            });
-        }
-
-        view.getChildren().add(0, header);
+        HBox pageHeader = new HBox(header);
+        pageHeader.getStyleClass().add("page-header");
+        pageHeader.setAlignment(Pos.CENTER);
+        // place pageHeader at the top of the view
+        view.getChildren().add(0, pageHeader);
     }
 
     private GridPane buildAddForm() {
@@ -142,25 +141,40 @@ public class BudgetView {
         form.setVgap(10);
         form.setPadding(new Insets(6));
 
+        // Make form expand horizontally with the view: set preferred width bound to parent view
+        try { form.prefWidthProperty().bind(view.widthProperty().subtract(200)); } catch (Exception ignored) {}
+
+        // Column layout: label col small, input col grows, other cols for right-side small controls
+        ColumnConstraints c0 = new ColumnConstraints(); c0.setPercentWidth(18); c0.setHgrow(Priority.NEVER);
+        ColumnConstraints c1 = new ColumnConstraints(); c1.setPercentWidth(40); c1.setHgrow(Priority.ALWAYS);
+        ColumnConstraints c2 = new ColumnConstraints(); c2.setPercentWidth(12); c2.setHgrow(Priority.NEVER);
+        ColumnConstraints c3 = new ColumnConstraints(); c3.setPercentWidth(30); c3.setHgrow(Priority.ALWAYS);
+        form.getColumnConstraints().addAll(c0, c1, c2, c3);
+
         Label beschreibungLabel = new Label("Beschreibung:");
         TextField beschreibungField = new TextField();
         beschreibungField.setPromptText("z. B. Einkäufe");
+        beschreibungField.setMaxWidth(Double.MAX_VALUE);
 
         Label betragLabel = new Label("Betrag:");
         TextField betragField = new TextField();
         betragField.setPromptText("z. B. 12.50");
+        betragField.setMaxWidth(Double.MAX_VALUE);
 
         Label kategorieLabel = new Label("Kategorie:");
         ComboBox<String> kategorieBox = new ComboBox<>();
         kategorieBox.getItems().addAll(categories);
         kategorieBox.setValue(categories.get(0));
+        kategorieBox.setMaxWidth(Double.MAX_VALUE);
 
         Label datumLabel = new Label("Datum:");
         DatePicker datePicker = new DatePicker(LocalDate.now());
+        datePicker.setMaxWidth(Double.MAX_VALUE);
 
         Label personLabel = new Label("Person:");
         ComboBox<String> personBox = new ComboBox<>();
         personBox.setPromptText("Wähle eine Person");
+        personBox.setMaxWidth(Double.MAX_VALUE);
         final List<String> usersInitial = loadUsernames();
         if (!usersInitial.isEmpty()) {
             personBox.getItems().addAll(usersInitial);
@@ -173,6 +187,7 @@ public class BudgetView {
 
         // Split UI
         splitCheck = new CheckBox("Aufteilen");
+        splitCheck.getStyleClass().add("budget-split");
         participantsPane = new FlowPane();
         participantsPane.setHgap(6);
         participantsPane.setVgap(6);
@@ -263,19 +278,26 @@ public class BudgetView {
 
         form.add(beschreibungLabel, 0, 0);
         form.add(beschreibungField, 1, 0, 3, 1);
+        GridPane.setHgrow(beschreibungField, Priority.ALWAYS);
         form.add(betragLabel, 0, 1);
         form.add(betragField, 1, 1);
+        GridPane.setHgrow(betragField, Priority.ALWAYS);
         form.add(kategorieLabel, 2, 1);
         form.add(kategorieBox, 3, 1);
+        GridPane.setHgrow(kategorieBox, Priority.ALWAYS);
         form.add(datumLabel, 0, 2);
         form.add(datePicker, 1, 2);
+        GridPane.setHgrow(datePicker, Priority.ALWAYS);
         form.add(personLabel, 2, 2);
         form.add(personBox, 3, 2);
+        GridPane.setHgrow(personBox, Priority.ALWAYS);
         form.add(splitCheck, 0, 3);
         form.add(participantsPane, 1, 3, 3, 1);
+        GridPane.setHgrow(participantsPane, Priority.ALWAYS);
         form.add(addButton, 0, 4, 4, 1);
         GridPane.setMargin(addButton, new Insets(8, 0, 0, 0));
         addButton.setMaxWidth(Double.MAX_VALUE);
+        GridPane.setHgrow(addButton, Priority.ALWAYS);
 
         // Admin-only: vollständiges Haushaltsbuch löschen (nur sichtbar für Admins)
         Button deleteAllBtn = new Button("Haushaltsbuch löschen");
@@ -302,6 +324,7 @@ public class BudgetView {
             form.add(deleteAllBtn, 0, 5, 4, 1);
             GridPane.setMargin(deleteAllBtn, new Insets(8, 0, 0, 0));
             deleteAllBtn.setMaxWidth(Double.MAX_VALUE);
+            GridPane.setHgrow(deleteAllBtn, Priority.ALWAYS);
         }
 
         return form;
@@ -544,7 +567,7 @@ public class BudgetView {
 
             VBox box = new VBox(8, catLabel, tv, sumLabel);
             box.setPadding(new Insets(6, 0, 12, 0));
-            box.setStyle("-fx-background-color: #ffffff; -fx-border-color: transparent;");
+            box.getStyleClass().add("card");
             categoriesContainer.getChildren().add(box);
         }
     }

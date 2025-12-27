@@ -42,6 +42,7 @@ public class AdminToolbar {
             adminBtn.setText("Admin");
         }
 
+        adminBtn.getStyleClass().add("icon-button");
         adminBtn.setOnAction(e -> {
             try {
                 Window owner = adminBtn.getScene() != null ? adminBtn.getScene().getWindow() : null;
@@ -55,6 +56,9 @@ public class AdminToolbar {
                 Alert a = new Alert(Alert.AlertType.ERROR);
                 a.setHeaderText(null);
                 a.setContentText("Fehler beim Öffnen des Dialogs: " + ex.getMessage());
+                com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                Window owner = adminBtn.getScene() != null ? adminBtn.getScene().getWindow() : null;
+                if (owner != null) a.initOwner(owner);
                 a.showAndWait();
             }
         });
@@ -76,6 +80,9 @@ public class AdminToolbar {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setHeaderText(null);
         a.setContentText(msg);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        com.flatmanager.App.getPrimaryStage();
+        if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
         a.showAndWait();
     }
 
