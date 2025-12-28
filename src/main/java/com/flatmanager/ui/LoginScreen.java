@@ -194,6 +194,7 @@ public class LoginScreen {
         nameLabel.setTextAlignment(TextAlignment.CENTER);
         nameLabel.setMaxWidth(120);
         nameLabel.setPrefWidth(120);
+        nameLabel.setAlignment(Pos.CENTER); // ensure label text is centered under the square
 
         VBox wrapper = new VBox(8, square, nameLabel);
         wrapper.setAlignment(Pos.CENTER);

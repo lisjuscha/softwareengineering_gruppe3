@@ -275,7 +275,7 @@ Global / Basis
                                       /* Login container background and text color (light mode)
                                          Dark-mode overrides are below */
                                       .login-container {
-                                          -fx-background-color: white;
+                                          -fx-background-color: #CAE3FE; /* hellblau wie App-Root */
                                           -fx-text-fill: #111827;
                                           -fx-background-radius: 8;
                                       }
@@ -825,4 +825,33 @@ Global / Basis
 .root.dark-mode .user-tile .login-initial,
 .dark-mode .user-tile .login-initial {
     -fx-text-fill: #0b2b52 !important; /* darker blue */
+}
+
+/* User tile name under the avatar - make it larger and centered */
+.user-name {
+    -fx-font-size: 13px; /* larger than small-text (12px) */
+    -fx-text-fill: #04243a; /* darker text for contrast */
+    -fx-alignment: center; /* ensure center alignment where supported */
+}
+
+.root.dark-mode .user-name, .dark-mode .user-name {
+    -fx-text-fill: #e6eef8 !important;
+}
+
+/* Fälligkeits-Text (rot) und DRINGEND-Label - hell/kontrastreich definieren und im Dark-Mode anpassen */
+.due-text {
+    -fx-text-fill: #b00020; /* Standard rot (light mode) */
+}
+.urgent-label {
+    -fx-text-fill: #d32f2f; /* stärkeres Rot */
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+/* Dark mode overrides: make reds brighter and fully opaque for contrast */
+.root.dark-mode .due-text, .dark-mode .due-text {
+    -fx-text-fill: #ff6b6b !important; /* brighter red for dark background */
+}
+.root.dark-mode .urgent-label, .dark-mode .urgent-label {
+    -fx-text-fill: #ff6b6b !important;
 }

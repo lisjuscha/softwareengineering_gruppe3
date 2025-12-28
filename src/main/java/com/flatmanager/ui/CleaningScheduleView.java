@@ -12,9 +12,6 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -85,7 +82,8 @@ public class CleaningScheduleView {
         // Top-Bar: Header links und Spacer (Admin-Button zentral in DashboardScreen)
         Label title = new Label("Putzplan");
         title.getStyleClass().addAll("cleaning-title", "title");
-        title.setPadding(new Insets(10, 0, 10, 0));
+        // Removed explicit padding so it matches other page headers (e.g. Einkaufsliste, Haushaltsbuch)
+        // Page header styling (spacing/padding) is handled by .page-header in styles.css
         title.setWrapText(true);
         // responsive font shrink when window narrows
         // font sizing handled centrally via CSS (styles.css)
@@ -224,7 +222,7 @@ public class CleaningScheduleView {
         title.setWrapText(true);
 
         Label meta = new Label(getDueText(task));
-        meta.setStyle("-fx-text-fill: #b00020;"); // rot für Fälligkeit
+        meta.getStyleClass().add("due-text"); // Farbe über CSS, damit Dark-Mode Override möglich
         meta.setWrapText(true);
 
         String recText = task.getRecurrence() == null ? "Einmalig" : task.getRecurrence();
@@ -232,7 +230,9 @@ public class CleaningScheduleView {
         recurring.getStyleClass().add("small-text");
 
         Label urgentLbl = new Label(task.isUrgent() ? "DRINGEND" : "");
-        urgentLbl.setStyle(task.isUrgent() ? "-fx-text-fill: #d32f2f; -fx-font-weight: bold; -fx-font-size: 11;" : "");
+        if (task.isUrgent()) {
+            urgentLbl.getStyleClass().add("urgent-label");
+        }
 
         // Titel oben, darunter Fälligkeits-Text, darunter Wiederholung (+ ggf. DRINGEND)
         VBox textBox = new VBox(2, title, meta, new HBox(8, recurring, urgentLbl));
@@ -471,4 +471,3 @@ public class CleaningScheduleView {
         });
     }
 }
-
