@@ -15,6 +15,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * Kleiner Helfer, der das Admin-Icon in der Top-Bar erzeugt (falls der aktuelle Benutzer Admin ist).
+ * Kapselt Icon-Laden, Sichtbarkeitsprüfungen und das Öffnen der Admin-Dialoge.
+ */
 public class AdminToolbar {
 
     public static Node settingsNode(String currentUser) {

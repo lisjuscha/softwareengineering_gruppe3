@@ -17,6 +17,10 @@ import java.io.InputStream;
 import java.sql.*;
 import java.util.*;
 
+/**
+ * UI für die Einkaufsliste. Zeigt bestehende Artikel, erlaubt Hinzufügen und Markieren als gekauft
+ * sowie einfache Verwaltungsfunktionen (Leeren, Erledigte entfernen).
+ */
 public class ShoppingListView {
 
     private BorderPane root;

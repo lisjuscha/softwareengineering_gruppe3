@@ -5,6 +5,10 @@ import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 
+/**
+ * Helferklasse für das globale Theme (Light / Dark). Verwaltet einen globalen Schalter
+ * und wendet die Klasse `dark-mode` sowie Stylesheets auf Szenen und Dialog-Panes an.
+ */
 public final class ThemeManager {
     private static boolean dark = false;
 

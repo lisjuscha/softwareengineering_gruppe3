@@ -29,6 +29,12 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * UI-Screen für das Login (Benutzerauswahl).
+ *
+ * Stellt eine Auswahl an Benutzern (aus der DB) dar und erlaubt den schnellen Login durch
+ * Klicken auf ein Nutzer-Kachel. Unterstützt Admin-Login über Passwort-Dialog.
+ */
 public class LoginScreen {
     private static final Logger LOG = Logger.getLogger(LoginScreen.class.getName());
 
@@ -39,6 +45,8 @@ public class LoginScreen {
         createView();
         loadUsers();
     }
+
+    // createView und loadUsers bauen die UI; statische Hilfsmethoden für show() sind weiter unten implementiert.
 
     private void createView() {
         view = new VBox(20);

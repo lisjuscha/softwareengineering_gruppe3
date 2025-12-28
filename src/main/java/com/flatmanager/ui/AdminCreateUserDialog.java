@@ -19,8 +19,17 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 
+/**
+ * Dialog für Administratoren, um neue Benutzer manuell anzulegen.
+ * Handhabt DB-Spaltenkompatibilität (password / is_admin) und zeigt Fehler/Erfolgsmeldungen.
+ */
 public class AdminCreateUserDialog {
 
+    /**
+     * Öffnet einen Dialog zum Anlegen eines neuen Nutzers. Gibt Optional<Boolean> zurück (true bei Erfolg).
+     * @param owner optionaler Owner-Window
+     * @return Optional<Boolean> - true wenn erfolgreich, false sonst; leer bei Abbruch
+     */
     public static Optional<Boolean> showAndWait(Window owner) {
         Dialog<Boolean> dialog = new Dialog<>();
         dialog.setTitle("Neuen Benutzer anlegen");

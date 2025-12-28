@@ -27,6 +27,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Dialoge für administrative Lösch-Operationen: einzelner Benutzer oder die komplette WG.
+ * Stellt Funktionen zum sicheren Löschen zur Verfügung und wendet Theme/Styles korrekt an.
+ */
 public class AdminDeleteUserDialog {
 
     /**

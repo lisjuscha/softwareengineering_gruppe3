@@ -23,6 +23,10 @@ import java.text.NumberFormat;
 import java.time.LocalDate;
 import java.util.*;
 
+/**
+ * UI für das Haushaltsbuch (Budget-Ansicht). Zeigt Transaktionen, Kategorien und Gesamt-Salden an
+ * und bietet Formulare zum Hinzufügen und Verwalten von Ausgaben.
+ */
 public class BudgetView {
     private VBox view;
     private String currentUser;

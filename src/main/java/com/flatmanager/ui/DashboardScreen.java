@@ -28,6 +28,12 @@ import javafx.application.Platform;
 import javafx.util.Duration;
 import javafx.scene.Scene;
 
+/**
+ * Haupt-Dashboard der Anwendung. Zeigt Zusammenfassungen für Aufgaben, Einkaufsliste und Finanzen
+ * sowie die linke Navigation und Top-Bar. Enthält einen internen Refresh-Timer und einen
+ * statischen Benachrichtigungs-Helfer {@link #notifyRefreshNow()} zum Triggern eines sofortigen Refreshes
+ * von anderen Komponenten.
+ */
 public class DashboardScreen {
     private BorderPane view;
     private String currentUser;
@@ -37,6 +43,10 @@ public class DashboardScreen {
     // active instance for cross-component notify
     private static DashboardScreen activeInstance = null;
 
+    /**
+     * Erzeugt ein neues Dashboard für den gegebenen Benutzer.
+     * @param username Anzeige-Name oder Username des aktuell eingeloggten Nutzers
+     */
     public DashboardScreen(String username) {
         this.currentUser = username;
         // ensure DB initialized for dependent views
@@ -158,6 +168,11 @@ public class DashboardScreen {
         if (activeInstance == instance) activeInstance = null;
     }
 
+    /**
+     * Externe Helfer-Methode, die anderen Views erlaubt, das Dashboard sofort zu aktualisieren.
+     * Falls das Dashboard momentan nicht als aktiv registriert ist, versucht sie eine Fallback-Suche
+     * über die Scene-Graph-Root.
+     */
     public static void notifyRefreshNow() {
         DashboardScreen inst = activeInstance;
         if (inst == null) {
@@ -710,6 +725,4 @@ public class DashboardScreen {
         }
     }
 }
-
-
 

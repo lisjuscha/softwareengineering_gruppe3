@@ -15,8 +15,17 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Hilfsklasse für die Anzeige des Registrierungsdialogs zum Anlegen einer neuen WG inkl. Admin.
+ * Die Methode {@link #showRegistration(Stage, java.util.function.Consumer)} öffnet ein modales Fenster.
+ */
 public class RegistrationView {
 
+    /**
+     * Öffnet ein modales Registrierungs-Dialogfenster.
+     * @param owner Besitzer-Fenster
+     * @param onResult Callback der mit true/false auf Erfolg reagiert
+     */
     public static void showRegistration(Stage owner, Consumer<Boolean> onResult) {
         Stage stage = new Stage();
         stage.initOwner(owner);

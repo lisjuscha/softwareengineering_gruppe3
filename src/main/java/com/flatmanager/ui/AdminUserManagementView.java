@@ -19,8 +19,19 @@ import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Admin-Oberfläche für Verwaltungsaktionen: Benutzer anlegen, löschen oder die gesamte WG löschen.
+ * Öffnet modale Dialoge und führt die gewünschten Aktionen aus.
+ */
 public class AdminUserManagementView {
 
+    /**
+     * Öffnet ein modales Verwaltungsfenster für Admin-Aktionen und gibt die gewählte Aktion als Optional zurück
+     * ("create", "delete", "delete-wg" oder leer bei Abbruch).
+     * @param owner optionales Besitzer-Fenster
+     * @param currentAdminUsername aktuell angemeldeter Admin-Username (wird an Delete-Dialog übergeben)
+     * @return Optional mit Aktions-Schlüssel oder leer bei Abbruch
+     */
     public static Optional<String> showAndWait(Window owner, String currentAdminUsername) {
         AtomicReference<String> result = new AtomicReference<>(null);
 

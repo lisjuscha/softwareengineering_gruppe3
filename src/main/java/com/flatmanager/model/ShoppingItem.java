@@ -2,6 +2,12 @@ package com.flatmanager.model;
 
 import javafx.beans.property.*;
 
+/**
+ * Modellklasse für einen Eintrag in der Einkaufsliste.
+ *
+ * <p>Die Klasse verwendet JavaFX-Properties, damit Views einfach an Daten gebunden werden können.
+ * Sie enthält Aliase (z. B. getName/setName, isBought/setBought) für Kompatibilität mit älteren DAOs.</p>
+ */
 public class ShoppingItem {
 
     private final IntegerProperty id;
@@ -14,6 +20,9 @@ public class ShoppingItem {
     private final BooleanProperty purchased;
     private final BooleanProperty selected;
 
+    /**
+     * Vollständiger Konstruktor mit allen Feldern.
+     */
     public ShoppingItem(int id, String itemName, String quantity, String addedBy, String category, String purchasedFor, boolean purchased) {
         this.id = new SimpleIntegerProperty(id);
         this.itemName = new SimpleStringProperty(itemName);
@@ -27,6 +36,9 @@ public class ShoppingItem {
     }
 
     // No-arg constructor for reflection-based DAO fallback
+    /**
+     * Parameterloser Konstruktor für Reflection/DAO-Fallback.
+     */
     public ShoppingItem() {
         this.id = new SimpleIntegerProperty(0);
         this.itemName = new SimpleStringProperty("");
