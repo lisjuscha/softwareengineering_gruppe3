@@ -102,9 +102,32 @@ public class AdminUserManagementView {
         root.setPadding(new Insets(12));
         root.setAlignment(Pos.CENTER);
 
-        stage.setScene(new Scene(root));
-        // apply current theme to this new stage
-        com.flatmanager.ui.ThemeManager.applyToScene(stage.getScene());
+        // Mark this root as a dialog pane so dialog CSS rules apply, and add dark-mode class when active
+        root.getStyleClass().add("dialog-pane");
+        if (com.flatmanager.ui.ThemeManager.isDark()) {
+            if (!root.getStyleClass().contains("dark-mode")) root.getStyleClass().add("dark-mode");
+            // Inline fallback style to guarantee dark background for modal content (helps on macOS where some popups can ignore stylesheet selectors)
+            root.setStyle("-fx-background-color: linear-gradient(#071826, #041223); -fx-text-fill: #e6eef8;");
+        } else {
+            root.getStyleClass().remove("dark-mode");
+            root.setStyle("-fx-background-color: #ffffff; -fx-text-fill: #111827;");
+        }
+        // Create scene, attach main stylesheet and apply theme so the modal respects dark-mode
+        Scene scene = new Scene(root);
+        // Ensure the Scene fill matches the theme (helps on macOS where window chrome/scene background may be white)
+        try {
+            if (com.flatmanager.ui.ThemeManager.isDark()) {
+                scene.setFill(javafx.scene.paint.Color.web("#071826"));
+            } else {
+                scene.setFill(javafx.scene.paint.Color.web("#ffffff"));
+            }
+        } catch (Exception ignored) {}
+        try {
+            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+            if (!scene.getStylesheets().contains(css)) scene.getStylesheets().add(css);
+        } catch (Exception ignored) {}
+        com.flatmanager.ui.ThemeManager.applyToScene(scene);
+        stage.setScene(scene);
         stage.showAndWait();
 
         return Optional.ofNullable(result.get());

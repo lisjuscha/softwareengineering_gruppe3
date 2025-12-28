@@ -26,6 +26,7 @@ import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.util.Duration;
+import javafx.scene.Scene;
 
 public class DashboardScreen {
     private BorderPane view;
@@ -48,6 +49,8 @@ public class DashboardScreen {
 
     private void createView() {
         view = new BorderPane();
+        // store a reference to this controller on the root node so other code can find it as fallback
+        view.setUserData(this);
         view.getStyleClass().add("dashboard");
 
         // Top bar
@@ -157,7 +160,23 @@ public class DashboardScreen {
 
     public static void notifyRefreshNow() {
         DashboardScreen inst = activeInstance;
-        if (inst == null) return;
+        if (inst == null) {
+            // fallback: try to find a dashboard instance from the primary stage scene
+            try {
+                if (com.flatmanager.App.getPrimaryStage() != null && com.flatmanager.App.getPrimaryStage().getScene() != null) {
+                    Scene s = com.flatmanager.App.getPrimaryStage().getScene();
+                    for (Node n : s.getRoot().lookupAll(".dashboard")) {
+                        Object ud = n.getUserData();
+                        if (ud instanceof DashboardScreen) {
+                            DashboardScreen found = (DashboardScreen) ud;
+                            Platform.runLater(found::refreshAll);
+                            return;
+                        }
+                    }
+                }
+            } catch (Exception ignored) {}
+            return;
+        }
         Platform.runLater(() -> inst.refreshAll());
     }
 
@@ -319,14 +338,17 @@ public class DashboardScreen {
             } catch (Exception ignored) {
             }
 
-            // update UI
+            // update UI: find the titled pane by its header label text safely
             for (Node n : contentArea.getChildren()) {
                 if (n instanceof TitledPane) {
                     TitledPane tp = (TitledPane) n;
-                    if ("Aufgaben".equals(((Label) ((HBox) tp.getGraphic()).getChildren().get(1)).getText())) {
+                    String header = getCardHeaderText(tp);
+                    if ("Aufgaben".equals(header)) {
                         VBox[] boxes = (VBox[]) tp.getUserData();
-                        ((Label) boxes[0].lookup("#stat-value")).setText(String.valueOf(myCount));
-                        ((Label) boxes[1].lookup("#stat-value")).setText(String.valueOf(openCount));
+                        Node v0 = boxes[0].lookup("#stat-value");
+                        Node v1 = boxes[1].lookup("#stat-value");
+                        if (v0 instanceof Label) ((Label) v0).setText(String.valueOf(myCount));
+                        if (v1 instanceof Label) ((Label) v1).setText(String.valueOf(openCount));
                         break;
                     }
                 }
@@ -360,10 +382,13 @@ public class DashboardScreen {
             for (Node n : contentArea.getChildren()) {
                 if (n instanceof TitledPane) {
                     TitledPane tp = (TitledPane) n;
-                    if ("Einkaufsliste".equals(((Label) ((HBox) tp.getGraphic()).getChildren().get(1)).getText())) {
+                    String header = getCardHeaderText(tp);
+                    if ("Einkaufsliste".equals(header)) {
                         VBox[] boxes = (VBox[]) tp.getUserData();
-                        ((Label) boxes[0].lookup("#stat-value")).setText(String.valueOf(total));
-                        ((Label) boxes[1].lookup("#stat-value")).setText(String.valueOf(mine));
+                        Node v0 = boxes[0].lookup("#stat-value");
+                        Node v1 = boxes[1].lookup("#stat-value");
+                        if (v0 instanceof Label) ((Label) v0).setText(String.valueOf(total));
+                        if (v1 instanceof Label) ((Label) v1).setText(String.valueOf(mine));
                         break;
                     }
                 }
@@ -468,10 +493,13 @@ public class DashboardScreen {
             for (Node n : contentArea.getChildren()) {
                 if (n instanceof TitledPane) {
                     TitledPane tp = (TitledPane) n;
-                    if ("Finanzen".equals(((Label) ((HBox) tp.getGraphic()).getChildren().get(1)).getText())) {
+                    String header = getCardHeaderText(tp);
+                    if ("Finanzen".equals(header)) {
                         VBox[] boxes = (VBox[]) tp.getUserData();
-                        ((Label) boxes[0].lookup("#stat-value")).setText(String.format("%.2f €", owedToMe));
-                        ((Label) boxes[1].lookup("#stat-value")).setText(String.format("%.2f €", oweOthers));
+                        Node v0 = boxes[0].lookup("#stat-value");
+                        Node v1 = boxes[1].lookup("#stat-value");
+                        if (v0 instanceof Label) ((Label) v0).setText(String.format("%.2f €", owedToMe));
+                        if (v1 instanceof Label) ((Label) v1).setText(String.format("%.2f €", oweOthers));
                         break;
                     }
                 }
@@ -649,6 +677,27 @@ public class DashboardScreen {
         return view;
     }
 
+    // Helper: extract header text from a TitledPane graphic that may contain nested HBoxes
+    private String getCardHeaderText(TitledPane tp) {
+        if (tp == null) return null;
+        Node graphic = tp.getGraphic();
+        if (graphic == null) return null;
+        // If graphic is HBox, search its children for a Label (or nested HBox containing Label)
+        if (graphic instanceof HBox) {
+            for (Node child : ((HBox) graphic).getChildren()) {
+                if (child instanceof Label) return ((Label) child).getText();
+                if (child instanceof HBox) {
+                    for (Node inner : ((HBox) child).getChildren()) {
+                        if (inner instanceof Label) return ((Label) inner).getText();
+                    }
+                }
+            }
+        } else if (graphic instanceof Label) {
+            return ((Label) graphic).getText();
+        }
+        return null;
+    }
+
     private static class TransactionRow {
         final int id;
         final double amount;
@@ -661,4 +710,6 @@ public class DashboardScreen {
         }
     }
 }
+
+
 

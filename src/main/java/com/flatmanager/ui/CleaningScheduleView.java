@@ -319,6 +319,14 @@ public class CleaningScheduleView {
         dialog.setTitle("Neue Aufgabe");
         dialog.setHeaderText(null);
 
+        // Apply styles and theme to the dialog pane so it follows dark-mode
+        dialog.getDialogPane().getStyleClass().add("dialog-pane");
+        try {
+            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+            if (!dialog.getDialogPane().getStylesheets().contains(css)) dialog.getDialogPane().getStylesheets().add(css);
+        } catch (Exception ignored) {}
+        com.flatmanager.ui.ThemeManager.styleDialogPane(dialog.getDialogPane());
+
         ButtonType createType = new ButtonType("Erstellen", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(createType, ButtonType.CANCEL);
 

@@ -296,10 +296,10 @@ Global / Basis
                                       }
 
                                       /* Dark mode overrides: add class 'dark-mode' to the root node */
-                                      .root.dark-mode {
-                                          -fx-background-color: linear-gradient(#001428, #001d33);
+                                      .dark-mode, .root.dark-mode {
+                                          -fx-background-color: linear-gradient(#001428, #001d33) !important;
                                           -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-                                          -fx-text-fill: #e6eef8;
+                                          -fx-text-fill: #e6eef8 !important;
                                       }
 
                                       .root.dark-mode .top-bar {
