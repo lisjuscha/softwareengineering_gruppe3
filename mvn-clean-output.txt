@@ -1,0 +1,273 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] --------------------< com.flatmanager:flat-manager >--------------------
+[INFO] Building Flat Manager 1.0-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[WARNING] 6 problems were encountered while building the effective model for org.openjfx:javafx-controls:jar:21.0.1 during dependency collection step for project (use -X to see details)
+[INFO] 
+[INFO] --- clean:3.2.0:clean (default-clean) @ flat-manager ---
+[INFO] Deleting /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/target
+[INFO] 
+[INFO] --- jacoco:0.8.10:prepare-agent (prepare-agent) @ flat-manager ---
+[INFO] argLine set to -javaagent:/Users/I740819/.m2/repository/org/jacoco/org.jacoco.agent/0.8.10/org.jacoco.agent-0.8.10-runtime.jar=destfile=/Users/I740819/Documents/GitHub/softwareengineering_gruppe3/target/jacoco.exec
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ flat-manager ---
+[INFO] Copying 9 resources from src/main/resources to target/classes
+[INFO] 
+[INFO] --- compiler:3.11.0:compile (default-compile) @ flat-manager ---
+[INFO] Changes detected - recompiling the module! :source
+[INFO] Compiling 22 source files with javac [debug target 17 module-path] to target/classes
+[INFO] /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/main/java/com/flatmanager/ui/BudgetView.java: /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/main/java/com/flatmanager/ui/BudgetView.java uses or overrides a deprecated API.
+[INFO] /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/main/java/com/flatmanager/ui/BudgetView.java: Recompile with -Xlint:deprecation for details.
+[INFO] /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/main/java/com/flatmanager/ui/BudgetView.java: /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/main/java/com/flatmanager/ui/BudgetView.java uses unchecked or unsafe operations.
+[INFO] /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/main/java/com/flatmanager/ui/BudgetView.java: Recompile with -Xlint:unchecked for details.
+[INFO] 
+[INFO] --- resources:3.3.1:testResources (default-testResources) @ flat-manager ---
+[INFO] skip non existing resourceDirectory /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/src/test/resources
+[INFO] 
+[INFO] --- compiler:3.11.0:testCompile (default-testCompile) @ flat-manager ---
+[INFO] Changes detected - recompiling the module! :dependency
+[INFO] Compiling 6 source files with javac [debug target 17 module-path] to target/test-classes
+[INFO] 
+[INFO] --- surefire:3.2.2:test (default-test) @ flat-manager ---
+[INFO] Using auto detected provider org.apache.maven.surefire.junitplatform.JUnitPlatformProvider
+[INFO] 
+[INFO] -------------------------------------------------------
+[INFO]  T E S T S
+[INFO] -------------------------------------------------------
+[INFO] Running com.flatmanager.database.DatabaseManagerTest
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:flatmanager.db
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManagerTest.testGetConnection(DatabaseManagerTest.java:13)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+SLF4J: Failed to load class "org.slf4j.impl.StaticLoggerBinder".
+SLF4J: Defaulting to no-operation (NOP) logger implementation
+SLF4J: See http://www.slf4j.org/codes.html#StaticLoggerBinder for further details.
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:flatmanager.db / conn=org.sqlite.jdbc4.JDBC4Connection@6f8e0cee
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.645 s -- in com.flatmanager.database.DatabaseManagerTest
+[INFO] Running com.flatmanager.dao.CleaningTaskDaoTest
+[DatabaseManager] Connection closed
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.before(CleaningTaskDaoTest.java:24)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@c81fd12
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.storage.Database.getConnection(Database.java:14)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDao.insert(CleaningTaskDao.java:55)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.testOrderingByDue(CleaningTaskDaoTest.java:74)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+[DatabaseManager] PRAGMAS already applied
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@50d3bf39
+[DatabaseManager] Connection closed
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.before(CleaningTaskDaoTest.java:24)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@6edcd0d8
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.storage.Database.getConnection(Database.java:14)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDao.insert(CleaningTaskDao.java:55)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.testInsertAndListAll(CleaningTaskDaoTest.java:38)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+[DatabaseManager] PRAGMAS already applied
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@6136998b
+[DatabaseManager] Connection closed
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.before(CleaningTaskDaoTest.java:24)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@b8a7e43
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.storage.Database.getConnection(Database.java:14)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDao.insert(CleaningTaskDao.java:55)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.testUpdateAndDeleteCompleted(CleaningTaskDaoTest.java:53)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+[DatabaseManager] PRAGMAS already applied
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:mem_cleaning?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@35835fa
+[DatabaseManager] Connection closed
+[ERROR] Tests run: 3, Failures: 0, Errors: 3, Skipped: 0, Time elapsed: 0.024 s <<< FAILURE! -- in com.flatmanager.dao.CleaningTaskDaoTest
+[ERROR] com.flatmanager.dao.CleaningTaskDaoTest.testOrderingByDue -- Time elapsed: 0.011 s <<< ERROR!
+org.sqlite.SQLiteException: [SQLITE_ERROR] SQL error or missing database (no such table: cleaning_tasks)
+	at org.sqlite.core.DB.newSQLException(DB.java:1179)
+	at org.sqlite.core.DB.newSQLException(DB.java:1190)
+	at org.sqlite.core.DB.throwex(DB.java:1150)
+	at org.sqlite.core.NativeDB.prepare_utf8(Native Method)
+	at org.sqlite.core.NativeDB.prepare(NativeDB.java:132)
+	at org.sqlite.core.DB.prepare(DB.java:264)
+	at org.sqlite.core.CorePreparedStatement.<init>(CorePreparedStatement.java:46)
+	at org.sqlite.jdbc3.JDBC3PreparedStatement.<init>(JDBC3PreparedStatement.java:32)
+	at org.sqlite.jdbc4.JDBC4PreparedStatement.<init>(JDBC4PreparedStatement.java:25)
+	at org.sqlite.jdbc4.JDBC4Connection.prepareStatement(JDBC4Connection.java:34)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:225)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:205)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:210)
+	at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDao.insert(CleaningTaskDao.java:56)
+	at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.testOrderingByDue(CleaningTaskDaoTest.java:74)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[ERROR] com.flatmanager.dao.CleaningTaskDaoTest.testInsertAndListAll -- Time elapsed: 0.004 s <<< ERROR!
+org.sqlite.SQLiteException: [SQLITE_ERROR] SQL error or missing database (no such table: cleaning_tasks)
+	at org.sqlite.core.DB.newSQLException(DB.java:1179)
+	at org.sqlite.core.DB.newSQLException(DB.java:1190)
+	at org.sqlite.core.DB.throwex(DB.java:1150)
+	at org.sqlite.core.NativeDB.prepare_utf8(Native Method)
+	at org.sqlite.core.NativeDB.prepare(NativeDB.java:132)
+	at org.sqlite.core.DB.prepare(DB.java:264)
+	at org.sqlite.core.CorePreparedStatement.<init>(CorePreparedStatement.java:46)
+	at org.sqlite.jdbc3.JDBC3PreparedStatement.<init>(JDBC3PreparedStatement.java:32)
+	at org.sqlite.jdbc4.JDBC4PreparedStatement.<init>(JDBC4PreparedStatement.java:25)
+	at org.sqlite.jdbc4.JDBC4Connection.prepareStatement(JDBC4Connection.java:34)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:225)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:205)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:210)
+	at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDao.insert(CleaningTaskDao.java:56)
+	at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.testInsertAndListAll(CleaningTaskDaoTest.java:38)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[ERROR] com.flatmanager.dao.CleaningTaskDaoTest.testUpdateAndDeleteCompleted -- Time elapsed: 0.003 s <<< ERROR!
+org.sqlite.SQLiteException: [SQLITE_ERROR] SQL error or missing database (no such table: cleaning_tasks)
+	at org.sqlite.core.DB.newSQLException(DB.java:1179)
+	at org.sqlite.core.DB.newSQLException(DB.java:1190)
+	at org.sqlite.core.DB.throwex(DB.java:1150)
+	at org.sqlite.core.NativeDB.prepare_utf8(Native Method)
+	at org.sqlite.core.NativeDB.prepare(NativeDB.java:132)
+	at org.sqlite.core.DB.prepare(DB.java:264)
+	at org.sqlite.core.CorePreparedStatement.<init>(CorePreparedStatement.java:46)
+	at org.sqlite.jdbc3.JDBC3PreparedStatement.<init>(JDBC3PreparedStatement.java:32)
+	at org.sqlite.jdbc4.JDBC4PreparedStatement.<init>(JDBC4PreparedStatement.java:25)
+	at org.sqlite.jdbc4.JDBC4Connection.prepareStatement(JDBC4Connection.java:34)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:225)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:205)
+	at org.sqlite.jdbc3.JDBC3Connection.prepareStatement(JDBC3Connection.java:210)
+	at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDao.insert(CleaningTaskDao.java:56)
+	at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.CleaningTaskDaoTest.testUpdateAndDeleteCompleted(CleaningTaskDaoTest.java:53)
+	at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+	at java.base/java.util.ArrayList.forEach(ArrayList.java:1511)
+
+[INFO] Running com.flatmanager.dao.ShoppingItemDaoTest
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.ShoppingItemDaoTest.before(ShoppingItemDaoTest.java:28)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@7918c7f8
+[DatabaseManager] Connection closed
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.ShoppingItemDaoTest.before(ShoppingItemDaoTest.java:28)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@c808207
+[DatabaseManager] Connection closed
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.ShoppingItemDaoTest.before(ShoppingItemDaoTest.java:28)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@20749d9
+[DatabaseManager] Connection closed
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.ShoppingItemDaoTest.before(ShoppingItemDaoTest.java:28)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@62628e78
+[DatabaseManager] Connection closed
+[DatabaseManager] createConnection called -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.database.DatabaseManager.getConnection(DatabaseManager.java:19)
+	 at com.flatmanager@1.0-SNAPSHOT/com.flatmanager.dao.ShoppingItemDaoTest.before(ShoppingItemDaoTest.java:28)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+	 at java.base/jdk.internal.reflect.NativeMethodAccessorImpl.invoke(NativeMethodAccessorImpl.java:77)
+	 at java.base/jdk.internal.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
+	 at java.base/java.lang.reflect.Method.invoke(Method.java:569)
+[DatabaseManager] PRAGMAS applied (journal_mode=DELETE)
+[DatabaseManager] ensureSchema executed / migrations applied
+[DatabaseManager] Connected -> url=jdbc:sqlite:file:memdb1?mode=memory&cache=shared / conn=org.sqlite.jdbc4.JDBC4Connection@44841b43
+[ShoppingItemDao] UPDATE SQL: UPDATE shopping_items SET item_name = ?, quantity = ?, added_by = ?, category = ?, purchased_for = ?, purchased = ?, bought = ? WHERE id = ?
+[ShoppingItemDao] params: itemName=Bread, quantity=2, addedBy=u2, category=Bakery, purchasedFor=null, purchased=1, bought=1, id=1
+[ShoppingItemDao] POST-UPDATE check id=1 -> p=1
+[DatabaseManager] Connection closed
+[INFO] Tests run: 5, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.054 s -- in com.flatmanager.dao.ShoppingItemDaoTest
+[INFO] Running com.flatmanager.model.ShoppingItemTest
+[INFO] Tests run: 3, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.003 s -- in com.flatmanager.model.ShoppingItemTest
+[INFO] Running com.flatmanager.model.CleaningTaskTest
+[INFO] Tests run: 2, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 0.010 s -- in com.flatmanager.model.CleaningTaskTest
+[INFO] 
+[INFO] Results:
+[INFO] 
+[ERROR] Errors: 
+[ERROR]   CleaningTaskDaoTest.testInsertAndListAll:38 » SQLite [SQLITE_ERROR] SQL error or missing database (no such table: cleaning_tasks)
+[ERROR]   CleaningTaskDaoTest.testOrderingByDue:74 » SQLite [SQLITE_ERROR] SQL error or missing database (no such table: cleaning_tasks)
+[ERROR]   CleaningTaskDaoTest.testUpdateAndDeleteCompleted:53 » SQLite [SQLITE_ERROR] SQL error or missing database (no such table: cleaning_tasks)
+[INFO] 
+[ERROR] Tests run: 15, Failures: 0, Errors: 3, Skipped: 0
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  4.773 s
+[INFO] Finished at: 2025-12-25T00:25:58+01:00
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-surefire-plugin:3.2.2:test (default-test) on project flat-manager: 
+[ERROR] 
+[ERROR] Please refer to /Users/I740819/Documents/GitHub/softwareengineering_gruppe3/target/surefire-reports for the individual test results.
+[ERROR] Please refer to dump files (if any exist) [date].dump, [date]-jvmRun[N].dump and [date].dumpstream.
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException

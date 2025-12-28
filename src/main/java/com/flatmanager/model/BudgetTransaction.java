@@ -3,6 +3,13 @@ package com.flatmanager.model;
 import java.time.LocalDate;
 import java.util.Objects;
 
+/**
+ * Repräsentiert eine einzelne Budget-Transaktion (Ausgabe/Einzahlung) im Haushaltsbuch.
+ *
+ * <p>Diese Klasse enthält Felder für Betrag, Datum, Beschreibung, Kategorie und ein optionales
+ * Meta-Feld zur Kompatibilität mit älteren DB-Schemata. Getter/Setter sind bewusst einfach gehalten
+ * und es gibt Überladungen für das Setzen des Datums mittels {@link LocalDate}.</p>
+ */
 public class BudgetTransaction {
 
     private int id;
@@ -13,10 +20,21 @@ public class BudgetTransaction {
     private String meta; // optionales 6. Feld zur Kompatibilität
 
     // Parameterloser Konstruktor (wird vom DAO benötigt)
+    /**
+     * Erzeugt eine leere BudgetTransaction. Wird u.a. vom DAO beim Einlesen verwendet.
+     */
     public BudgetTransaction() {
     }
 
-    // Gängiger Konstruktor mit 6 Parametern (beibehalten für Kompatibilität)
+    /**
+     * Voller Konstruktor mit allen Feldern (wird zur späteren Kompatibilität bereitgehalten).
+     * @param id Primärschlüssel
+     * @param amount Betrag (positiv/negativ)
+     * @param date Datum als ISO-String (yyyy-MM-dd)
+     * @param description Beschreibung
+     * @param category Kategorie
+     * @param meta optionales Meta-Feld
+     */
     public BudgetTransaction(int id, double amount, String date, String description, String category, String meta) {
         this.id = id;
         this.amount = amount;
@@ -26,7 +44,11 @@ public class BudgetTransaction {
         this.meta = meta;
     }
 
-    // Komfort-Konstruktor (optional)
+    /**
+     * Komfort-Konstruktor für schnelle Instanziierung mit Betrag und Datum.
+     * @param amount Betrag
+     * @param date Datum als ISO-String
+     */
     public BudgetTransaction(double amount, String date) {
         this.amount = amount;
         this.date = date;

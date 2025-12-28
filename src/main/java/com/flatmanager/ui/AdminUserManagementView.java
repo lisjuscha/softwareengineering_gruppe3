@@ -11,14 +11,27 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import javafx.stage.Window;
+import javafx.scene.text.Font;
+import javafx.scene.text.FontWeight;
 
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Admin-Oberfläche für Verwaltungsaktionen: Benutzer anlegen, löschen oder die gesamte WG löschen.
+ * Öffnet modale Dialoge und führt die gewünschten Aktionen aus.
+ */
 public class AdminUserManagementView {
 
+    /**
+     * Öffnet ein modales Verwaltungsfenster für Admin-Aktionen und gibt die gewählte Aktion als Optional zurück
+     * ("create", "delete", "delete-wg" oder leer bei Abbruch).
+     * @param owner optionales Besitzer-Fenster
+     * @param currentAdminUsername aktuell angemeldeter Admin-Username (wird an Delete-Dialog übergeben)
+     * @return Optional mit Aktions-Schlüssel oder leer bei Abbruch
+     */
     public static Optional<String> showAndWait(Window owner, String currentAdminUsername) {
         AtomicReference<String> result = new AtomicReference<>(null);
 
@@ -27,11 +40,17 @@ public class AdminUserManagementView {
         if (owner != null) stage.initOwner(owner);
         stage.setTitle("Benutzerverwaltung");
 
+        Label header = new Label("Benutzerverwaltung");
+        header.getStyleClass().add("title");
+        header.setWrapText(true);
+
         Label label = new Label("Wähle eine Aktion:");
-        Button createBtn = new Button("Benutzer anlegen");
-        Button deleteBtn = new Button("Benutzer löschen");
-        Button deleteWgBtn = new Button("WG löschen");
-        Button cancelBtn = new Button("Abbrechen");
+        label.setWrapText(true);
+        label.setMaxWidth(Double.MAX_VALUE);
+        Button createBtn = new Button("Benutzer anlegen"); createBtn.setWrapText(true); createBtn.setMaxWidth(Double.MAX_VALUE);
+        Button deleteBtn = new Button("Benutzer löschen"); deleteBtn.setWrapText(true); deleteBtn.setMaxWidth(Double.MAX_VALUE);
+        Button deleteWgBtn = new Button("WG löschen"); deleteWgBtn.setWrapText(true); deleteWgBtn.setMaxWidth(Double.MAX_VALUE);
+        Button cancelBtn = new Button("Abbrechen"); cancelBtn.setWrapText(true); cancelBtn.setMaxWidth(Double.MAX_VALUE);
 
         createBtn.setOnAction(e -> {
             try {
@@ -90,11 +109,36 @@ public class AdminUserManagementView {
         HBox actions = new HBox(10, createBtn, deleteBtn, deleteWgBtn, cancelBtn);
         actions.setAlignment(Pos.CENTER);
 
-        VBox root = new VBox(12, label, actions);
+        VBox root = new VBox(12, header, label, actions);
         root.setPadding(new Insets(12));
         root.setAlignment(Pos.CENTER);
 
-        stage.setScene(new Scene(root));
+        // Mark this root as a dialog pane so dialog CSS rules apply, and add dark-mode class when active
+        root.getStyleClass().add("dialog-pane");
+        if (com.flatmanager.ui.ThemeManager.isDark()) {
+            if (!root.getStyleClass().contains("dark-mode")) root.getStyleClass().add("dark-mode");
+            // Inline fallback style to guarantee dark background for modal content (helps on macOS where some popups can ignore stylesheet selectors)
+            root.setStyle("-fx-background-color: linear-gradient(#071826, #041223); -fx-text-fill: #e6eef8;");
+        } else {
+            root.getStyleClass().remove("dark-mode");
+            root.setStyle("-fx-background-color: #ffffff; -fx-text-fill: #111827;");
+        }
+        // Create scene, attach main stylesheet and apply theme so the modal respects dark-mode
+        Scene scene = new Scene(root);
+        // Ensure the Scene fill matches the theme (helps on macOS where window chrome/scene background may be white)
+        try {
+            if (com.flatmanager.ui.ThemeManager.isDark()) {
+                scene.setFill(javafx.scene.paint.Color.web("#071826"));
+            } else {
+                scene.setFill(javafx.scene.paint.Color.web("#ffffff"));
+            }
+        } catch (Exception ignored) {}
+        try {
+            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+            if (!scene.getStylesheets().contains(css)) scene.getStylesheets().add(css);
+        } catch (Exception ignored) {}
+        com.flatmanager.ui.ThemeManager.applyToScene(scene);
+        stage.setScene(scene);
         stage.showAndWait();
 
         return Optional.ofNullable(result.get());
@@ -168,6 +212,8 @@ public class AdminUserManagementView {
                                     Alert a = new Alert(Alert.AlertType.ERROR);
                                     a.setHeaderText("Fehler beim Öffnen des Logins");
                                     a.setContentText(cause.toString());
+                                    com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                                    if (owner != null) a.initOwner(owner);
                                     a.showAndWait();
                                 });
                             } catch (Throwable t) {
@@ -178,6 +224,8 @@ public class AdminUserManagementView {
                                     Alert a = new Alert(Alert.AlertType.ERROR);
                                     a.setHeaderText("Fehler beim Öffnen des Logins");
                                     a.setContentText(t.toString());
+                                    com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                                    if (owner != null) a.initOwner(owner);
                                     a.showAndWait();
                                 });
                             }
@@ -216,6 +264,8 @@ public class AdminUserManagementView {
                                         Alert a = new Alert(Alert.AlertType.ERROR);
                                         a.setHeaderText("Fehler beim Öffnen des Logins");
                                         a.setContentText(cause.toString());
+                                        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                                        if (owner != null) a.initOwner(owner);
                                         a.showAndWait();
                                     });
                                 } catch (Throwable t) {
@@ -226,6 +276,8 @@ public class AdminUserManagementView {
                                         Alert a = new Alert(Alert.AlertType.ERROR);
                                         a.setHeaderText("Fehler beim Öffnen des Logins");
                                         a.setContentText(t.toString());
+                                        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                                        if (owner != null) a.initOwner(owner);
                                         a.showAndWait();
                                     });
                                 }
@@ -254,6 +306,8 @@ public class AdminUserManagementView {
                 Alert a = new Alert(Alert.AlertType.INFORMATION);
                 a.setHeaderText(null);
                 a.setContentText(extended);
+                com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                if (owner != null) a.initOwner(owner);
                 a.showAndWait();
             });
             return;
@@ -263,6 +317,8 @@ public class AdminUserManagementView {
             Alert a = new Alert(Alert.AlertType.INFORMATION);
             a.setHeaderText(null);
             a.setContentText(content);
+            com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+            if (owner != null) a.initOwner(owner);
             a.showAndWait();
         });
     }
@@ -271,6 +327,9 @@ public class AdminUserManagementView {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setHeaderText(null);
         a.setContentText(msg);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        Stage primary = com.flatmanager.App.getPrimaryStage();
+        if (primary != null) a.initOwner(primary);
         a.showAndWait();
     }
 }

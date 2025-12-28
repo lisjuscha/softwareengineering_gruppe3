@@ -1,153 +1,857 @@
-/* css - JavaFX compatible */
-                    /* Datei: src/main/resources/styles.css */
+/* ===========================
+Global / Basis
+=========================== */
+                                      .root {
+                                          -fx-background-color: #CAE3FE;
+                                          -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+                                          -fx-text-fill: #111827;
+                                          -fx-font-size: 14px;
+                                          -fx-base: #ffffff;
+                                      }
 
-                    /* ------------------  THEME (statische Werte für JavaFX) ------------------ */
-                    /* Farben / Werte: primär: #3B82F6, hover: #2563EB, bg: #F9FAFB, surface: #FFFFFF, text: #111827 */
+                                      /* Utility: reset default padding/margins falls benötigt */
+                                      .pane, .vbox, .hbox {
+                                          -fx-padding: 0;
+                                          -fx-spacing: 0;
+                                      }
 
-                    /* ------------------  GLOBAL / ROOT ------------------ */
-                    .root {
-                        -fx-background-color: #F9FAFB;
-                        -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
-                        -fx-text-fill: #111827;
-                    }
+                                      /* ===========================
+                                         Topbar / Sidebar / Layout
+                                         =========================== */
+                                      .top-bar {
+                                          -fx-background-color: #D2E8FE; /* angepasst */
+                                          -fx-padding: 8 16;
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                          -fx-alignment: center-left;
+                                      }
 
-                    /* ------------------  TOPBAR ------------------ */
-                    .top-bar {
-                        -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #efefef 0%, #e2e2e2 100%);
-                        -fx-padding: 8 16;
-                        -fx-border-color: #cfcfcf;
-                        -fx-border-width: 0 0 1 0;
-                        -fx-alignment: center-left;
-                    }
-                    .top-bar .label.title {
-                        -fx-font-size: 18px;
-                        -fx-font-weight: 600;
-                        -fx-text-fill: #333333;
-                    }
-                    .top-bar .label.user {
-                        -fx-font-size: 13px;
-                        -fx-text-fill: #6B7280;
-                    }
+                                      .sidebar {
+                                          -fx-pref-width: 150px;
+                                          -fx-background-color: #D2E8FE; /* angepasst */
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                          -fx-padding: 18 10;
+                                      }
 
-                    /* ------------------  LAYOUT: SIDEBAR + CONTENT ------------------ */
-                    .app-shell { -fx-padding: 0; -fx-background-color: transparent; }
-                    .sidebar {
-                        -fx-pref-width: 150px;
-                        -fx-background-color: linear-gradient(from 0% 0% to 0% 100%, #fbfbfb 0%, #f4f4f4 100%);
-                        -fx-border-color: transparent #d0d0d0 transparent transparent;
-                        -fx-border-width: 0 1 0 0;
-                        -fx-padding: 18 10;
-                    }
-                    .sidebar .label.nav-item {
-                        -fx-padding: 8 6;
-                        -fx-alignment: center-left;
-                        -fx-text-fill: #444444;
-                        -fx-font-size: 13px;
-                        -fx-graphic-text-gap: 10;
-                        -fx-background-radius: 6;
-                    }
-                    .sidebar .label.nav-item:hover { -fx-background-color: #f0f0f0; }
+                                      .content {
+                                          -fx-padding: 20;
+                                          -fx-background-color: transparent;
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                      }
+                                      .columns {
+                                          -fx-spacing: 18;
+                                          -fx-fill-height: true;
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                      }
+                                      .column {
+                                          -fx-background-color: transparent;
+                                          -fx-pref-width: 50%;
+                                          -fx-padding: 6 8;
+                                          -fx-border-color: transparent;
+                                          -fx-border-width: 0;
+                                      }
 
-                    .content { -fx-padding: 20; -fx-background-color: transparent; }
-                    .columns { -fx-spacing: 18; -fx-fill-height: true; }
-                    .column {
-                        -fx-background-color: transparent;
-                        -fx-pref-width: 50%;
-                        -fx-padding: 6 8;
-                        -fx-border-color: transparent #cfcfcf transparent transparent;
-                        -fx-border-width: 0 1 0 0;
-                    }
-                    .column.empty { -fx-background-color: transparent; }
+                                      /* ===========================
+                                         ScrollPane
+                                         =========================== */
+                                      .scroll-pane {
+                                          -fx-background-color: transparent;
+                                          -fx-background-radius: 6;
+                                          -fx-border-radius: 6;
+                                          -fx-padding: 8;
+                                      }
+                                      .scroll-pane .viewport {
+                                          -fx-background-color: transparent;
+                                      }
 
-                    /* ------------------  COLUMN HEADERS / LISTS ------------------ */
-                    .column .label.column-header {
-                        -fx-font-size: 16px;
-                        -fx-font-weight: 600;
-                        -fx-text-fill: #222222;
-                        -fx-alignment: center-left;
-                        -fx-padding: 6 10 12 10;
-                        -fx-border-color: transparent transparent #e2e2e2 transparent;
-                        -fx-border-width: 0 0 1 0;
-                    }
-                    .scroll-pane {
-                        -fx-background-color: transparent;
-                        -fx-background-radius: 6;
-                        -fx-border-radius: 6;
-                        -fx-padding: 8;
-                    }
-                    .scroll-pane .viewport { -fx-background-color: transparent; }
+                                      /* ===========================
+                                         Buttons
+                                         =========================== */
+                                      .button {
+                                          -fx-background-color: linear-gradient(#FFFFFF, #efefef);
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-width: 1;
+                                          -fx-background-radius: 8;
+                                          -fx-border-radius: 8;
+                                          -fx-text-fill: #111827;
+                                          -fx-padding: 8 12;
+                                          -fx-font-size: 14px;
+                                          -fx-background-insets: 0;
+                                          -fx-max-width: Infinity;
+                                          -fx-cursor: hand;
+                                      }
+                                      .button:hover {
+                                          -fx-effect: dropshadow(two-pass-box, rgba(0,0,0,0.04), 4, 0.0, 0, 1);
+                                      }
+                                      .button:focused {
+                                          -fx-outline: none;
+                                          -fx-border-color: #3B82F6;
+                                      }
 
-                    /* ------------------  CARD / TASK ITEM ------------------ */
-                    .task-card, .card, .list-cell .card {
-                        -fx-background-color: linear-gradient(#ffffff, #fbfbfb);
-                        -fx-border-color: #d0d0d0;
-                        -fx-border-width: 1;
-                        -fx-background-radius: 8;
-                        -fx-border-radius: 8;
-                        -fx-padding: 10;
-                        -fx-pref-height: 64;
-                        -fx-alignment: center-left;
-                    }
-                    .task-card .label.title { -fx-font-size: 14px; -fx-font-weight: 600; -fx-text-fill: #222222; }
-                    .task-card .label.meta { -fx-font-size: 12px; -fx-text-fill: #6B7280; -fx-padding: 6 0 0 0; }
-                    .task-card .label.overdue { -fx-text-fill: #EF4444; -fx-font-weight: 600; }
+                                      .button-primary {
+                                          -fx-background-color: linear-gradient(#3B82F6, #2563EB);
+                                          -fx-text-fill: white;
+                                          -fx-border-color: transparent;
+                                          -fx-background-insets: 0;
+                                          -fx-max-width: Infinity;
+                                          -fx-font-size: 14px;
+                                      }
+                                      .button-danger {
+                                          -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
+                                          -fx-text-fill: white;
+                                          -fx-border-color: transparent;
+                                          -fx-background-insets: 0;
+                                          -fx-max-width: Infinity;
+                                          -fx-font-size: 14px;
+                                      }
 
-                    /* ------------------  BUTTONS ------------------ */
-                    /* JavaFX-Buttons haben standardmäßig die style-class "button" */
-                    .button {
-                        -fx-background-color: linear-gradient(#FFFFFF, #efefef);
-                        -fx-border-color: #E5E7EB;
-                        -fx-border-width: 1;
-                        -fx-background-radius: 8;
-                        -fx-border-radius: 8;
-                        -fx-text-fill: #111827;
-                        -fx-padding: 6 12;
-                        -fx-font-size: 13px;
-                    }
-                    .button:hover {
-                        -fx-background-color: linear-gradient(#FFFFFF, #F3F4F6);
-                    }
-                    .button-primary {
-                        -fx-background-color: linear-gradient(#3B82F6, #2563EB);
-                        -fx-text-fill: white;
-                        -fx-border-color: transparent;
-                    }
-                    .button-danger {
-                        -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
-                        -fx-text-fill: white;
-                        -fx-border-color: transparent;
-                    }
-                    .button-outline {
-                        -fx-background-color: transparent;
-                        -fx-border-color: #E5E7EB;
-                        -fx-text-fill: #111827;
-                    }
-                    .button:disabled { -fx-opacity: 0.6; -fx-cursor: default; }
+                                      /* Sidebar: Buttons auf #CAE3FE */
+                                      .sidebar .button,
+                                      .sidebar .icon-button {
+                                          -fx-background-color: #CAE3FE;
+                                          -fx-border-color: transparent;
+                                          -fx-text-fill: #111827;
+                                          -fx-background-radius: 8;
+                                          -fx-border-radius: 8;
+                                          -fx-padding: 8 12;
+                                          -fx-cursor: hand;
+                                      }
 
-                    /* ------------------  FORM ELEMENTS / CONTROLS ------------------ */
-                    /* Standard JavaFX-Klassen verwenden (TextField, TextArea, ComboBox, DatePicker...) */
-                    .text-field, .text-area, .combo-box, .date-picker, .choice-box, .spinner {
-                        -fx-font-size: 16px;
-                        -fx-padding: 8 10;
-                        -fx-border-color: #E5E7EB;
-                        -fx-border-width: 1;
-                        -fx-background-color: #FFFFFF;
-                        -fx-background-radius: 6;
-                        -fx-border-radius: 6;
-                    }
-                    .text-field:focused, .combo-box:focused, .date-picker:focused {
-                        -fx-border-color: #3B82F6;
-                    }
+                                      /* dezenter Hover-Effekt für Sidebar-Buttons */
+                                      .sidebar .button:hover,
+                                      .sidebar .icon-button:hover {
+                                          -fx-background-color: linear-gradient(#E6F3FF, #D7EEFF);
+                                      }
 
-                    /* ------------------  TABLE / LIST ------------------ */
-                    .table-view .column-header-background { -fx-background-color: transparent; }
-                    .table-view .column-header, .table-view .table-row-cell { -fx-border-color: transparent; }
+                                      /* gedrückter Zustand für Sidebar-Buttons */
+                                      .sidebar .button:pressed,
+                                      .sidebar .icon-button:pressed {
+                                          -fx-background-color: linear-gradient(#CFE7FF, #B6DCFF);
+                                      }
 
-                    /* ------------------  UTILITIES ------------------ */
-                    .title { -fx-font-size: 16px; -fx-font-weight: 600; -fx-text-fill: #222222; }
-                    .small-text { -fx-font-size: 14px; -fx-text-fill: #6B7280; }
-                    .mt-20 { -fx-padding: 20 0 0 0; } /* JavaFX verwendet padding/spacing statt margin in vielen Fällen */
+                                      /* Icon button */
+                                      .icon-button {
+                                          -fx-background-color: transparent;
+                                          -fx-background-radius: 6;
+                                          -fx-background-insets: 0;
+                                          -fx-padding: 6;
+                                          -fx-cursor: hand;
+                                      }
+                                      .icon-button:pressed {
+                                          -fx-background-color: rgba(0,0,0,0.06);
+                                      }
 
-                    /* ------------------  RESPONSIVE / ALIASES ------------------ */
-                    /* JavaFX unterstützt kein @media\, bei Bedarf per Code anpassen */
-                    .topbar { -fx-padding: 8 12; } /* alternative Class-Name, falls verwendet */
+                                      /* Theme toggle in light mode: visible white background */
+                                      .top-bar .icon-button.theme-toggle {
+                                          -fx-background-color: white;
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-width: 1;
+                                          -fx-background-radius: 8;
+                                          -fx-padding: 6 8;
+                                      }
+
+                                      /* Ensure admin/settings button has same height as logout and theme-toggle */
+                                      .top-bar .icon-button, .top-bar .logout-button {
+                                          -fx-min-height: 36px;
+                                          -fx-pref-height: 36px;
+                                          -fx-max-height: 36px;
+                                          -fx-padding: 6 10;
+                                          -fx-font-size: 14px;
+                                      }
+
+                                      /* Spezifischer Stil für den Abmelden-Button in der Topbar */
+                                      .top-bar .logout-button {
+                                          -fx-background-color: #D2E8FE;
+                                          -fx-background-insets: 0;
+                                          -fx-border-color: transparent;
+                                          -fx-text-fill: #111827;
+                                          -fx-cursor: hand;
+                                      }
+
+                                      /* ===========================
+                                         Form Controls (einheitlich)
+                                         =========================== */
+                                      .text-field, .combo-box, .choice-box {
+                                          -fx-font-size: 14px;
+                                          -fx-padding: 8 10;
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-width: 1;
+                                          -fx-background-color: #FFFFFF;
+                                          -fx-background-radius: 6;
+                                          -fx-border-radius: 6;
+                                          -fx-prompt-text-fill: rgba(0,0,0,0.4);
+                                      }
+                                      .text-field:focused, .combo-box:focused, .choice-box:focused {
+                                          -fx-border-color: #3B82F6;
+                                          -fx-effect: none;
+                                      }
+
+                                      /* PasswordField & TextArea spezifisch */
+                                      .password-field, .text-area {
+                                          -fx-font-size: 14px;
+                                          -fx-padding: 8 10;
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-width: 1;
+                                          -fx-background-color: #FFFFFF;
+                                          -fx-background-radius: 6;
+                                          -fx-border-radius: 6;
+                                      }
+
+                                      /* TextArea zusätzliche Anpassungen */
+                                      .text-area {
+                                          -fx-pref-row-count: 4;
+                                          -fx-wrap-text: true;
+                                      }
+
+                                      /* Labels und Wrap */
+                                      .label {
+                                          -fx-wrap-text: true;
+                                          -fx-font-size: 14px;
+                                          -fx-text-fill: #111827;
+                                      }
+
+                                      /* Page-specific big titles (Haushaltsbuch, Putzplan, Einkaufsliste) */
+                                      .budget-title, .cleaning-title, .shopping-title {
+                                          -fx-font-size: 24px;
+                                          -fx-font-weight: normal;
+                                          -fx-text-fill: #111827;
+                                      }
+
+                                      /* Dark-mode: make those page titles lighter */
+                                      .dark-mode .budget-title, .dark-mode .cleaning-title, .dark-mode .shopping-title,
+                                      .root.dark-mode .budget-title, .root.dark-mode .cleaning-title, .root.dark-mode .shopping-title {
+                                          -fx-text-fill: #e6eef8;
+                                      }
+
+                                      /* ===========================
+                                         Titles / Section Headers
+                                         =========================== */
+                                      .title {
+                                          -fx-font-size: 18px;
+                                          -fx-font-weight: normal; /* no bold globally */
+                                          -fx-text-fill: #111827;
+                                      }
+
+                                      /* Spezifischer Titel der RegistrationView */
+                                      .registration-title {
+                                          -fx-font-size: 20px;
+                                          -fx-font-weight: normal;
+                                          -fx-text-fill: #111827;
+                                          -fx-padding: 8 12 12 12;
+                                      }
+
+                                      /* kleine Hilfsklassen */
+                                      .small-text {
+                                          -fx-font-size: 12px;
+                                          -fx-text-fill: #6B7280;
+                                      }
+
+                                      /* Login specific styles - only used on the login screen */
+                                      .login-title {
+                                          -fx-font-size: 32px; /* large only on login */
+                                          -fx-font-weight: normal;
+                                          -fx-text-fill: #111827;
+                                          -fx-text-alignment: center;
+                                          -fx-alignment: center;
+                                      }
+
+                                      .login-subtitle {
+                                          -fx-font-size: 18px;
+                                          -fx-font-weight: normal;
+                                          -fx-text-fill: #666666;
+                                          -fx-text-alignment: center;
+                                          -fx-alignment: center;
+                                      }
+
+                                      .login-initial {
+                                          -fx-font-size: 36px;
+                                          -fx-font-weight: normal;
+                                          -fx-text-fill: #333333;
+                                      }
+
+                                      /* Login container background and text color (light mode)
+                                         Dark-mode overrides are below */
+                                      .login-container {
+                                          -fx-background-color: #CAE3FE; /* hellblau wie App-Root */
+                                          -fx-text-fill: #111827;
+                                          -fx-background-radius: 8;
+                                      }
+
+                                      /* Global horizontal page padding: ~1cm = 37px on left/right */
+                                      .dashboard, .cleaning-view, .shopping-view, .budget-view, .login-container {
+                                          -fx-padding: 12 37 12 37; /* top right bottom left */
+                                      }
+
+                                      /* Logout button in top-bar should be red like danger buttons */
+                                      .top-bar .logout-button {
+                                          -fx-background-color: linear-gradient(#ff7b7b, #ff5f5f);
+                                          -fx-text-fill: white;
+                                          -fx-border-color: transparent;
+                                          -fx-background-radius: 8;
+                                          -fx-border-radius: 8;
+                                          -fx-cursor: hand;
+                                      }
+
+                                      /* Dark mode overrides: add class 'dark-mode' to the root node */
+                                      .dark-mode, .root.dark-mode {
+                                          -fx-background-color: linear-gradient(#001428, #001d33) !important;
+                                          -fx-font-family: "Inter", system, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      .root.dark-mode .top-bar {
+                                          -fx-background-color: #07182b;
+                                      }
+
+                                      .root.dark-mode .sidebar {
+                                          -fx-background-color: #071028;
+                                      }
+
+                                      .root.dark-mode .content {
+                                          -fx-background-color: transparent;
+                                      }
+
+                                      .root.dark-mode .label, .root.dark-mode .title, .root.dark-mode .small-text,
+                                      .dark-mode .label, .dark-mode .title, .dark-mode .small-text {
+                                          -fx-text-fill: #e6eef8;
+                                      }
+
+                                      .root.dark-mode .button {
+                                          -fx-background-color: linear-gradient(#0f3b6b, #0b2b52);
+                                          -fx-text-fill: #e6eef8;
+                                          -fx-border-color: #214a72;
+                                      }
+
+                                      .root.dark-mode .button-primary {
+                                          -fx-background-color: linear-gradient(#3367c6, #224e9c);
+                                          -fx-text-fill: white;
+                                      }
+
+                                      .root.dark-mode .button-danger, .root.dark-mode .top-bar .logout-button {
+                                          -fx-background-color: linear-gradient(#c84b4b, #a23a3a);
+                                          -fx-text-fill: white;
+                                      }
+
+                                      /* Dark-mode: make login container dark and its labels light */
+                                      .root.dark-mode .login-container,
+                                      .dark-mode .login-container {
+                                          -fx-background-color: transparent; /* let root background show */
+                                          -fx-text-fill: #e6eef8;
+                                      }
+                                      .root.dark-mode .login-container .label,
+                                      .root.dark-mode .login-container .login-title,
+                                      .root.dark-mode .login-container .login-subtitle,
+                                      .dark-mode .login-container .label,
+                                      .dark-mode .login-container .login-title,
+                                      .dark-mode .login-container .login-subtitle {
+                                          -fx-text-fill: #e6eef8;
+                                      }
+                                      /* If the login container itself has dark-mode class (applied to root), ensure its children are light */
+                                      .login-container.dark-mode .login-title,
+                                      .login-container.dark-mode .login-subtitle,
+                                      .login-container.dark-mode .login-initial,
+                                      .login-container.dark-mode .label {
+                                          -fx-text-fill: #e6eef8;
+                                      }
+
+                                       /* ===========================
+                                          Cards / Panels
+                                          =========================== */
+                                      .vbox.card, .card {
+                                          -fx-background-color: rgba(255,255,255,0.95);
+                                          -fx-background-radius: 10;
+                                          -fx-padding: 12;
+                                          -fx-border-radius: 10;
+                                      }
+
+                                      /* Ensure 'card' class becomes dark (high specificity) */
+                                      .root.dark-mode .vbox.card, .root.dark-mode .card,
+                                      .dark-mode .vbox.card, .dark-mode .card {
+                                          -fx-background-color: linear-gradient(#072033, #041826) !important;
+                                          -fx-border-color: rgba(0,0,0,0.2) !important;
+                                      }
+
+                                      /* Stat box */
+                                      #stat-value {
+                                          -fx-font-size: 20px;
+                                          -fx-font-weight: normal;
+                                      }
+
+                                      /* Table cell wrapping */
+                                      .table-view .table-cell .label {
+                                          -fx-wrap-text: true;
+                                      }
+
+                                      /* ===========================
+                                         Dialog / Alert Styling
+                                         =========================== */
+                                      .dialog-pane {
+                                          -fx-font-family: inherit;
+                                          -fx-font-size: 14px;
+                                          -fx-background-color: white;
+                                          -fx-background-radius: 8;
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-radius: 8;
+                                      }
+
+                                      .dialog-pane .header-panel {
+                                          -fx-padding: 10 12 6 12;
+                                      }
+                                      .dialog-pane .content {
+                                          -fx-padding: 8 12 12 12;
+                                      }
+                                      .dialog-pane .content .label, .dialog-pane .content-label {
+                                          -fx-wrap-text: true;
+                                      }
+
+                                      .dialog-pane .button {
+                                          -fx-font-size: 13px;
+                                      }
+
+                                      .alert {
+                                          -fx-font-family: inherit;
+                                      }
+                                      .alert .graphic {
+                                          -fx-padding: 6;
+                                      }
+
+                                      /* Accessibility / Focus visuals */
+                                      :focused {
+                                          -fx-effect: none;
+                                      }
+
+                                      /* Misc / Specific IDs */
+                                      #some-specific-id {
+                                          /* Anpassungen hier */
+                                      }
+
+                                      /* End of file */
+                                      /* TitledPane headers in light mode (default) */
+                                       .titled-pane > .title {
+                                           -fx-background-color: linear-gradient(#ffffff, #f0f0f0);
+                                           -fx-text-fill: #111827;
+                                       }
+
+                                       /* TitledPane headers in dark mode - override explicitly */
+                                       .root.dark-mode .titled-pane > .title,
+                                       .dark-mode .titled-pane > .title {
+                                           -fx-background-color: linear-gradient(#0b2734, #071726) !important;
+                                           -fx-text-fill: #e6eef8 !important;
+                                           -fx-border-color: transparent !important;
+                                       }
+
+                                       /* TitledPane content background override for dark mode */
+                                       .root.dark-mode .titled-pane .content,
+                                       .dark-mode .titled-pane .content {
+                                           -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                           -fx-text-fill: #e6eef8;
+                                       }
+
+                                       /* Input fields - also add .dark-mode fallback */
+                                       .dark-mode .text-field,
+                                       .dark-mode .password-field,
+                                       .dark-mode .combo-box,
+                                       .dark-mode .choice-box,
+                                       .dark-mode .date-picker .text-field,
+                                       .dark-mode .text-area {
+                                           -fx-background-color: linear-gradient(#071a28, #04202a) !important;
+                                           -fx-control-inner-background: linear-gradient(#071a28, #04202a) !important;
+                                           -fx-text-fill: #e6eef8 !important;
+                                           -fx-border-color: #123244 !important;
+                                       }
+
+                                       /* Theme toggle override in dark mode: show moon icon on dark background */
+                                       .dark-mode .top-bar .icon-button.theme-toggle {
+                                           -fx-background-color: linear-gradient(#0f3b6b, #0b2b52) !important;
+                                           -fx-border-color: #214a72 !important;
+                                           -fx-text-fill: #ffdca3 !important;
+                                       }
+
+                                      /* ===========================
+                                         Page header bar (full width, responsive)
+                                         =========================== */
+                                      .page-header {
+                                          -fx-background-color: linear-gradient(#ffffff, #f3f7fb);
+                                          -fx-padding: 12 37; /* respect same page horizontal padding */
+                                          -fx-alignment: center;
+                                      }
+
+                                      .page-header .title {
+                                          -fx-font-size: 24px;
+                                          -fx-text-fill: #111827;
+                                      }
+
+                                      /* Dark mode page header */
+                                      .root.dark-mode .page-header, .dark-mode .page-header {
+                                          -fx-background-color: linear-gradient(#071826, #051622) !important;
+                                      }
+                                      .root.dark-mode .page-header .title, .dark-mode .page-header .title {
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* TabPane header (tabs area) dark mode overrides */
+                                      .root.dark-mode .tab-pane .tab-header-background,
+                                      .dark-mode .tab-pane .tab-header-background,
+                                      .root.dark-mode .tab-pane .tab-header-area,
+                                      .dark-mode .tab-pane .tab-header-area,
+                                      .root.dark-mode .tab-pane .tab-header-background .headers-region,
+                                      .dark-mode .tab-pane .tab-header-background .headers-region {
+                                          -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                      }
+                                      .root.dark-mode .tab-pane .tab,
+                                      .dark-mode .tab-pane .tab,
+                                      .root.dark-mode .tab-pane .tab-header-area .tab,
+                                      .dark-mode .tab-pane .tab-header-area .tab {
+                                          -fx-background-color: transparent !important;
+                                          -fx-text-base-color: #cfe8ff !important;
+                                          -fx-border-color: transparent !important;
+                                      }
+                                      .root.dark-mode .tab-pane .tab:selected,
+                                      .dark-mode .tab-pane .tab:selected,
+                                      .root.dark-mode .tab-pane .tab-header-area .tab:selected,
+                                      .dark-mode .tab-pane .tab-header-area .tab:selected {
+                                          -fx-background-color: linear-gradient(#0f3b6b, #0b2b52) !important;
+                                          -fx-text-base-color: white !important;
+                                          -fx-border-color: transparent !important;
+                                      }
+                                      /* Ensure tab labels are readable */
+                                      .root.dark-mode .tab-pane .tab .text,
+                                      .dark-mode .tab-pane .tab .text {
+                                          -fx-fill: #e6eef8 !important;
+                                      }
+
+                                      /* Page-tabpane specific overrides to ensure tabs area is dark in dark mode */
+                                      .root.dark-mode .page-tabpane .tab-header-background,
+                                      .dark-mode .page-tabpane .tab-header-background,
+                                      .root.dark-mode .page-tabpane .tab-header-area,
+                                      .dark-mode .page-tabpane .tab-header-area {
+                                          -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                      }
+                                      .root.dark-mode .page-tabpane .tab,
+                                      .dark-mode .page-tabpane .tab {
+                                          -fx-background-color: transparent !important;
+                                          -fx-text-base-color: #cfe8ff !important;
+                                      }
+                                      .root.dark-mode .page-tabpane .tab:selected,
+                                      .dark-mode .page-tabpane .tab:selected {
+                                          -fx-background-color: linear-gradient(#0f3b6b, #0b2b52) !important;
+                                          -fx-text-base-color: white !important;
+                                      }
+
+
+                                       /* ==========================
+                                          Dialog / Alert Styling (dark overrides)
+                                          ========================== */
+                                      /* Default dialog pane (light) */
+                                      .dialog-pane {
+                                          -fx-font-family: inherit;
+                                          -fx-font-size: 14px;
+                                          -fx-background-color: white;
+                                          -fx-background-radius: 8;
+                                          -fx-border-color: #E5E7EB;
+                                          -fx-border-radius: 8;
+                                      }
+
+                                      /* Dark mode: dialog pane and its inner controls */
+                                      .dialog-pane.dark-mode,
+                                      .root.dark-mode .dialog-pane,
+                                      .dark-mode .dialog-pane {
+                                          -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                          -fx-border-color: transparent !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      .dialog-pane.dark-mode .label, .dialog-pane.dark-mode .content, .dialog-pane.dark-mode .header-panel,
+                                      .root.dark-mode .dialog-pane .label, .root.dark-mode .dialog-pane .content,
+                                      .dark-mode .dialog-pane .label, .dark-mode .dialog-pane .content {
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* Controls inside dialog should follow dark input styles */
+                                      .dialog-pane.dark-mode .text-field,
+                                      .dialog-pane.dark-mode .password-field,
+                                      .dialog-pane.dark-mode .combo-box,
+                                      .dialog-pane.dark-mode .choice-box,
+                                      .dialog-pane.dark-mode .date-picker .text-field,
+                                      .dialog-pane.dark-mode .text-area,
+                                      .root.dark-mode .dialog-pane .text-field,
+                                      .root.dark-mode .dialog-pane .password-field,
+                                      .root.dark-mode .dialog-pane .combo-box,
+                                      .root.dark-mode .dialog-pane .date-picker .text-field {
+                                          -fx-background-color: linear-gradient(#081a27, #041421) !important;
+                                          -fx-control-inner-background: linear-gradient(#081a27, #041421) !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                          -fx-border-color: #123244 !important;
+                                      }
+
+                                      /* DatePicker arrow / button in dark dialogs */
+                                      .dialog-pane.dark-mode .date-picker .arrow-button,
+                                      .root.dark-mode .dialog-pane .date-picker .arrow-button,
+                                      .dark-mode .dialog-pane .date-picker .arrow-button {
+                                          -fx-background-color: transparent !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* If calendar popup uses separate scene, attempt to style common popup selectors */
+                                      .root.dark-mode .popup .date-picker-popup,
+                                      .dark-mode .popup .date-picker-popup {
+                                          -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* Dialog buttons (OK/Cancel) in dark mode */
+                                      .dialog-pane.dark-mode .button,
+                                      .root.dark-mode .dialog-pane .button,
+                                      .dark-mode .dialog-pane .button {
+                                          -fx-background-color: linear-gradient(#0f3b6b, #0b2b52) !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                          -fx-border-color: #214a72 !important;
+                                      }
+
+                                      /* Dropdown lists, list-cells, context menus and popup lists in dark mode */
+                                      .root.dark-mode .list-view, .dark-mode .list-view,
+                                      .root.dark-mode .list-cell, .dark-mode .list-cell,
+                                      .root.dark-mode .combo-box .list-view, .dark-mode .combo-box .list-view,
+                                      .root.dark-mode .combo-box-popup .list-view, .dark-mode .combo-box-popup .list-view,
+                                      .root.dark-mode .context-menu, .dark-mode .context-menu,
+                                      .root.dark-mode .menu, .dark-mode .menu {
+                                          -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                          -fx-control-inner-background: linear-gradient(#071826, #041223) !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                          -fx-border-color: rgba(255,255,255,0.03) !important;
+                                      }
+
+                                      .root.dark-mode .list-cell:filled:selected, .dark-mode .list-cell:filled:selected,
+                                      .root.dark-mode .list-cell:selected, .dark-mode .list-cell:selected {
+                                          -fx-background-color: linear-gradient(#0f3b6b, #0b2b52) !important;
+                                          -fx-text-fill: white !important;
+                                      }
+
+                                      /* DatePicker calendar popup / calendar pane */
+                                      .root.dark-mode .date-picker-popup, .dark-mode .date-picker-popup,
+                                      .root.dark-mode .calendar-pane, .dark-mode .calendar-pane,
+                                      .root.dark-mode .calendar-view, .dark-mode .calendar-view {
+                                          -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                          -fx-border-color: transparent !important;
+                                      }
+
+                                      /* Date cells inside calendar */
+                                      .root.dark-mode .calendar-pane .day-cell, .dark-mode .calendar-pane .day-cell,
+                                      .root.dark-mode .calendar-pane .date-cell, .dark-mode .calendar-pane .date-cell {
+                                          -fx-background-color: transparent !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* ChoiceBox popup styling */
+                                      .root.dark-mode .choice-box .list-view, .dark-mode .choice-box .list-view {
+                                          -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* Ensure cleaning-title uses same weight as others */
+                                      .cleaning-title {
+                                          -fx-font-weight: normal !important;
+                                      }
+
+                                      /* Ensure titles are clearly visible in dark mode (pale blue) */
+                                      .root.dark-mode .title, .dark-mode .title,
+                                      .root.dark-mode .page-header .title, .dark-mode .page-header .title {
+                                          -fx-text-fill: #cfe8ff !important; /* pale blue for contrast */
+                                          -fx-opacity: 1 !important;
+                                          -fx-font-weight: normal !important;
+                                      }
+
+                                      /* Ensure generic labels are fully opaque and readable in dark mode */
+                                      .root.dark-mode .label, .dark-mode .label {
+                                          -fx-text-fill: #cfe8ff !important;
+                                          -fx-opacity: 1 !important;
+                                      }
+
+                                      /* Dark mode: prompt text color (lighter blue) so placeholders are readable) */
+                                      .root.dark-mode .text-field, .root.dark-mode .password-field,
+                                      .root.dark-mode .combo-box, .root.dark-mode .choice-box,
+                                      .dark-mode .text-field, .dark-mode .password-field,
+                                      .dark-mode .combo-box, .dark-mode .choice-box {
+                                          -fx-prompt-text-fill: rgba(173,216,230,0.55) !important; /* light blue */
+                                      }
+
+                                      /* ComboBox selected item and label color in dark mode */
+                                      .root.dark-mode .combo-box, .dark-mode .combo-box {
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* Checkbox label (e.g. 'Aufteilen') should be light in dark mode */
+                                      .root.dark-mode .check-box .text, .dark-mode .check-box .text,
+                                      .root.dark-mode .check-box .label, .dark-mode .check-box .label {
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* DatePicker control: remove white border in dark mode and style popup */
+                                      .root.dark-mode .date-picker, .dark-mode .date-picker {
+                                          -fx-background-color: linear-gradient(#081a27, #041421) !important;
+                                          -fx-border-color: transparent !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+                                      .root.dark-mode .date-picker .text-field, .dark-mode .date-picker .text-field {
+                                          -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                          -fx-control-inner-background: linear-gradient(#071826, #041223) !important;
+                                          -fx-border-color: transparent !important;
+                                          -fx-text-fill: #e6eef8 !important;
+                                          -fx-prompt-text-fill: rgba(173,216,230,0.55) !important;
+                                      }
+
+                                      /* Ensure top-bar icon buttons and logout show readable text/icon color in dark mode */
+                                      .root.dark-mode .top-bar .icon-button, .root.dark-mode .top-bar .logout-button,
+                                      .dark-mode .top-bar .icon-button, .dark-mode .top-bar .logout-button {
+                                          -fx-text-fill: #e6eef8 !important;
+                                      }
+
+                                      /* BudgetView (light mode): make tab header bar match light background and show only tabs */
+                                     .budget-view .page-tabpane .tab-header-background,
+                                     .budget-view .page-tabpane .tab-header-area {
+                                         -fx-background-color: linear-gradient(#D2E8FE, #CAE3FE) !important;
+                                         -fx-border-color: transparent !important;
+                                     }
+                                     .budget-view .page-tabpane .tab {
+                                         -fx-background-color: transparent !important;
+                                         -fx-border-color: transparent !important;
+                                         -fx-text-base-color: #0b2b52 !important;
+                                     }
+                                     .budget-view .page-tabpane .tab:selected {
+                                         -fx-background-color: linear-gradient(#bcdff8, #9cc9f0) !important;
+                                         -fx-text-base-color: #04243a !important;
+                                     }
+
+
+                                     /* BudgetView: dark mode table styles - deeper coverage */
+                                     .root.dark-mode .budget-view .table-view,
+                                     .dark-mode .budget-view .table-view {
+                                         -fx-background-color: linear-gradient(#071826, #041223) !important;
+                                         -fx-control-inner-background: linear-gradient(#071826, #041223) !important;
+                                         -fx-border-color: transparent !important;
+                                     }
+                                     .root.dark-mode .budget-view .table-view .table-row-cell,
+                                     .dark-mode .budget-view .table-view .table-row-cell,
+                                     .root.dark-mode .budget-view .table-cell,
+                                     .dark-mode .budget-view .table-cell {
+                                         -fx-background-color: linear-gradient(#091c2a, #06121b) !important;
+                                         -fx-text-fill: #e6eef8 !important;
+                                         -fx-border-color: transparent !important;
+                                     }
+                                     .root.dark-mode .budget-view .table-view .column-header-background,
+                                     .dark-mode .budget-view .table-view .column-header-background {
+                                         -fx-background-color: linear-gradient(#072033, #041826) !important;
+                                         -fx-text-fill: #cfe8ff !important;
+                                     }
+                                     .root.dark-mode .budget-view .table-view .column-header .label,
+                                     .dark-mode .budget-view .table-view .column-header .label {
+                                         -fx-text-fill: #cfe8ff !important;
+                                     }
+
+                                     /* Ensure budget-split checkbox label (Aufteilen) is white in all modes when used in BudgetView */
+                                     .budget-view .budget-split, .budget-view .budget-split .label, .budget-view .budget-split .text {
+                                         -fx-text-fill: white !important;
+                                     }
+
+
+                                     /* BudgetView (light mode): table appearance - avoid pure white tables */
+                                    .budget-view .table-view {
+                                        -fx-background-color: transparent !important;
+                                        -fx-control-inner-background: transparent !important;
+                                    }
+                                    .budget-view .table-view .table-row-cell,
+                                    .budget-view .table-cell {
+                                        -fx-background-color: #f5fbff !important; /* very light blue */
+                                        -fx-text-fill: #04243a !important; /* dark text */
+                                        -fx-border-color: transparent !important;
+                                    }
+                                    .budget-view .table-view .column-header-background {
+                                        -fx-background-color: linear-gradient(#e8f6ff, #d8f0ff) !important;
+                                        -fx-text-fill: #04243a !important;
+                                    }
+
+
+/* BudgetView: enforce column header styling (both light and dark mode) */
+.budget-view .table-view .column-header-background,
+.budget-view .table-view .column-header,
+.budget-view .table-view .column-header .label,
+.budget-view .table-view .column-header-background .label {
+    -fx-background-color: linear-gradient(#e8f6ff, #d8f0ff) !important; /* light-mode header */
+    -fx-text-fill: #04243a !important;
+    -fx-border-color: transparent !important;
+}
+
+.root.dark-mode .budget-view .table-view .column-header-background,
+.root.dark-mode .budget-view .table-view .column-header,
+.root.dark-mode .budget-view .table-view .column-header .label,
+.dark-mode .budget-view .table-view .column-header-background,
+.dark-mode .budget-view .table-view .column-header,
+.dark-mode .budget-view .table-view .column-header .label {
+    -fx-background-color: linear-gradient(#072033, #041826) !important; /* dark-mode header */
+    -fx-text-fill: #cfe8ff !important;
+    -fx-border-color: transparent !important;
+}
+
+/* User tile on login screen */
+.user-tile {
+    -fx-background-color: #e0e0e0; /* light mode tile */
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+    -fx-cursor: hand;
+    -fx-alignment: center;
+}
+.user-tile-hover {
+    -fx-background-color: #d0d0d0;
+}
+.user-tile .login-initial {
+    -fx-font-size: 36px;
+    -fx-text-fill: #333333; /* dark text in light mode */
+    -fx-font-weight: bold;
+}
+
+/* Dark mode adjustments for user tile and initials */
+.root.dark-mode .user-tile,
+.dark-mode .user-tile {
+    -fx-background-color: linear-gradient(#072033, #041826) !important;
+}
+.root.dark-mode .user-tile-hover, .dark-mode .user-tile-hover {
+    -fx-background-color: linear-gradient(#0f3b6b, #0b2b52) !important;
+}
+/* The user asked that the letters in the login tiles in dark mode be dark-blue (match background accent) */
+.root.dark-mode .user-tile .login-initial,
+.dark-mode .user-tile .login-initial {
+    -fx-text-fill: #0b2b52 !important; /* darker blue */
+}
+
+/* User tile name under the avatar - make it larger and centered */
+.user-name {
+    -fx-font-size: 13px; /* larger than small-text (12px) */
+    -fx-text-fill: #04243a; /* darker text for contrast */
+    -fx-alignment: center; /* ensure center alignment where supported */
+}
+
+.root.dark-mode .user-name, .dark-mode .user-name {
+    -fx-text-fill: #e6eef8 !important;
+}
+
+/* Fälligkeits-Text (rot) und DRINGEND-Label - hell/kontrastreich definieren und im Dark-Mode anpassen */
+.due-text {
+    -fx-text-fill: #b00020; /* Standard rot (light mode) */
+}
+.urgent-label {
+    -fx-text-fill: #d32f2f; /* stärkeres Rot */
+    -fx-font-weight: bold;
+    -fx-font-size: 11px;
+}
+
+/* Dark mode overrides: make reds brighter and fully opaque for contrast */
+.root.dark-mode .due-text, .dark-mode .due-text {
+    -fx-text-fill: #ff6b6b !important; /* brighter red for dark background */
+}
+.root.dark-mode .urgent-label, .dark-mode .urgent-label {
+    -fx-text-fill: #ff6b6b !important;
+}

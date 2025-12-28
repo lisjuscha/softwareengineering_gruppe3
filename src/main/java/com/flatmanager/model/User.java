@@ -1,5 +1,9 @@
 package com.flatmanager.model;
 
+/**
+ * Einfaches Modell für einen Benutzer / WG-Mitbewohner.
+ * Beinhaltet Felder für id, username, (gehashtes) password und ein optionales Anzeige-Name-Feld.
+ */
 public class User {
     private int id;
     private String username;

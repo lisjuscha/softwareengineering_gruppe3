@@ -1,6 +1,6 @@
 package com.flatmanager.ui;
 
-import com.flatmanager.database.DatabaseManager;
+import com.flatmanager.storage.Database;
 import javafx.application.Platform;
 import javafx.geometry.Insets;
 import javafx.geometry.Pos;
@@ -8,6 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.FlowPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Font;
@@ -28,6 +29,12 @@ import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+/**
+ * UI-Screen für das Login (Benutzerauswahl).
+ *
+ * Stellt eine Auswahl an Benutzern (aus der DB) dar und erlaubt den schnellen Login durch
+ * Klicken auf ein Nutzer-Kachel. Unterstützt Admin-Login über Passwort-Dialog.
+ */
 public class LoginScreen {
     private static final Logger LOG = Logger.getLogger(LoginScreen.class.getName());
 
@@ -39,19 +46,40 @@ public class LoginScreen {
         loadUsers();
     }
 
+    // createView und loadUsers bauen die UI; statische Hilfsmethoden für show() sind weiter unten implementiert.
+
     private void createView() {
         view = new VBox(20);
         view.setAlignment(Pos.TOP_CENTER);
         view.setPadding(new Insets(40));
         view.getStyleClass().add("login-container");
 
+        // Top row with theme toggle (align right)
+        HBox topRow = new HBox();
+        topRow.setPrefWidth(Double.MAX_VALUE);
+        topRow.setAlignment(Pos.TOP_RIGHT);
+        Button themeToggleTop = new Button();
+        themeToggleTop.getStyleClass().add("icon-button");
+        themeToggleTop.setText(com.flatmanager.ui.ThemeManager.isDark() ? "🌙" : "☀");
+        themeToggleTop.setOnAction(e -> {
+            com.flatmanager.ui.ThemeManager.toggle();
+            themeToggleTop.setText(com.flatmanager.ui.ThemeManager.isDark() ? "🌙" : "☀");
+        });
+        topRow.getChildren().add(themeToggleTop);
+        // add topRow to view
+        view.getChildren().add(topRow);
+
         Label titleLabel = new Label("WG Verwaltung");
-        titleLabel.setFont(Font.font("Arial", FontWeight.BOLD, 36));
-        titleLabel.getStyleClass().add("title");
+        titleLabel.getStyleClass().addAll("login-title");
+        titleLabel.setWrapText(true);
+        titleLabel.maxWidthProperty().bind(view.widthProperty().subtract(80));
+        titleLabel.setTextAlignment(TextAlignment.CENTER);
+        titleLabel.setAlignment(Pos.CENTER);
 
         Label subtitleLabel = new Label("Wähle dein Profil");
-        subtitleLabel.setFont(Font.font("Arial", 14));
-        subtitleLabel.setStyle("-fx-text-fill: #666;");
+        subtitleLabel.getStyleClass().addAll("login-subtitle");
+        subtitleLabel.setWrapText(true);
+        subtitleLabel.maxWidthProperty().bind(view.widthProperty().subtract(80));
 
         usersPane = new FlowPane();
         usersPane.setHgap(24);
@@ -61,14 +89,16 @@ public class LoginScreen {
         usersPane.setPrefWrapLength(800);
 
         view.getChildren().addAll(titleLabel, subtitleLabel, usersPane);
-        view.setStyle("-fx-font-family: Arial; -fx-background-color: white;");
+        // keep font-family but avoid setting background color here so dark-mode can apply
+        view.setStyle("-fx-font-family: Arial;");
     }
 
     private void loadUsers() {
         usersPane.getChildren().clear();
         int loaded = 0;
 
-        try (Connection conn = DatabaseManager.getConnection()) {
+        try (Connection conn = Database.getConnection()) {
+
             boolean hasIsAdmin = hasColumn(conn, "is_admin");
             String nameCol = resolveNameColumn(conn);
 
@@ -111,6 +141,9 @@ public class LoginScreen {
 
         if (loaded == 0) {
             Button registerBtn = new Button("Neue WG erstellen");
+            registerBtn.setWrapText(true);
+            registerBtn.setMaxWidth(Double.MAX_VALUE);
+            registerBtn.setPrefWidth(180);
             registerBtn.setOnAction(ev -> {
                 Stage owner = com.flatmanager.App.getPrimaryStage();
                 RegistrationView.showRegistration(owner, success -> {
@@ -157,22 +190,19 @@ public class LoginScreen {
         StackPane square = new StackPane();
         square.setPrefSize(120, 120);
         square.setMaxSize(120, 120);
-        square.setStyle(
-                "-fx-background-color: #e0e0e0;" +
-                "-fx-border-radius: 8; -fx-background-radius: 8;" +
-                "-fx-cursor: hand;"
-        );
+        square.getStyleClass().add("user-tile");
 
         Label initialLabel = new Label(initial);
-        initialLabel.setFont(Font.font("Arial", FontWeight.BOLD, 48));
-        initialLabel.setStyle("-fx-text-fill: #333;");
+        initialLabel.getStyleClass().addAll("login-initial");
         square.getChildren().add(initialLabel);
 
         Label nameLabel = new Label(displayName + (isAdmin ? " \u2605" : ""));
-        nameLabel.setFont(Font.font("Arial", 14));
+        nameLabel.getStyleClass().addAll("small-text", "user-name");
         nameLabel.setWrapText(true);
         nameLabel.setTextAlignment(TextAlignment.CENTER);
         nameLabel.setMaxWidth(120);
+        nameLabel.setPrefWidth(120);
+        nameLabel.setAlignment(Pos.CENTER); // ensure label text is centered under the square
 
         VBox wrapper = new VBox(8, square, nameLabel);
         wrapper.setAlignment(Pos.CENTER);
@@ -188,12 +218,12 @@ public class LoginScreen {
             }
         });
 
-        wrapper.setOnMouseEntered(e -> square.setStyle(
-                "-fx-background-color: #d0d0d0; -fx-border-radius: 8; -fx-background-radius: 8; -fx-cursor: hand;"
-        ));
-        wrapper.setOnMouseExited(e -> square.setStyle(
-                "-fx-background-color: #e0e0e0; -fx-border-radius: 8; -fx-background-radius: 8;"
-        ));
+        wrapper.setOnMouseEntered(e -> {
+            square.getStyleClass().add("user-tile-hover");
+        });
+        wrapper.setOnMouseExited(e -> {
+            square.getStyleClass().remove("user-tile-hover");
+        });
 
         return wrapper;
     }
@@ -207,6 +237,13 @@ public class LoginScreen {
         } else {
             LOG.warning("PrimaryStage ist null - Dialog erhält keinen Owner.");
         }
+        // Ensure dialog pane uses styling and follows current theme
+        dialog.getDialogPane().getStyleClass().add("dialog-pane");
+        try {
+            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+            if (!dialog.getDialogPane().getStylesheets().contains(css)) dialog.getDialogPane().getStylesheets().add(css);
+        } catch (Exception ignored) {}
+        com.flatmanager.ui.ThemeManager.styleDialogPane(dialog.getDialogPane());
         dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
 
         PasswordField pwField = new PasswordField();
@@ -226,7 +263,12 @@ public class LoginScreen {
             if (authenticateAdmin(username, entered)) {
                 return true;
             } else {
-                showAlert("Falsches Passwort für Admin.");
+                Alert a = new Alert(Alert.AlertType.INFORMATION);
+                a.setHeaderText(null);
+                a.setContentText("Falsches Passwort für Admin.");
+                com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
+                a.showAndWait();
                 return false;
             }
         }
@@ -234,7 +276,7 @@ public class LoginScreen {
     }
 
     private boolean authenticateAdmin(String username, String password) {
-        try (Connection conn = DatabaseManager.getConnection();
+        try (Connection conn = Database.getConnection();
              PreparedStatement ps = conn.prepareStatement("SELECT password FROM users WHERE " + resolveNameColumn(conn) + " = ? COLLATE NOCASE LIMIT 1")) {
             ps.setString(1, username);
             try (ResultSet rs = ps.executeQuery()) {
@@ -257,6 +299,8 @@ public class LoginScreen {
         try {
             DashboardScreen dashboard = new DashboardScreen(username);
             com.flatmanager.App.getPrimaryStage().getScene().setRoot(dashboard.getView());
+            // Re-apply theme so the new root receives the dark-mode class when active
+            com.flatmanager.ui.ThemeManager.ensureCurrentScene();
         } catch (Exception e) {
             LOG.log(Level.SEVERE, "Fehler beim Wechsel zum Dashboard", e);
             showAlert("Fehler beim Wechsel zum Dashboard: " + e.getMessage());
@@ -267,6 +311,8 @@ public class LoginScreen {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setHeaderText(null);
         a.setContentText(message);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
         a.showAndWait();
     }
 
@@ -306,7 +352,13 @@ public class LoginScreen {
                     }
                 } else {
                     Stage s = new Stage();
-                    s.setScene(new Scene(ls.getView()));
+                    Scene scene = new Scene(ls.getView());
+                    try {
+                        String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+                        if (!scene.getStylesheets().contains(css)) scene.getStylesheets().add(css);
+                    } catch (Exception ignored) {}
+                    com.flatmanager.ui.ThemeManager.applyToScene(scene);
+                    s.setScene(scene);
                     s.show();
                 }
             } catch (Throwable t) {
@@ -333,13 +385,25 @@ public class LoginScreen {
                     if (ownerStage.getScene() != null) {
                         ownerStage.getScene().setRoot(ls.getView());
                     } else {
-                        ownerStage.setScene(new Scene(ls.getView()));
+                        Scene scene = new Scene(ls.getView());
+                        try {
+                            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+                            if (!scene.getStylesheets().contains(css)) scene.getStylesheets().add(css);
+                        } catch (Exception ignored) {}
+                        com.flatmanager.ui.ThemeManager.applyToScene(scene);
+                        ownerStage.setScene(scene);
                         ownerStage.show();
                     }
                 } else {
                     Stage s = new Stage();
                     if (owner != null) s.initOwner(owner);
-                    s.setScene(new Scene(ls.getView()));
+                    Scene scene = new Scene(ls.getView());
+                    try {
+                        String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+                        if (!scene.getStylesheets().contains(css)) scene.getStylesheets().add(css);
+                    } catch (Exception ignored) {}
+                    com.flatmanager.ui.ThemeManager.applyToScene(scene);
+                    s.setScene(scene);
                     s.show();
                 }
             } catch (Throwable t) {
@@ -360,7 +424,10 @@ public class LoginScreen {
             a.setHeaderText("Fehler beim Öffnen des Logins");
             String msg = t == null ? "Unbekannter Fehler" : t.toString();
             a.setContentText(msg);
+            com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+            if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
             a.showAndWait();
         });
     }
-}
+
+ }

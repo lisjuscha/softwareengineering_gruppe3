@@ -15,11 +15,16 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
+/**
+ * Hilfsklasse für die Anzeige des Registrierungsdialogs zum Anlegen einer neuen WG inkl. Admin.
+ * Die Methode {@link #showRegistration(Stage, java.util.function.Consumer)} öffnet ein modales Fenster.
+ */
 public class RegistrationView {
 
     /**
-     * Öffnet ein modales Fenster zur Anlage einer WG mit Admin und optionalen Mitgliedern.
-     * onResult.accept(true) wird bei Erfolg aufgerufen, sonst accept(false).
+     * Öffnet ein modales Registrierungs-Dialogfenster.
+     * @param owner Besitzer-Fenster
+     * @param onResult Callback der mit true/false auf Erfolg reagiert
      */
     public static void showRegistration(Stage owner, Consumer<Boolean> onResult) {
         Stage stage = new Stage();
@@ -47,15 +52,31 @@ public class RegistrationView {
         TextArea membersArea = new TextArea();
         membersArea.setPromptText("Zusätzliche Mitglieder (eine pro Zeile: displayName,username,password)");
 
-        form.getChildren().addAll(new Label("WG Name:"), wgField,
-                new Label("Admin Benutzername:"), adminUser,
-                new Label("Admin Passwort:"), adminPass,
-                new Label("Zusätzliche Mitglieder (optional):"), membersArea);
+        Label wgLabel = new Label("WG Name:");
+        wgLabel.setWrapText(true);
+        wgLabel.setMaxWidth(Double.MAX_VALUE);
+        Label adminUserLabel = new Label("Admin Benutzername:");
+        adminUserLabel.setWrapText(true);
+        adminUserLabel.setMaxWidth(Double.MAX_VALUE);
+        Label adminPassLabel = new Label("Admin Passwort:");
+        adminPassLabel.setWrapText(true);
+        adminPassLabel.setMaxWidth(Double.MAX_VALUE);
+        Label membersLabel = new Label("Zusätzliche Mitglieder (optional):");
+        membersLabel.setWrapText(true);
+        membersLabel.setMaxWidth(Double.MAX_VALUE);
+        form.getChildren().addAll(wgLabel, wgField,
+                adminUserLabel, adminUser,
+                adminPassLabel, adminPass,
+                membersLabel, membersArea);
 
         root.setCenter(form);
 
         Button createBtn = new Button("Erstellen");
+        createBtn.setWrapText(true);
+        createBtn.setMaxWidth(Double.MAX_VALUE);
         Button cancelBtn = new Button("Abbrechen");
+        cancelBtn.setWrapText(true);
+        cancelBtn.setMaxWidth(Double.MAX_VALUE);
         createBtn.setDefaultButton(true);
         cancelBtn.setCancelButton(true);
 
@@ -105,7 +126,20 @@ public class RegistrationView {
 
         root.setBottom(bottom);
 
+        Label title = new Label("Registrierung");
+        title.getStyleClass().add("registration-title"); // Style über CSS
+        title.setWrapText(true);
+
+        root.setTop(title);
+
         Scene scene = new Scene(root);
+
+        // Stylesheet sicherstellen (prüfe, ob App das global setzt; ansonsten hier hinzufügen)
+        String css = RegistrationView.class.getResource("/styles.css").toExternalForm();
+        if (!scene.getStylesheets().contains(css)) {
+            scene.getStylesheets().add(css);
+        }
+
         stage.setScene(scene);
         stage.showAndWait();
     }
@@ -115,6 +149,7 @@ public class RegistrationView {
         a.initOwner(owner);
         a.setHeaderText(null);
         a.setContentText(message);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
         a.showAndWait();
     }
 }

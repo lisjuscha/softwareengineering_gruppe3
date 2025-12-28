@@ -15,6 +15,10 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * Kleiner Helfer, der das Admin-Icon in der Top-Bar erzeugt (falls der aktuelle Benutzer Admin ist).
+ * Kapselt Icon-Laden, Sichtbarkeitsprüfungen und das Öffnen der Admin-Dialoge.
+ */
 public class AdminToolbar {
 
     public static Node settingsNode(String currentUser) {
@@ -24,8 +28,8 @@ public class AdminToolbar {
         if (!admin) return placeholder();
 
         Button adminBtn = new Button();
-        // Icon aus den Projekt-Ressourcen laden (/icons/Einstellungen.png), bei Fehler Fallback-Text verwenden
-        final String resourcePath = "/icons/Einstellungen.png";
+        // Icon aus den Projekt-Ressourcen laden (/icons/Einstellungen_icon.png), bei Fehler Fallback-Text verwenden
+        final String resourcePath = "/icons/Einstellungen_icon.png";
         try (InputStream is = AdminToolbar.class.getResourceAsStream(resourcePath)) {
             if (is != null) {
                 Image img = new Image(is, 20, 20, true, true);
@@ -42,6 +46,7 @@ public class AdminToolbar {
             adminBtn.setText("Admin");
         }
 
+        adminBtn.getStyleClass().add("icon-button");
         adminBtn.setOnAction(e -> {
             try {
                 Window owner = adminBtn.getScene() != null ? adminBtn.getScene().getWindow() : null;
@@ -55,6 +60,9 @@ public class AdminToolbar {
                 Alert a = new Alert(Alert.AlertType.ERROR);
                 a.setHeaderText(null);
                 a.setContentText("Fehler beim Öffnen des Dialogs: " + ex.getMessage());
+                com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                Window owner = adminBtn.getScene() != null ? adminBtn.getScene().getWindow() : null;
+                if (owner != null) a.initOwner(owner);
                 a.showAndWait();
             }
         });
@@ -76,6 +84,9 @@ public class AdminToolbar {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setHeaderText(null);
         a.setContentText(msg);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        com.flatmanager.App.getPrimaryStage();
+        if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
         a.showAndWait();
     }
 

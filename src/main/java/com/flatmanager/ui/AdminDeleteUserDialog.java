@@ -27,6 +27,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
+/**
+ * Dialoge für administrative Lösch-Operationen: einzelner Benutzer oder die komplette WG.
+ * Stellt Funktionen zum sicheren Löschen zur Verfügung und wendet Theme/Styles korrekt an.
+ */
 public class AdminDeleteUserDialog {
 
     /**
@@ -42,8 +46,11 @@ public class AdminDeleteUserDialog {
         stage.setTitle("Benutzer / WG löschen");
 
         Label label = new Label("Benutzer zum Löschen auswählen:");
+        label.setWrapText(true);
+        label.setMaxWidth(Double.MAX_VALUE);
         List<String> usernames = loadUsernames(owner, currentAdminUsername);
         ComboBox<String> userCombo = new ComboBox<>(FXCollections.observableArrayList(usernames));
+        userCombo.setMaxWidth(Double.MAX_VALUE);
         userCombo.setPromptText("Benutzer auswählen");
 
         Button deleteBtn = new Button("Löschen");
@@ -61,6 +68,8 @@ public class AdminDeleteUserDialog {
             Alert confirm = new Alert(AlertType.CONFIRMATION);
             confirm.setHeaderText(null);
             confirm.setContentText("Benutzer '" + user + "' wirklich löschen?");
+            // style and owner
+            com.flatmanager.ui.ThemeManager.styleDialogPane(confirm.getDialogPane());
             confirm.initOwner(stage);
             Optional<ButtonType> choice = confirm.showAndWait();
             if (choice.isPresent() && choice.get() == ButtonType.OK) {
@@ -78,6 +87,7 @@ public class AdminDeleteUserDialog {
                         Alert a = new Alert(AlertType.ERROR);
                         a.setHeaderText(null);
                         a.setContentText("Benutzer konnte nicht gelöscht werden (nicht gefunden).");
+                        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
                         a.initOwner(stage);
                         a.showAndWait();
                     }
@@ -85,6 +95,7 @@ public class AdminDeleteUserDialog {
                     Alert a = new Alert(AlertType.ERROR);
                     a.setHeaderText(null);
                     a.setContentText("Fehler beim Löschen: " + ex.getMessage());
+                    com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
                     a.initOwner(stage);
                     a.showAndWait();
                 }
@@ -103,7 +114,14 @@ public class AdminDeleteUserDialog {
         root.setPadding(new Insets(12));
         root.setAlignment(Pos.CENTER_LEFT);
 
-        stage.setScene(new Scene(root));
+        // create scene and ensure stylesheet + theme are applied so the dialog respects dark mode
+        Scene scene = new Scene(root);
+        try {
+            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+            if (!scene.getStylesheets().contains(css)) scene.getStylesheets().add(css);
+        } catch (Exception ignored) {}
+        com.flatmanager.ui.ThemeManager.applyToScene(scene);
+        stage.setScene(scene);
         stage.showAndWait();
 
         return Optional.ofNullable(result.get());
@@ -119,6 +137,7 @@ public class AdminDeleteUserDialog {
         Alert confirm = new Alert(AlertType.CONFIRMATION);
         confirm.setHeaderText(null);
         confirm.setContentText("ALLE Benutzer (inkl. Admin) und alle Einträge wirklich löschen?\nDieser Vorgang ist unwiederbringlich und startet die Registrierung neu.");
+        com.flatmanager.ui.ThemeManager.styleDialogPane(confirm.getDialogPane());
         if (owner != null) confirm.initOwner(owner);
         Optional<ButtonType> choice = confirm.showAndWait();
         if (choice.isPresent() && choice.get() == ButtonType.OK) {
@@ -175,6 +194,7 @@ public class AdminDeleteUserDialog {
                     Alert a = new Alert(AlertType.ERROR);
                     a.setHeaderText(null);
                     a.setContentText("Fehler beim Löschen der WG-Daten: " + ex.getMessage());
+                    com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
                     if (owner != null) a.initOwner(owner);
                     a.showAndWait();
                 } finally {
@@ -187,6 +207,7 @@ public class AdminDeleteUserDialog {
                 Alert a = new Alert(AlertType.ERROR);
                 a.setHeaderText(null);
                 a.setContentText("Datenbankfehler: " + ex.getMessage());
+                com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
                 if (owner != null) a.initOwner(owner);
                 a.showAndWait();
             }
@@ -226,6 +247,7 @@ public class AdminDeleteUserDialog {
             Alert a = new Alert(AlertType.ERROR);
             a.setHeaderText(null);
             a.setContentText("Fehler beim Laden der Benutzer: " + ex.getMessage());
+            com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
             if (owner != null) a.initOwner(owner);
             a.showAndWait();
         }
@@ -236,6 +258,7 @@ public class AdminDeleteUserDialog {
         Alert a = new Alert(Alert.AlertType.INFORMATION);
         a.setHeaderText(null);
         a.setContentText(msg);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
         if (owner != null) a.initOwner(owner);
         a.showAndWait();
     }

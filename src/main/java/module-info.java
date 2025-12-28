@@ -8,4 +8,5 @@ module com.flatmanager {
     exports com.flatmanager.ui;
     exports com.flatmanager.model;
     exports com.flatmanager.database;
+    exports com.flatmanager.storage;
 }

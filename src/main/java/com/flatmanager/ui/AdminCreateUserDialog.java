@@ -19,11 +19,28 @@ import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.Optional;
 
+/**
+ * Dialog für Administratoren, um neue Benutzer manuell anzulegen.
+ * Handhabt DB-Spaltenkompatibilität (password / is_admin) und zeigt Fehler/Erfolgsmeldungen.
+ */
 public class AdminCreateUserDialog {
 
+    /**
+     * Öffnet einen Dialog zum Anlegen eines neuen Nutzers. Gibt Optional<Boolean> zurück (true bei Erfolg).
+     * @param owner optionaler Owner-Window
+     * @return Optional<Boolean> - true wenn erfolgreich, false sonst; leer bei Abbruch
+     */
     public static Optional<Boolean> showAndWait(Window owner) {
         Dialog<Boolean> dialog = new Dialog<>();
         dialog.setTitle("Neuen Benutzer anlegen");
+        // dialog style class + theme
+        dialog.getDialogPane().getStyleClass().add("dialog-pane");
+        // Ensure the dialog pane uses the main stylesheet so our dark-mode rules apply
+        try {
+            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+            dialog.getDialogPane().getStylesheets().add(css);
+        } catch (Exception ignored) {}
+        if (com.flatmanager.ui.ThemeManager.isDark()) dialog.getDialogPane().getStyleClass().add("dark-mode");
         if (owner != null) dialog.initOwner(owner);
         dialog.initModality(Modality.APPLICATION_MODAL);
 
@@ -36,29 +53,22 @@ public class AdminCreateUserDialog {
 
         TextField usernameField = new TextField();
         usernameField.setPromptText("Benutzername");
+        usernameField.setMaxWidth(Double.MAX_VALUE);
 
         CheckBox adminCheck = new CheckBox("Admin");
 
-        Label passwordLabel = new Label("Passwort:");
+        Label passwordLabel = new Label("Passwort:"); passwordLabel.setWrapText(true); passwordLabel.setMaxWidth(Double.MAX_VALUE);
         PasswordField passwordField = new PasswordField();
         passwordField.setPromptText("Passwort");
+        passwordField.setMaxWidth(Double.MAX_VALUE);
 
-        Label confirmLabel = new Label("Passwort bestätigen:");
+        Label confirmLabel = new Label("Passwort bestätigen:"); confirmLabel.setWrapText(true); confirmLabel.setMaxWidth(Double.MAX_VALUE);
         PasswordField confirmField = new PasswordField();
         confirmField.setPromptText("Passwort bestätigen");
+        confirmField.setMaxWidth(Double.MAX_VALUE);
 
-        // Standardmäßig Passwortfelder und Labels ausblenden (sichtbar nur bei Admin)
-        passwordLabel.setVisible(false);
-        passwordLabel.setManaged(false);
-        passwordField.setVisible(false);
-        passwordField.setManaged(false);
-
-        confirmLabel.setVisible(false);
-        confirmLabel.setManaged(false);
-        confirmField.setVisible(false);
-        confirmField.setManaged(false);
-
-        grid.add(new Label("Benutzername:"), 0, 0);
+        Label unameLabel = new Label("Benutzername:"); unameLabel.setWrapText(true); unameLabel.setMaxWidth(Double.MAX_VALUE);
+        grid.add(unameLabel, 0, 0);
         grid.add(usernameField, 1, 0);
         grid.add(adminCheck, 1, 1);
         grid.add(passwordLabel, 0, 2);
@@ -207,6 +217,9 @@ public class AdminCreateUserDialog {
                     Alert a = new Alert(Alert.AlertType.INFORMATION);
                     a.setHeaderText(null);
                     a.setContentText("Benutzer erfolgreich angelegt.");
+                    // style the alert's dialog pane
+                    com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+                    a.initOwner(dialog.getDialogPane().getScene() != null ? dialog.getDialogPane().getScene().getWindow() : null);
                     a.showAndWait();
                     return true;
 
@@ -235,6 +248,8 @@ public class AdminCreateUserDialog {
         Alert a = new Alert(Alert.AlertType.ERROR);
         a.setHeaderText(null);
         a.setContentText(msg);
+        com.flatmanager.ui.ThemeManager.styleDialogPane(a.getDialogPane());
+        if (com.flatmanager.App.getPrimaryStage() != null) a.initOwner(com.flatmanager.App.getPrimaryStage());
         a.showAndWait();
     }
 

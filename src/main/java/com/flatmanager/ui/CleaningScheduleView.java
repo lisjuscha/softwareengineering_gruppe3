@@ -12,9 +12,6 @@ import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.*;
-import javafx.scene.text.Font;
-import javafx.scene.text.FontWeight;
-
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -84,19 +81,18 @@ public class CleaningScheduleView {
 
         // Top-Bar: Header links und Spacer (Admin-Button zentral in DashboardScreen)
         Label title = new Label("Putzplan");
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 22));
-        title.getStyleClass().add("cleaning-title");
-        title.setPadding(new Insets(10, 0, 10, 0));
+        title.getStyleClass().addAll("cleaning-title", "title");
+        // Removed explicit padding so it matches other page headers (e.g. Einkaufsliste, Haushaltsbuch)
+        // Page header styling (spacing/padding) is handled by .page-header in styles.css
+        title.setWrapText(true);
+        // responsive font shrink when window narrows
+        // font sizing handled centrally via CSS (styles.css)
 
-        HBox topBar = new HBox();
-        topBar.setAlignment(Pos.CENTER_LEFT);
-        topBar.setPadding(new Insets(10, 12, 10, 12));
-
-        Region spacer = new Region();
-        HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        // Admin-Node entfernt, da zentral in DashboardScreen eingefügt
-        topBar.getChildren().addAll(title, spacer);
+        HBox pageHeader = new HBox();
+        pageHeader.getStyleClass().add("page-header");
+        pageHeader.setAlignment(Pos.CENTER);
+        // Center the title in the header bar
+        pageHeader.getChildren().add(title);
 
         // Fehlerlabel (versteckt, wird bei Problemen sichtbar)
         errorLabel = new Label();
@@ -107,7 +103,7 @@ public class CleaningScheduleView {
         errorBox.setAlignment(Pos.CENTER);
         errorBox.setPadding(new Insets(6, 0, 6, 0));
 
-        VBox top = new VBox(topBar, errorBox);
+        VBox top = new VBox(pageHeader, errorBox);
         view.setTop(top);
 
         // Two columns: assigned + open
@@ -121,9 +117,9 @@ public class CleaningScheduleView {
 
         // Headers
         Label assignedHeader = new Label("Zugewiesene Aufgaben");
-        assignedHeader.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        assignedHeader.getStyleClass().add("title");
         Label openHeader = new Label("Offene Aufgaben");
-        openHeader.setFont(Font.font("Arial", FontWeight.BOLD, 16));
+        openHeader.getStyleClass().add("title");
 
         // Scroll panes
         ScrollPane assignedScroll = new ScrollPane(assignedContainer);
@@ -144,10 +140,12 @@ public class CleaningScheduleView {
 
         // Buttons under open list
         Button newTaskBtn = new Button("Neue Aufgabe");
+        newTaskBtn.setWrapText(true);
         newTaskBtn.setMaxWidth(Double.MAX_VALUE);
         newTaskBtn.setOnAction(e -> showNewTaskDialog());
 
         Button deleteCompletedBtn = new Button("Erledigte Aufgaben löschen");
+        deleteCompletedBtn.setWrapText(true);
         deleteCompletedBtn.setMaxWidth(Double.MAX_VALUE);
         deleteCompletedBtn.setStyle("-fx-background-color: #f0625e; -fx-text-fill: white;");
         deleteCompletedBtn.setOnAction(e -> deleteCompletedTasks());
@@ -212,6 +210,7 @@ public class CleaningScheduleView {
             task.setCompleted(cb.isSelected());
             try {
                 dao.update(task);
+                try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
             } catch (Exception ex) {
                 showError("Fehler beim Aktualisieren: " + ex.getMessage());
             }
@@ -219,20 +218,21 @@ public class CleaningScheduleView {
         });
 
         Label title = new Label(task.getTitle());
-        title.setFont(Font.font("Arial", FontWeight.BOLD, 14));
+        title.getStyleClass().add("title");
+        title.setWrapText(true);
 
         Label meta = new Label(getDueText(task));
-        meta.setStyle("-fx-text-fill: #b00020;"); // rot für Fälligkeit
-        if (!task.hasAssignee()) {
-            meta.setStyle("-fx-text-fill: -fx-text-inner-color;");
-        }
+        meta.getStyleClass().add("due-text"); // Farbe über CSS, damit Dark-Mode Override möglich
+        meta.setWrapText(true);
 
         String recText = task.getRecurrence() == null ? "Einmalig" : task.getRecurrence();
         Label recurring = new Label(recText);
-        recurring.setStyle("-fx-text-fill: gray; -fx-font-size: 11;");
+        recurring.getStyleClass().add("small-text");
 
         Label urgentLbl = new Label(task.isUrgent() ? "DRINGEND" : "");
-        urgentLbl.setStyle(task.isUrgent() ? "-fx-text-fill: #d32f2f; -fx-font-weight: bold; -fx-font-size: 11;" : "");
+        if (task.isUrgent()) {
+            urgentLbl.getStyleClass().add("urgent-label");
+        }
 
         // Titel oben, darunter Fälligkeits-Text, darunter Wiederholung (+ ggf. DRINGEND)
         VBox textBox = new VBox(2, title, meta, new HBox(8, recurring, urgentLbl));
@@ -244,7 +244,7 @@ public class CleaningScheduleView {
         assigneeChoices.add("Nicht zugewiesen");
         for (String u : users) {
             if (u == null) continue;
-            if ("admin".equalsIgnoreCase(u.trim())) continue;
+            // admin wird jetzt mit angezeigt
             assigneeChoices.add(u);
         }
         ComboBox<String> assigneeCombo = new ComboBox<>(assigneeChoices);
@@ -264,6 +264,7 @@ public class CleaningScheduleView {
             try {
                 dao.update(task);
                 clearError();
+                try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
             } catch (Exception ex) {
                 showError("Fehler beim Aktualisieren der Zuweisung: " + ex.getMessage());
             }
@@ -281,7 +282,7 @@ public class CleaningScheduleView {
         HBox root = new HBox(10, cb, textBox, assigneeCombo);
         root.setPadding(new Insets(8));
         root.setAlignment(Pos.CENTER_LEFT);
-        root.setStyle("-fx-background-color: #f6f6f6; -fx-border-color: #dcdcdc; -fx-border-radius: 4; -fx-background-radius: 4;");
+        root.getStyleClass().add("card");
         HBox.setHgrow(textBox, Priority.ALWAYS);
 
         if (task.isCompleted()) {
@@ -291,6 +292,14 @@ public class CleaningScheduleView {
             title.setStyle("");
             root.setOpacity(1.0);
         }
+
+        // make labels responsive to available width
+        textBox.maxWidthProperty().bind(view.widthProperty().multiply(0.5));
+        title.maxWidthProperty().bind(textBox.maxWidthProperty().subtract(20));
+        meta.maxWidthProperty().bind(textBox.maxWidthProperty().subtract(20));
+        recurring.maxWidthProperty().bind(textBox.maxWidthProperty().subtract(20));
+        // also shrink font slightly when very narrow
+        // Responsive scaling is disabled to preserve unified CSS sizes
 
         return root;
     }
@@ -310,6 +319,14 @@ public class CleaningScheduleView {
         dialog.setTitle("Neue Aufgabe");
         dialog.setHeaderText(null);
 
+        // Apply styles and theme to the dialog pane so it follows dark-mode
+        dialog.getDialogPane().getStyleClass().add("dialog-pane");
+        try {
+            String css = com.flatmanager.App.class.getResource("/styles.css").toExternalForm();
+            if (!dialog.getDialogPane().getStylesheets().contains(css)) dialog.getDialogPane().getStylesheets().add(css);
+        } catch (Exception ignored) {}
+        com.flatmanager.ui.ThemeManager.styleDialogPane(dialog.getDialogPane());
+
         ButtonType createType = new ButtonType("Erstellen", ButtonBar.ButtonData.OK_DONE);
         dialog.getDialogPane().getButtonTypes().addAll(createType, ButtonType.CANCEL);
 
@@ -327,7 +344,7 @@ public class CleaningScheduleView {
         assigneeChoices.add("Nicht zugewiesen");
         for (String u : users) {
             if (u == null) continue;
-            if ("admin".equalsIgnoreCase(u.trim())) continue;
+            // admin wird nun in der Auswahl angezeigt
             assigneeChoices.add(u);
         }
         ComboBox<String> assigneeCombo = new ComboBox<>(assigneeChoices);
@@ -390,6 +407,8 @@ public class CleaningScheduleView {
                 else openTasks.add(task);
                 refreshLists();
                 clearError();
+                // notify dashboard immediately
+                try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
             } catch (Exception ex) {
                 showError("Fehler beim Anlegen der Aufgabe: " + ex.getMessage());
             }
@@ -406,6 +425,8 @@ public class CleaningScheduleView {
         assignedTasks.removeIf(CleaningTask::isCompleted);
         openTasks.removeIf(CleaningTask::isCompleted);
         refreshLists();
+        // notify dashboard immediately
+        try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
     }
 
     public Node getView() {
@@ -422,7 +443,7 @@ public class CleaningScheduleView {
             while (rs.next()) {
                 String u = rs.getString("username");
                 if (u != null && !u.trim().isEmpty()) {
-                    if ("admin".equalsIgnoreCase(u.trim())) continue; // admin nicht in Auswahl
+                    // admin wird ebenfalls in die Auswahl aufgenommen
                     users.add(u.trim());
                 }
             }
