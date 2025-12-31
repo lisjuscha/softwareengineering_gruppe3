@@ -211,6 +211,39 @@ public class CleaningScheduleView {
             try {
                 dao.update(task);
                 try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
+
+                // Falls die Aufgabe gerade als erledigt markiert wurde und eine unterstützte Wiederholung hat,
+                // sofort die nächste rotierende Aufgabe erstellen (wenn Benutzerliste vorhanden)
+                if (task.isCompleted() && task.getRecurrence() != null) {
+                    String rec = task.getRecurrence();
+                    java.time.Period addPeriod = null;
+                    if (rec.equalsIgnoreCase("Wöchentlich")) addPeriod = java.time.Period.ofDays(7);
+                    else if (rec.equalsIgnoreCase("Monatlich")) addPeriod = java.time.Period.ofMonths(1);
+
+                    if (addPeriod != null) {
+                        String currentAssignee = task.getAssignedTo();
+                        if (currentAssignee != null && !currentAssignee.trim().isEmpty() && users != null && !users.isEmpty()) {
+                            int idx = -1;
+                            for (int i = 0; i < users.size(); i++) {
+                                String u = users.get(i);
+                                if (u != null && u.equals(currentAssignee)) { idx = i; break; }
+                            }
+                            int nextIdx = 0;
+                            if (idx >= 0) nextIdx = (idx + 1) % users.size();
+                            String nextUser = users.get(nextIdx);
+
+                            java.time.LocalDate newDue = (task.getDue() != null) ? task.getDue().plus(addPeriod) : java.time.LocalDate.now().plus(addPeriod);
+                            CleaningTask next = new CleaningTask(task.getTitle(), newDue, nextUser, task.getRecurrence(), task.isUrgent());
+                            try {
+                                dao.insert(next);
+                                if (next.hasAssignee()) assignedTasks.add(next); else openTasks.add(next);
+                            } catch (Exception ex) {
+                                showError("Fehler beim Anlegen wiederkehrender Aufgabe: " + ex.getMessage());
+                            }
+                        }
+                    }
+                }
+
             } catch (Exception ex) {
                 showError("Fehler beim Aktualisieren: " + ex.getMessage());
             }
@@ -417,6 +450,47 @@ public class CleaningScheduleView {
 
     private void deleteCompletedTasks() {
         try {
+            // Zuerst erledigte Aufgaben lesen, um vor dem Löschen ggf. wiederkehrende Aufgaben neu anzulegen
+            java.util.List<CleaningTask> completed = dao.listCompleted();
+            for (CleaningTask t : completed) {
+                // Unterstützte Wiederholungen: Wöchentlich (Period.ofDays(7)) und Monatlich (Period.ofMonths(1))
+                if (t.getRecurrence() != null) {
+                    String rec = t.getRecurrence();
+                    java.time.Period addPeriod = null;
+                    if (rec.equalsIgnoreCase("Wöchentlich")) addPeriod = java.time.Period.ofDays(7);
+                    else if (rec.equalsIgnoreCase("Monatlich")) addPeriod = java.time.Period.ofMonths(1);
+
+                    if (addPeriod != null) {
+                        // Nur rotieren, wenn die Aufgabe einen zugewiesenen Benutzer hat
+                        String currentAssignee = t.getAssignedTo();
+                        if (currentAssignee != null && !currentAssignee.trim().isEmpty() && users != null && !users.isEmpty()) {
+                            // finde index des aktuellen Benutzers in users; fallback falls nicht gefunden
+                            int idx = -1;
+                            for (int i = 0; i < users.size(); i++) {
+                                String u = users.get(i);
+                                if (u != null && u.equals(currentAssignee)) { idx = i; break; }
+                            }
+                            int nextIdx = 0;
+                            if (idx >= 0) nextIdx = (idx + 1) % users.size();
+                            String nextUser = users.get(nextIdx);
+
+                            // neues Fälligkeitsdatum: +addPeriod (wenn due == null, setze heute +addPeriod)
+                            java.time.LocalDate newDue = (t.getDue() != null) ? t.getDue().plus(addPeriod) : java.time.LocalDate.now().plus(addPeriod);
+
+                            CleaningTask newTask = new CleaningTask(t.getTitle(), newDue, nextUser, t.getRecurrence(), t.isUrgent());
+                            try {
+                                dao.insert(newTask);
+                                // füge zur UI-Liste hinzu
+                                if (newTask.hasAssignee()) assignedTasks.add(newTask); else openTasks.add(newTask);
+                            } catch (Exception ex) {
+                                showError("Fehler beim Anlegen wiederkehrender Aufgabe: " + ex.getMessage());
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Nun tatsächlich löschen
             dao.deleteCompleted();
             clearError();
         } catch (Exception ex) {

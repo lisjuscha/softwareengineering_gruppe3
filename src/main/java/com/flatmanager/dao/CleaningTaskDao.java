@@ -50,6 +50,32 @@ public class CleaningTaskDao {
         return list;
     }
 
+    // Neue Methode: listet alle als erledigt markierten Aufgaben (wird vor dem Löschen aufgerufen)
+    public List<CleaningTask> listCompleted() throws SQLException {
+        List<CleaningTask> list = new ArrayList<>();
+        String sql = "SELECT id, title, due, assigned_to, recurrence, urgent, completed FROM cleaning_tasks WHERE completed = 1 ORDER BY (due IS NULL), due ASC";
+        try (Connection conn = Database.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
+            while (rs.next()) {
+                int id = rs.getInt("id");
+                String title = rs.getString("title");
+                String dueText = rs.getString("due");
+                LocalDate due = (dueText != null && !dueText.isBlank()) ? LocalDate.parse(dueText) : null;
+                String assignedTo = rs.getString("assigned_to");
+                String recurrence = rs.getString("recurrence");
+                boolean urgent = rs.getInt("urgent") != 0;
+                boolean completed = rs.getInt("completed") != 0;
+
+                CleaningTask t = new CleaningTask(title, due, (assignedTo != null && !assignedTo.trim().isEmpty()) ? assignedTo : null, recurrence, urgent);
+                t.setId(id);
+                t.setCompleted(completed);
+                list.add(t);
+            }
+        }
+        return list;
+    }
+
     public void insert(CleaningTask task) throws SQLException {
         String sql = "INSERT INTO cleaning_tasks (title, due, assigned_to, recurrence, urgent, completed) VALUES (?, ?, ?, ?, ?, ?)";
         try (Connection conn = Database.getConnection();
