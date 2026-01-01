@@ -8,20 +8,84 @@ import java.nio.charset.StandardCharsets;
 
 public final class DatabaseManager {
 
-    private static volatile Connection connection;
+    // Einfaches Connection-Pool für Threadsicherheit und bessere Parallelität in Tests
+    private static final java.util.concurrent.ConcurrentLinkedQueue<Connection> idleConnections = new java.util.concurrent.ConcurrentLinkedQueue<>();
+    private static final java.util.Set<Connection> allConnections = java.util.Collections.newSetFromMap(new java.util.concurrent.ConcurrentHashMap<Connection, Boolean>());
+    private static final int MAX_POOL_SIZE = 16;
     private static volatile boolean pragmasApplied = false;
+    private static volatile boolean poolClosed = false;
 
     private DatabaseManager() {
     }
 
-    public static synchronized Connection getConnection() throws SQLException {
-        if (connection == null || connection.isClosed()) {
-            connection = createConnection();
+    public static Connection getConnection() throws SQLException {
+        // Wenn Pool vorher geschlossen wurde (z.B. durch Database.closeConnection()),
+        // reinitialisieren wir den Pool automatisch beim nächsten Aufruf.
+        if (poolClosed) {
+            idleConnections.clear();
+            allConnections.clear();
+            poolClosed = false;
         }
-        return connection;
+
+        // Versuche, eine freie Connection aus dem Pool zu nehmen
+        Connection phys = idleConnections.poll();
+        if (phys == null) {
+            // Erzeuge neue physische Connection wenn Pool noch nicht voll
+            synchronized (allConnections) {
+                if (allConnections.size() < MAX_POOL_SIZE) {
+                    phys = createPhysicalConnection();
+                    allConnections.add(phys);
+                } else {
+                    // Warte kurz auf eine freie Connection
+                    for (int i = 0; i < 50 && phys == null; i++) {
+                        phys = idleConnections.poll();
+                        if (phys == null) {
+                            try { Thread.sleep(20); } catch (InterruptedException ignored) {}
+                        }
+                    }
+                    if (phys == null) {
+                        // Fallback: erstelle doch eine Connection (falls Pool-Size Limit nicht strikt erforderlich)
+                        phys = createPhysicalConnection();
+                        allConnections.add(phys);
+                    }
+                }
+            }
+        }
+
+        final Connection physical = phys;
+
+        // Proxy: close() gibt Connection zurück in den Pool (sofern Pool noch offen), andere Methoden delegieren
+        java.lang.reflect.InvocationHandler handler = (proxy, method, args) -> {
+            String name = method.getName();
+            if ("close".equals(name)) {
+                // return to pool if not closed
+                if (physical != null) {
+                    try {
+                        if (!physical.isClosed() && !poolClosed) {
+                            idleConnections.offer(physical);
+                            return null;
+                        }
+                    } catch (SQLException ignored) {}
+                    try { physical.close(); } catch (SQLException ignored) {}
+                }
+                return null;
+            }
+            // delegate isClosed to the physical connection
+            if ("isClosed".equals(name)) {
+                try { return physical.isClosed(); } catch (SQLException e) { throw new java.lang.reflect.InvocationTargetException(e); }
+            }
+            synchronized (physical) {
+                try { return method.invoke(physical, args); }
+                catch (java.lang.reflect.InvocationTargetException ite) { throw ite.getCause(); }
+            }
+        };
+
+        return (Connection) java.lang.reflect.Proxy.newProxyInstance(
+                Connection.class.getClassLoader(), new Class[]{Connection.class}, handler
+        );
     }
 
-    private static Connection createConnection() throws SQLException {
+    private static Connection createPhysicalConnection() throws SQLException {
         String url = System.getenv().getOrDefault("DB_URL", System.getProperty("db.url", "jdbc:sqlite:flatmanager.db"));
 
         StackTraceElement[] st = Thread.currentThread().getStackTrace();
@@ -41,22 +105,24 @@ public final class DatabaseManager {
         } catch (SQLException ignored) {
         }
 
-        synchronized (DatabaseManager.class) {
-            if (!pragmasApplied) {
-                try (Statement s = conn.createStatement()) {
-                    String journalMode = System.getenv().getOrDefault("DB_JOURNAL_MODE",
-                            System.getProperty("db.journal_mode", "DELETE"));
-                    s.execute("PRAGMA journal_mode = " + journalMode);
-                    s.execute("PRAGMA synchronous = NORMAL");
-                    s.execute("PRAGMA busy_timeout = 5000");
-                    pragmasApplied = true;
-                    System.err.println("[DatabaseManager] PRAGMAS applied (journal_mode=" + journalMode + ")");
-                } catch (SQLException e) {
-                    System.err.println("[DatabaseManager] PRAGMA setup failed: " + e.getMessage());
-                }
-            } else {
-                System.err.println("[DatabaseManager] PRAGMAS already applied");
+        // Always apply PRAGMAs on the newly created connection (SQLite PRAGMAs are per-connection)
+        try (Statement s = conn.createStatement()) {
+            String journalMode = System.getenv().getOrDefault("DB_JOURNAL_MODE",
+                    // Use DELETE by default to preserve test behavior where tests may delete DB files
+                    System.getProperty("db.journal_mode", "DELETE"));
+            try {
+                s.execute("PRAGMA journal_mode = " + journalMode);
+            } catch (SQLException e) {
+                // Some drivers require string value for PRAGMA, fallback to explicit quoted value
+                try {
+                    s.execute("PRAGMA journal_mode = '" + journalMode + "'");
+                } catch (SQLException ignored) {}
             }
+            try { s.execute("PRAGMA synchronous = NORMAL"); } catch (SQLException ignored) {}
+            try { s.execute("PRAGMA busy_timeout = 5000"); } catch (SQLException ignored) {}
+            System.err.println("[DatabaseManager] PRAGMAS applied (journal_mode=" + journalMode + ")");
+        } catch (SQLException e) {
+            System.err.println("[DatabaseManager] PRAGMA setup failed: " + e.getMessage());
         }
 
         ensureSchema(conn);
@@ -66,15 +132,21 @@ public final class DatabaseManager {
     }
 
     public static synchronized void closeConnection() {
-        if (connection != null) {
-            try {
-                connection.close();
-            } catch (SQLException ignored) {
+        // Schließe die gecachte Connection, setze Flags zurück
+        poolClosed = true;
+        try {
+            // Alle physischen Connections schließen
+            for (Connection c : allConnections) {
+                try { c.close(); } catch (SQLException ignored) {}
             }
-            connection = null;
-            pragmasApplied = false;
-            System.err.println("[DatabaseManager] Connection closed");
+        } catch (Exception e) {
+            System.err.println("[DatabaseManager] closeConnection error: " + e.getMessage());
+        } finally {
+            allConnections.clear();
+            idleConnections.clear();
         }
+        pragmasApplied = false;
+        System.err.println("[DatabaseManager] Connection pool closed");
     }
 
     /* ----------------- Schema erstellen + Migration ----------------- */
@@ -355,6 +427,117 @@ public final class DatabaseManager {
             return false;
         } catch (SQLException e) {
             System.err.println("[DatabaseManager] createOrUpdateUser failed: " + e.getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Löscht einen Benutzer und setzt vorher alle referenzierten Spalten, die auf diesen Benutzer zeigen, auf NULL.
+     * Unterstützte Anpassungen:
+     * - shopping_items.added_by (INTEGER -> user id)
+     * - budget_transactions.user_id / budget_transactions.paid_by (INTEGER -> user id)
+     * - cleaning_tasks.assigned_to (TEXT -> username)
+     *
+     * Die Operation wird in einer Transaktion ausgeführt.
+     */
+    public static boolean deleteUser(String username) {
+        if (username == null || username.isBlank()) return false;
+        try (Connection conn = getConnection()) {
+            boolean originalAuto = true;
+            try {
+                try { originalAuto = conn.getAutoCommit(); } catch (SQLException ignored) {}
+                // begin transaction early to prevent race conditions between counting admins and deleting
+                conn.setAutoCommit(false);
+
+                // Prüfe: ist der Benutzer ein Admin? Wenn ja, wie viele Admins existieren?
+                boolean isAdmin = false;
+                try (PreparedStatement ps = conn.prepareStatement("SELECT COALESCE(is_admin,0) AS is_admin FROM users WHERE username = ? COLLATE NOCASE")) {
+                    ps.setString(1, username);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) {
+                            isAdmin = rs.getInt("is_admin") == 1;
+                        } else {
+                            // Benutzer nicht gefunden -> nichts zu tun
+                            try { conn.setAutoCommit(originalAuto); } catch (SQLException ignored) {}
+                            return false;
+                        }
+                    }
+                }
+
+                if (isAdmin) {
+                    try (PreparedStatement ps = conn.prepareStatement("SELECT COUNT(*) AS c FROM users WHERE COALESCE(is_admin,0) = 1")) {
+                        try (ResultSet rs = ps.executeQuery()) {
+                            if (rs.next()) {
+                                int cnt = rs.getInt("c");
+                                if (cnt <= 1) {
+                                    System.err.println("[DatabaseManager] deleteUser prevented: would remove last admin (username=" + username + ")");
+                                    try { conn.setAutoCommit(originalAuto); } catch (SQLException ignored) {}
+                                    return false;
+                                }
+                            }
+                        } catch (SQLException e) {
+                            System.err.println("[DatabaseManager] Failed to count admins: " + e.getMessage());
+                            try { conn.setAutoCommit(originalAuto); } catch (SQLException ignored) {}
+                            // Bei Zählfehlern nicht löschen
+                            return false;
+                        }
+                    }
+                }
+
+                // Finde user id (falls vorhanden)
+                Integer uid = null;
+                try (PreparedStatement ps = conn.prepareStatement("SELECT id FROM users WHERE username = ? COLLATE NOCASE")) {
+                    ps.setString(1, username);
+                    try (ResultSet rs = ps.executeQuery()) {
+                        if (rs.next()) uid = rs.getInt("id");
+                    }
+                }
+
+                if (uid != null) {
+                    // shopping_items.added_by auf NULL setzen
+                    try (PreparedStatement ps = conn.prepareStatement("UPDATE shopping_items SET added_by = NULL WHERE added_by = ?")) {
+                        ps.setInt(1, uid);
+                        ps.executeUpdate();
+                    } catch (SQLException ignored) {
+                        // Tabelle oder Spalte könnte fehlen; weiter versuchen
+                    }
+
+                    // budget_transactions.user_id auf NULL setzen
+                    try (PreparedStatement ps = conn.prepareStatement("UPDATE budget_transactions SET user_id = NULL WHERE user_id = ?")) {
+                        ps.setInt(1, uid);
+                        ps.executeUpdate();
+                    } catch (SQLException ignored) {}
+
+                    // budget_transactions.paid_by auf NULL setzen
+                    try (PreparedStatement ps = conn.prepareStatement("UPDATE budget_transactions SET paid_by = NULL WHERE paid_by = ?")) {
+                        ps.setInt(1, uid);
+                        ps.executeUpdate();
+                    } catch (SQLException ignored) {}
+                }
+
+                // cleaning_tasks.assigned_to (text) auf NULL setzen, basierend auf username
+                try (PreparedStatement ps = conn.prepareStatement("UPDATE cleaning_tasks SET assigned_to = NULL WHERE assigned_to = ? COLLATE NOCASE")) {
+                    ps.setString(1, username);
+                    ps.executeUpdate();
+                } catch (SQLException ignored) {}
+
+                // Schließlich den Benutzer löschen
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM users WHERE username = ? COLLATE NOCASE")) {
+                    ps.setString(1, username);
+                    ps.executeUpdate();
+                }
+
+                conn.commit();
+                try { conn.setAutoCommit(originalAuto); } catch (SQLException ignored) {}
+                return true;
+            } catch (SQLException e) {
+                try { conn.rollback(); } catch (SQLException ignored) {}
+                try { conn.setAutoCommit(originalAuto); } catch (SQLException ignored) {}
+                System.err.println("[DatabaseManager] deleteUser failed: " + e.getMessage());
+                return false;
+            }
+        } catch (SQLException e) {
+            System.err.println("[DatabaseManager] getConnection failed in deleteUser: " + e.getMessage());
             return false;
         }
     }
@@ -834,3 +1017,4 @@ public final class DatabaseManager {
         }
     }
 }
+

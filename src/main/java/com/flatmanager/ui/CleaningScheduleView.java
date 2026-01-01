@@ -19,11 +19,17 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.Optional;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
 
 public class CleaningScheduleView {
 
     private BorderPane view;
     private String currentUser;
+
+    // Scheduler to refresh the lists daily so tasks that enter the 30-day window become visible
+    private ScheduledExecutorService scheduler;
 
     private final CleaningTaskDao dao = new CleaningTaskDao();
 
@@ -73,6 +79,34 @@ public class CleaningScheduleView {
         }
 
         refreshLists();
+
+        // schedule a daily refresh so tasks that are >30 days away will appear automatically
+        // once they enter the 30-day window. Run first check after 1 minute to cover near-term tests.
+        scheduler = Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "CleaningScheduleView-refresh");
+            t.setDaemon(true);
+            return t;
+        });
+        scheduler.scheduleAtFixedRate(() -> {
+            try {
+                // UI update must run on FX thread
+                javafx.application.Platform.runLater(() -> {
+                    try {
+                        loadDataFromDb();
+                        refreshLists();
+                    } catch (Exception ex) {
+                        // ignore; showError already used inside
+                    }
+                });
+            } catch (Throwable ignore) {}
+        }, 1, 24 * 60, TimeUnit.MINUTES);
+
+        // shut down scheduler when view removed from scene to avoid leaks
+        view.sceneProperty().addListener((obs, oldScene, newScene) -> {
+            if (newScene == null && scheduler != null && !scheduler.isShutdown()) {
+                scheduler.shutdownNow();
+            }
+        });
     }
 
     private void createView() {
@@ -172,7 +206,53 @@ public class CleaningScheduleView {
         assignedTasks.clear();
         openTasks.clear();
         try {
+            LocalDate today = LocalDate.now();
+            // Zeige nur Aufgaben, die innerhalb des kommenden Monats fällig sind (Monatslänge 28-31 Tage)
+            LocalDate limit = today.plusMonths(1);
+
+            java.util.Map<String, CleaningTask> recurringMap = new java.util.HashMap<>();
+            java.util.List<CleaningTask> singles = new java.util.ArrayList<>();
+
             for (CleaningTask t : dao.listAll()) {
+                // Tasks without a due date are always visible
+                boolean withinWindow = false;
+                if (t.getDue() == null) withinWindow = true;
+                else {
+                    // show only when due is within next calendar month (inclusive)
+                    if (!t.getDue().isAfter(limit)) withinWindow = true;
+                }
+                if (!withinWindow) continue;
+
+                // If task is recurring, group by title+recurrence and keep only the nearest due date
+                if (t.getRecurrence() != null && !t.getRecurrence().trim().isEmpty()) {
+                    String key = (t.getTitle() == null ? "" : t.getTitle().trim().toLowerCase()) + "|" + t.getRecurrence().trim().toLowerCase();
+                    CleaningTask existing = recurringMap.get(key);
+                    if (existing == null) {
+                        recurringMap.put(key, t);
+                    } else {
+                        // prefer the task with the earlier due date (or the one with a non-null due)
+                        LocalDate ed = existing.getDue();
+                        LocalDate td = t.getDue();
+                        if (ed == null && td != null) {
+                            // prefer the one with a due date
+                            recurringMap.put(key, t);
+                        } else if (ed != null && td != null && td.isBefore(ed)) {
+                            recurringMap.put(key, t);
+                        } else if (ed == null && td == null) {
+                            // keep existing (both null)
+                        }
+                    }
+                } else {
+                    singles.add(t);
+                }
+            }
+
+            // combine singles + deduplicated recurring
+            java.util.List<CleaningTask> toShow = new java.util.ArrayList<>();
+            toShow.addAll(singles);
+            toShow.addAll(recurringMap.values());
+
+            for (CleaningTask t : toShow) {
                 if (t.hasAssignee()) assignedTasks.add(t);
                 else openTasks.add(t);
             }
@@ -212,37 +292,10 @@ public class CleaningScheduleView {
                 dao.update(task);
                 try { com.flatmanager.ui.DashboardScreen.notifyRefreshNow(); } catch (Throwable ignore) {}
 
-                // Falls die Aufgabe gerade als erledigt markiert wurde und eine unterstützte Wiederholung hat,
-                // sofort die nächste rotierende Aufgabe erstellen (wenn Benutzerliste vorhanden)
-                if (task.isCompleted() && task.getRecurrence() != null) {
-                    String rec = task.getRecurrence();
-                    java.time.Period addPeriod = null;
-                    if (rec.equalsIgnoreCase("Wöchentlich")) addPeriod = java.time.Period.ofDays(7);
-                    else if (rec.equalsIgnoreCase("Monatlich")) addPeriod = java.time.Period.ofMonths(1);
-
-                    if (addPeriod != null) {
-                        String currentAssignee = task.getAssignedTo();
-                        if (currentAssignee != null && !currentAssignee.trim().isEmpty() && users != null && !users.isEmpty()) {
-                            int idx = -1;
-                            for (int i = 0; i < users.size(); i++) {
-                                String u = users.get(i);
-                                if (u != null && u.equals(currentAssignee)) { idx = i; break; }
-                            }
-                            int nextIdx = 0;
-                            if (idx >= 0) nextIdx = (idx + 1) % users.size();
-                            String nextUser = users.get(nextIdx);
-
-                            java.time.LocalDate newDue = (task.getDue() != null) ? task.getDue().plus(addPeriod) : java.time.LocalDate.now().plus(addPeriod);
-                            CleaningTask next = new CleaningTask(task.getTitle(), newDue, nextUser, task.getRecurrence(), task.isUrgent());
-                            try {
-                                dao.insert(next);
-                                if (next.hasAssignee()) assignedTasks.add(next); else openTasks.add(next);
-                            } catch (Exception ex) {
-                                showError("Fehler beim Anlegen wiederkehrender Aufgabe: " + ex.getMessage());
-                            }
-                        }
-                    }
-                }
+                // Hinweis: Die nächste wiederkehrende Aufgabe wird jetzt nur noch beim Löschen
+                // der erledigten Aufgabe erzeugt (deleteCompletedTasks()).
+                // Vorher war hier eine sofortige Erzeugung beim Abhaken implementiert —
+                // diese Logik wurde entfernt, damit die neue Aufgabe erst nach Löschung erscheint.
 
             } catch (Exception ex) {
                 showError("Fehler beim Aktualisieren: " + ex.getMessage());
