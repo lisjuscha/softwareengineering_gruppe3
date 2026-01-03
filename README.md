@@ -144,6 +144,16 @@ Die Anwendung verwendet SQLite. Die Datenbankdatei (flatmanager.db) wird beim er
 3. Direkt in der IDE:
    - In IntelliJ: Tests mit „Run with Coverage“ ausführen und das Coverage-Fenster nutzen.
 
+## UX-Tests
+
+Zur Evaluation der Benutzerfreundlichkeit wurden informelle UX-Tests durchgeführt, bei denen mehrere Familienmitglieder (Eltern und Geschwister) als Testpersonen die Anwendung nutzten. Testablauf:
+
+- Testpersonen führten typische Aufgaben aus (Login, Reinigungsaufgabe anlegen, Einkauf hinzufügen, Transaktion erfassen).
+- Beobachtung von Bedienfluss, Verständlichkeit der Beschriftungen und Fehlerreaktionen.
+- Dauer pro Testperson: ca. 20–30 Minuten; Feedback wurde mündlich und in kurzen Notizen gesammelt.
+
+Die Tests dienten primär dazu, offensichtliche Usability-Probleme zu finden.
+
 ## License
 
 Dieses Projekt dient zu Lehrzwecken.
