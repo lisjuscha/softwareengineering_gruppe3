@@ -1,88 +1,55 @@
-# Quick Start Guide - Flat Manager
+# Schnellstart - WG-Verwaltung (Flat Manager)
+## Voraussetzungen
+- Java 17 oder neuer installiert (`java -version`)
+- Maven installiert (`mvn -version`)
 
-## Prerequisites
-- Java 17 or higher installed
-- Maven 3.6 or higher installed
+## Installation & Start (ZIP‑Datei)
+1. ZIP‑Datei entpacken:
+    
+    unzip /pfad/zur/FlatManager.zip
+    cd softwareengineering_gruppe3
 
-## Installation & Running
+2. Anwendung bauen:
 
-### 1. Clone the Repository
-```bash
-git clone https://github.com/lisjuscha/softwareengineering_gruppe3.git
-cd softwareengineering_gruppe3
-```
+    mvn clean package
 
-### 2. Build the Application
-```bash
-mvn clean package
-```
+3. Anwendung starten:
 
-### 3. Run the Application
-```bash
-mvn javafx:run
-```
+    mvn javafx:run
 
-## First Login
+## Erstes Login
 
-When the application starts, you'll see the login screen.
+Beim Start erscheint der Login‑Bildschirm.
 
-**Default Credentials:**
-- Username: `admin`
-- Password: `admin`
+Standardzugang:
+- Benutzername: `admin`
+- Passwort: `admin`
 
-## Using the Application
+## Nutzung
+- Reinigungspläne: Aufgaben hinzufügen, als erledigt markieren, löschen.
+- Einkaufsliste: Artikel hinzufügen, als gekauft markieren, entfernen.
+- Haushaltsbudget: Transaktionen hinzufügen, Gesamt anzeigen, Einträge löschen.
 
-### Main Dashboard
-After logging in, you'll see the main dashboard with three navigation options:
+## Hinweise zur Datenbank
+- Die Anwendung nutzt die SQLite‑Datei `flatmanager.db`.
+- `flatmanager.db` wird beim ersten Start automatisch erstellt.
+- Zum Zurücksetzen die `flatmanager.db` löschen (wird neu angelegt).
 
-1. **Cleaning Schedules** - Manage household cleaning tasks
-2. **Shopping Lists** - Keep track of items to buy
-3. **Household Budget** - Track shared expenses
+## JaCoCo Coverage‑Report anzeigen
+1. Tests ausführen und Report erzeugen:
 
-### Cleaning Schedules
-- **Add a Task**: Fill in task name, assignee, and due date, then click "Add Task"
-- **Complete a Task**: Click the "Complete" button next to the task
-- **Delete a Task**: Click the "Delete" button next to the task
+    mvn test jacoco:report
 
-### Shopping Lists
-- **Add an Item**: Enter item name and quantity, then click "Add Item"
-- **Mark as Purchased**: Click the "Purchase" button next to the item
-- **Remove an Item**: Click the "Delete" button next to the item
+2. HTML‑Report öffnen (macOS):
 
-### Household Budget
-- **Add a Transaction**: Enter description, amount, category, and date, then click "Add Transaction"
-- **View Total**: See the total expenses at the top of the list
-- **Delete a Transaction**: Click the "Delete" button next to the transaction
+    open target/site/jacoco/index.html
 
-## Tips
+## Fehlerbehebung kurz
+- Anwendung startet nicht: Prüfe `java -version` und `mvn -version`. Versuche `mvn clean package` erneut.
+- Datenbankfehler: `rm flatmanager.db` und Anwendung neu starten.
+- Build‑Fehler: Internetverbindung prüfen oder Maven‑Cache leeren (`mvn clean`).
 
-- All data is automatically saved to the SQLite database (`flatmanager.db`)
-- The database is created automatically on first run
-- You can have multiple people use the same database file
-- The current user's name appears in the top bar
-- Use the "Logout" button to return to the login screen
-
-## Troubleshooting
-
-### Application won't start
-- Make sure Java 17 or higher is installed: `java -version`
-- Make sure Maven is installed: `mvn -version`
-- Try rebuilding: `mvn clean package`
-
-### Database errors
-- Delete the `flatmanager.db` file to reset the database
-- The database will be recreated with default data on next run
-
-### Build errors
-- Make sure you have an internet connection for Maven to download dependencies
-- Try clearing Maven cache: `mvn clean`
-
-## Additional Resources
-
-- See [README.md](README.md) for detailed feature descriptions
-- See [ARCHITECTURE.md](ARCHITECTURE.md) for technical documentation
-- Check the source code in `src/main/java/com/flatmanager/` for implementation details
-
-## Support
-
-This is an educational project. For issues or questions, please refer to the documentation or examine the source code.
+## Zusätzliche Ressourcen
+- Siehe `README.md` für Feature‑Details
+- Siehe `ARCHITECTURE.md` für technische Dokumentation
+- Quellcode in `src/main/java/com/flatmanager/`

@@ -1,233 +1,130 @@
-# Flat Manager - Architecture Documentation
+# WG-Verwaltung — Architekturdokumentation
 
-## Overview
-Flat Manager is a JavaFX desktop application for managing shared living spaces. It provides features for cleaning schedules, shopping lists, and household budget tracking.
+## Übersicht
+Flat Manager ist eine JavaFX-Desktopanwendung zur Verwaltung von Wohngemeinschaften. Features: Reinigungspläne, Einkaufslisten und Haushaltsbudget‑Verwaltung.
 
-## Architecture
+## Architektur
 
-### Layer Structure
+### Schichtenübersicht
 
 ```
 ┌─────────────────────────────────────────────┐
-│           User Interface Layer              │
-│  (LoginScreen, DashboardScreen, Views)      │
+│          Benutzeroberfläche (UI)            │
+│   (LoginScreen, DashboardScreen, Views)     │
 └─────────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────┐
-│          Application Layer                   │
-│               (App.java)                     │
+│            Anwendungsschicht                │
+│                (App.java)                   │
 └─────────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────┐
-│           Model Layer                        │
-│  (User, CleaningTask, ShoppingItem, etc.)   │
+│             Modell-Schicht                  │
+│   (User, CleaningTask, ShoppingItem, etc.)  │
 └─────────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────┐
-│         Database Layer                       │
-│        (DatabaseManager)                     │
+│            Datenbank-Schicht                │
+│         (DatabaseManager, DAOs)             │
 └─────────────────────────────────────────────┘
                      ↓
 ┌─────────────────────────────────────────────┐
-│          SQLite Database                     │
-│        (flatmanager.db)                      │
+│             SQLite Datenbank                │
+│             (flatmanager.db)                │
 └─────────────────────────────────────────────┘
 ```
 
-## User Interface Structure
+Die Anwendung ist modular aufgebaut (siehe `module-info.class` in `target/classes`).
 
-### Login Screen
-```
-┌────────────────────────────────────────────┐
-│                                            │
-│           Flat Manager                     │
-│    Shared Living Space Management          │
-│                                            │
-│         ┌──────────────────┐               │
-│         │ Username:        │               │
-│         │ [____________]   │               │
-│         │                  │               │
-│         │ Password:        │               │
-│         │ [____________]   │               │
-│         │                  │               │
-│         │   [  Login  ]    │               │
-│         │                  │               │
-│         │ Default: admin/admin             │
-│         └──────────────────┘               │
-│                                            │
-└────────────────────────────────────────────┘
-```
+## Benutzeroberfläche (UI)
 
-### Dashboard
-```
-┌────────────────────────────────────────────────────────┐
-│  Flat Manager - Welcome, admin              [Logout]   │
-├──────────────┬─────────────────────────────────────────┤
-│              │                                         │
-│ Navigation   │         Content Area                    │
-│              │                                         │
-│ ─────────    │  Welcome to Flat Manager!               │
-│              │                                         │
-│ [Cleaning    │  Use the navigation menu:               │
-│  Schedules]  │  • Manage Cleaning Schedules            │
-│              │  • Create Shopping Lists                │
-│ [Shopping    │  • Track Household Budget               │
-│  Lists]      │                                         │
-│              │                                         │
-│ [Household   │                                         │
-│  Budget]     │                                         │
-│              │                                         │
-└──────────────┴─────────────────────────────────────────┘
-```
+- Login Screen: Benutzername/Passwort, Standardzugang `admin` / `admin`.
+- Dashboard: Navigation (Cleaning Schedules, Shopping Lists, Household Budget) und Content‑Area.
+- Views:
+  - Cleaning Schedules: Aufgaben anlegen, Zuweisung, Fälligkeitsdatum, als erledigt markieren, löschen.
+  - Shopping Lists: Artikel anlegen, Menge, hinzugefügt von, als gekauft markieren, löschen.
+  - Household Budget: Transaktionen anlegen, Summenberechnung, Kategorien, löschen.
 
-### Cleaning Schedules View
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Cleaning Schedules                                          │
-│                                                              │
-│  [Task____] [Assignee___] [Date____] [Add Task]             │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ Task       │ Assigned To │ Due Date │ Comp. │ Actions │ │
-│  ├────────────────────────────────────────────────────────┤ │
-│  │ Kitchen    │ John        │ 2025-12  │ ☐     │[✓][✕]   │ │
-│  │ Bathroom   │ Sarah       │ 2025-12  │ ☑     │[✓][✕]   │ │
-│  └────────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────┘
-```
+UI‑Komponenten sind als wiederverwendbare Views/Controller implementiert; Styling über gemeinsame CSS‑Datei in `target/classes/styles.css` / `src/main/resources`.
 
-### Shopping Lists View
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Shopping Lists                                              │
-│                                                              │
-│  [Item Name___] [Quantity___] [Add Item]                    │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ Item      │ Quantity │ Added By │ Purchased │ Actions │ │
-│  ├────────────────────────────────────────────────────────┤ │
-│  │ Milk      │ 2L       │ John     │ ☐         │[✓][✕]   │ │
-│  │ Bread     │ 1        │ Sarah    │ ☑         │[✓][✕]   │ │
-│  └────────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────┘
-```
+## Datenbankschema
 
-### Household Budget View
-```
-┌──────────────────────────────────────────────────────────────┐
-│  Household Budget                                            │
-│                                                              │
-│  [Description_] [Amount_] [Category_] [Date_] [Add Trans.]  │
-│                                                              │
-│  Total: €523.45                                              │
-│                                                              │
-│  ┌────────────────────────────────────────────────────────┐ │
-│  │ Description │ Amount  │ Category  │ Paid By │ Actions │ │
-│  ├────────────────────────────────────────────────────────┤ │
-│  │ Groceries   │ €125.50 │ Food      │ John    │  [✕]    │ │
-│  │ Electricity │ €89.99  │ Utilities │ Sarah   │  [✕]    │ │
-│  └────────────────────────────────────────────────────────┘ │
-└──────────────────────────────────────────────────────────────┘
-```
+Tabellen (vereinfachte Darstellung):
 
-## Database Schema
+- `users`
+  - `id` INTEGER PRIMARY KEY
+  - `username` TEXT UNIQUE
+  - `password` TEXT (zurzeit plaintext, nur zu Lernzwecken)
+  - `name` TEXT
 
-### Tables
+- `cleaning_schedules`
+  - `id` INTEGER PRIMARY KEY
+  - `task` TEXT
+  - `assigned_to` TEXT
+  - `due_date` TEXT (ISO)
+  - `completed` INTEGER (0/1)
 
-#### users
-- `id` (INTEGER PRIMARY KEY) - User ID
-- `username` (TEXT UNIQUE) - Login username
-- `password` (TEXT) - Password (plain text for educational purposes)
-- `name` (TEXT) - Full name
+- `shopping_items`
+  - `id` INTEGER PRIMARY KEY
+  - `item_name` TEXT
+  - `quantity` TEXT
+  - `added_by` TEXT
+  - `purchased` INTEGER (0/1)
 
-#### cleaning_schedules
-- `id` (INTEGER PRIMARY KEY) - Task ID
-- `task` (TEXT) - Task description
-- `assigned_to` (TEXT) - Person assigned to the task
-- `due_date` (TEXT) - Due date (ISO format)
-- `completed` (INTEGER) - Completion status (0/1)
+- `budget_transactions`
+  - `id` INTEGER PRIMARY KEY
+  - `description` TEXT
+  - `amount` REAL
+  - `paid_by` TEXT
+  - `date` TEXT (ISO)
+  - `category` TEXT
 
-#### shopping_items
-- `id` (INTEGER PRIMARY KEY) - Item ID
-- `item_name` (TEXT) - Item name
-- `quantity` (TEXT) - Quantity description
-- `added_by` (TEXT) - User who added the item
-- `purchased` (INTEGER) - Purchase status (0/1)
+Die Datei `flatmanager.db` liegt im Projektstamm und wird beim ersten Start angelegt, falls nicht vorhanden.
 
-#### budget_transactions
-- `id` (INTEGER PRIMARY KEY) - Transaction ID
-- `description` (TEXT) - Transaction description
-- `amount` (REAL) - Transaction amount
-- `paid_by` (TEXT) - User who paid
-- `date` (TEXT) - Transaction date (ISO format)
-- `category` (TEXT) - Transaction category
+## Wichtige Komponenten & Pfade
 
-## Key Features
+- Quellcode: `src/main/java`
+- Tests: `src/test/java`
+- Maven‑Build: `pom.xml`
+- Lokale DB: `flatmanager.db`
+- Test‑Reports: `target/surefire-reports`
+- JaCoCo Coverage: `target/site/jacoco/index.html` (Erzeugung siehe unten)
 
-### 1. Authentication
-- Login screen with username/password
-- Default admin user (admin/admin)
-- Session management with current user tracking
+## Tests & Coverage
+- Tests mit Maven laufen: `mvn test`
+- JaCoCo HTML‑Report erzeugen: `mvn test jacoco:report`
+- Report öffnen (macOS): `open target/site/jacoco/index.html`
+- Coverage‑Daten liegen als `jacoco.exec` in `target/`
 
-### 2. Cleaning Schedules
-- Add new cleaning tasks with assignee and due date
-- Mark tasks as complete
-- Delete tasks
-- View all tasks sorted by due date
+## Designprinzipien
 
-### 3. Shopping Lists
-- Add items with quantities
-- Mark items as purchased
-- Remove items
-- Track who added each item
+- Separation of Concerns: UI, Application, Model und Database klar getrennt.
+- Wiederverwendbare Komponenten: modularisierte Views/Controller.
+- Resource Management: Try‑with‑resources für DB‑Zugriffe.
+- Fehlerbehandlung: zentrale Logging/Exception‑Behandlung in DatabaseManager/Services.
 
-### 4. Household Budget
-- Add transactions with description, amount, category
-- Calculate total expenses
-- View transaction history
-- Delete transactions
-- Category-based organization (Groceries, Utilities, Cleaning, Other)
+## Sicherheit (bildend / nicht produktiv)
+- Aktuell: Passwörter im Klartext (nur zu Lehrzwecken).
+- Default‑Admin: `admin` / `admin` — in produktiven Systemen unzulässig.
+- Empfohlene Verbesserungen: Passwort‑Hashing, Validierung, Zugriffsrechte, sichere Konfiguration der DB‑Datei.
 
-## Technology Stack
+## Bekannte Limitierungen
+- Single static DB‑Connection / kein Connection‑Pooling.
+- Keine Produktions‑Härtung (Input‑Validierung, Sanitization).
+- Keine verteilte/mehrbenutzerfähige Backend‑Architektur.
 
-- **Java 17**: Core programming language
-- **JavaFX 21**: UI framework
-- **SQLite 3.44.1**: Database
-- **Maven**: Build and dependency management
-- **JUnit 5**: Testing framework
+## Vorschläge für Weiterentwicklung
+1. Passwort‑Hashing und obligatorischer Passwortwechsel beim ersten Login.  
+2. Benutzerverwaltung mit Rollen/Permissions.  
+3. Datenvalidierung und erweiterte Fehlerbehandlung.  
+4. Connection‑Pooling oder verschachtelte Transaktionen verbessern.  
+5. Datenexport/Import (CSV/JSON).  
+6. Wiederkehrende Reinigungsaufgaben/Benachrichtigungen.  
+7. CI‑Integration: Coverage automatisch erzeugen und Reports in ZIP aufnehmen.  
+8. Mobile oder Web‑Frontend als Ergänzung.
 
-## Design Patterns
-
-### Separation of Concerns
-- **UI Layer**: Handles user interaction and display
-- **Model Layer**: Represents data entities
-- **Database Layer**: Manages data persistence
-
-### Resource Management
-- Try-with-resources for automatic database connection cleanup
-- Proper exception handling
-
-### Component Reusability
-- Modular view components
-- Shared styling via CSS
-
-## Security Considerations
-
-⚠️ **Educational Limitations**:
-- Passwords stored in plain text (should use bcrypt/PBKDF2 in production)
-- Default admin credentials (should require password change)
-- Single static database connection (should use connection pooling)
-
-## Future Enhancements
-
-Potential improvements for production use:
-1. Implement password hashing (bcrypt, PBKDF2)
-2. Add user registration and management
-3. Implement multi-user authentication
-4. Add data validation and error handling
-5. Implement connection pooling
-6. Add data export/import features
-7. Implement recurring tasks for cleaning schedules
-8. Add expense splitting calculations
-9. Implement notification system for due tasks
-10. Add mobile/web companion application
+## Kurz: Start & Debugging‑Hinweise
+- Build: `mvn clean package`  
+- Start in Entwicklung: `mvn javafx:run`  
+- Tests + Coverage: `mvn test jacoco:report` → `target/site/jacoco/index.html`  
+- Logs und Testausgaben: `target/surefire-reports`
